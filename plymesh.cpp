@@ -12,8 +12,69 @@
 void normalize(double *w);
 void vector_prod(double *u, double *v, double *w);
 
+void PlyMesh::set_vertex_adjacent_faces() {
+  // TODO do not harcode the max number of adjacent faces.
+  vertex_adjacent_faces.resize(vertices.size() * 10, -1);
+  int n_adja = 1;
+  long unsigned int total_size = 0;
+  for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
+    n_adja = 0;
+    ++total_size; // since we store the number of adj at the begining.
+                  // TODO maybe vector can handle this with reserve
+    if (total_size >= vertex_adjacent_faces.size()) {
+      vertex_adjacent_faces.resize(total_size + vertices.size());
+    }
+    for (unsigned int j = 0; j < (unsigned int)n_faces; ++j) {
+      for (unsigned int k = 0; k < 3; ++k) {
+        if (faces[j * 3 + k] == i) {
+          if (total_size >= vertex_adjacent_faces.size()) {
+            vertex_adjacent_faces.resize(total_size + vertices.size());
+          }
+          vertex_adjacent_faces.at(total_size) = j;
+          ++n_adja;
+          ++total_size;
+        }
+      }
+    }
+    vertex_adjacent_faces[total_size - n_adja - 1] = n_adja;
+    if (!n_adja) {
+      std::cout << "Error, vertex without an adjacent face.\n";
+    }
+  }
+  vertex_adjacent_faces.resize(total_size);
+}
+
+void PlyMesh::set_vertex_normals() {
+  if (vertex_adjacent_faces.size() == 0) {
+    set_vertex_adjacent_faces();
+  }
+  if (face_normals.size() == 0) {
+    set_face_normals();
+  }
+
+  vertex_normals.resize(n_vertices * 3, 0);
+  int n_adja = 0;
+  int adja_array_idx = 0;
+  int face;
+  for (int i = 0; i < n_vertices; ++i) {
+    n_adja = vertex_adjacent_faces.at(adja_array_idx);
+    for (int j = 0; j < n_adja; ++j) {
+      ++adja_array_idx;
+      face = vertex_adjacent_faces.at(adja_array_idx);
+      for (int k = 0; k < 3; ++k) {
+        vertex_normals.at(i * 3 + k) += face_normals.at(face * 3 + k);
+      }
+    }
+    vertex_normals.at(i * 3) /= n_adja;
+    vertex_normals.at(i * 3 + 1) /= n_adja;
+    vertex_normals.at(i * 3 + 2) /= n_adja;
+
+    ++adja_array_idx;
+  }
+}
+
 void PlyMesh::set_face_normals() {
-  faces_normals.resize(faces.size(), 0);
+  face_normals.resize(faces.size(), 0);
   unsigned int i, j, k;
   double e0[3], e1[3];
   for (int face_idx = 0; face_idx < n_faces; ++face_idx) {
@@ -28,8 +89,8 @@ void PlyMesh::set_face_normals() {
     e1[0] = vertices[k * 3] - vertices[i * 3];
     e1[1] = vertices[k * 3 + 1] - vertices[i * 3 + 1];
     e1[2] = vertices[k * 3 + 2] - vertices[i * 3 + 2];
-    vector_prod(e0, e1, faces_normals.data() + face_idx * 3);
-    normalize(faces_normals.data() + face_idx * 3);
+    vector_prod(e0, e1, face_normals.data() + face_idx * 3);
+    normalize(face_normals.data() + face_idx * 3);
   }
 }
 
@@ -266,11 +327,37 @@ void PlyMesh::print_faces() {
   }
 }
 
-void PlyMesh::print_normals() {
+void PlyMesh::print_face_normals() {
   for (int i = 0; i < n_faces; ++i) {
     for (int j = 0; j < 3; ++j) {
-      std::cout << faces_normals.at(i * 3 + j) << " ";
+      std::cout << face_normals.at(i * 3 + j) << " ";
     }
     std::cout << "\n";
+  }
+}
+
+void PlyMesh::print_vertex_adjacent_face() {
+  int n_adja = 0;
+  int adja_array_idx = 0;
+  int face;
+  for (int i = 0; i < n_vertices; ++i) {
+    n_adja = vertex_adjacent_faces.at(adja_array_idx);
+    std::cout << "n  " << n_adja << " : ";
+    for (int j = 0; j < n_adja; ++j) {
+      ++adja_array_idx;
+      face = vertex_adjacent_faces.at(adja_array_idx);
+      std::cout << face << " ";
+    }
+    std::cout << std::endl;
+    ++adja_array_idx;
+  }
+}
+
+void PlyMesh::print_vertex_normals() {
+  for (int i = 0; i < n_vertices; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      std::cout << vertex_normals.at(i * 3 + j) << " ";
+    }
+    std::cout << std::endl;
   }
 }

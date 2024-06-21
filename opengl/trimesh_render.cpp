@@ -33,16 +33,6 @@ void MeshRender::init_window() {
 }
 
 void MeshRender::init_render() {
-  if (!faces) {
-    std::cout << "Error, please provide faces \n";
-    exit(1);
-  }
-
-  if (!vertices) {
-    std::cout << "Error, please provide vertices \n";
-    exit(1);
-  }
-
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     printf("Failed to initialize GLAD\n");
     exit(1);
@@ -57,7 +47,6 @@ void MeshRender::init_render() {
   glDeleteShader(fragmentShader);
 
   glUseProgram(shader_program);
-  // maxval_loc = glGetUniformLocation(shader_program, "maxval");
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   keep_aspect_ratio(window, width, height);
@@ -83,7 +72,7 @@ void MeshRender::init_render() {
 
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(double) * n_vertices * 3, vertices,
+  glBufferData(GL_ARRAY_BUFFER, sizeof(double) * n_vertices * 6, vertexes_attr,
                GL_STATIC_DRAW);
 
   // Square EBO
@@ -91,9 +80,12 @@ void MeshRender::init_render() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * n_faces * 3,
                faces, GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 3 * sizeof(double),
+  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double),
                         (void *)0);
   glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double),
+                        (void *)(3 * sizeof(double)));
+  glEnableVertexAttribArray(1);
 
   //// Position attrib
   // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void
@@ -109,10 +101,13 @@ void MeshRender::init_render() {
 
 int MeshRender::render_loop(int (*data_update_function)(void *fargs),
                             void *fargs) {
-
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   int flag = 1;
+  double time = 0;
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glUseProgram(shader_program);
+  unsigned int time_loc = glGetUniformLocation(shader_program, "time");
+  glUniform1f(time_loc, 0.01);
   if (data_update_function != NULL) {
     while (!glfwWindowShouldClose(window) && flag) {
       keep_aspect_ratio(window, width, height);
@@ -132,10 +127,12 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
       processInput(window);
       glClear(GL_COLOR_BUFFER_BIT);
       // render container
+      glUniform1f(time_loc, time);
       glBindVertexArray(VAO);
       glDrawElements(GL_TRIANGLES, n_faces * 3, GL_UNSIGNED_INT, 0);
       glfwSwapBuffers(window);
       glfwPollEvents();
+      time += 0.0015;
     }
   }
   glCheckError();

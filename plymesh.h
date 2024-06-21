@@ -31,25 +31,36 @@ public:
   int n_vertices = 0;
   int n_faces = 0;
   std::vector<double> normals;
-  std::vector<double> faces_normals;
+  std::vector<double> face_normals;
+  std::vector<double> vertex_normals;
   std::vector<unsigned int> edges;
   std::vector<unsigned int> one_ring;
+  std::vector<unsigned int> vertex_adjacent_faces;
 
   PlyMesh(std::vector<double> ivertices, std::vector<unsigned int> ifaces)
       : vertices(ivertices), faces(ifaces), n_vertices(ivertices.size() / 3),
         n_faces(ifaces.size() / 3) {
     set_face_normals();
+    set_vertex_adjacent_faces();
+    set_vertex_normals();
   }
 
   PlyMesh(const char *fname) {
     from_file(fname);
+    // TODO depending on the ply file, normals migth be provided
     set_face_normals();
+    set_vertex_adjacent_faces();
+    set_vertex_normals();
   }
 
+  void set_vertex_adjacent_faces();
   void set_face_normals();
+  void set_vertex_normals();
   void print();
   void print_faces();
   void print_vertices();
-  void print_normals();
+  void print_vertex_adjacent_face();
+  void print_vertex_normals();
+  void print_face_normals();
 };
 #endif // PLYMESH_H_

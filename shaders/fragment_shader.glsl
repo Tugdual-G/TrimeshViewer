@@ -3,8 +3,9 @@
 
 // Output color
 out vec4 FragColor;
-//in vec2 TexCoords;
+in vec3 normal;
 void main()
 {
-    FragColor = vec4(0.0, 0.0, 0.9, 1.0);
+    float intensity =  (1+normal.y)/2.0;
+    FragColor = vec4(0.01, 0.8, 1.0, 1.0)*intensity;
 }

@@ -1,11 +1,11 @@
 #ifndef TRIMESH_RENDER_H_
 #define TRIMESH_RENDER_H_
 
-#include "../plymesh.h"
 #include "include/glad/glad.h" // glad should be included before glfw3
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 class MeshRender {
   unsigned int shader_program, compute_program;
@@ -13,24 +13,26 @@ class MeshRender {
 
 public:
   unsigned int width{0}, height{0};
-  double *vertices{NULL};
-  int n_vertices{0};
+  double *vertexes_attr{NULL}; // contains vertices pos and normals (vvvnnn)
+  unsigned int n_vertices{0};
   unsigned int *faces{NULL};
-  int n_faces{0};
-  PlyMesh *plymesh;
+  unsigned int n_faces{0};
 
   void *userpointer;
   GLFWwindow *window;
 
-  MeshRender(int w_width, int w_height, PlyMesh *mesh)
-      : width(w_width), height(w_height), vertices(mesh->vertices.data()),
-        n_vertices(mesh->n_vertices), faces(mesh->faces.data()),
-        n_faces(mesh->n_faces), plymesh(mesh) {
-    double max = *std::max_element(vertices, vertices + n_vertices * 3);
-    std::cout << "v size :" << mesh->vertices.size() << std::endl;
-    std::cout << "vc size :" << n_vertices * 3 << std::endl;
-    for (double *v = vertices; v < vertices + n_vertices * 3; ++v) {
-      *v /= max;
+  MeshRender(int w_width, int w_height, std::vector<double> &vertices,
+             std::vector<unsigned int> &faces,
+             std::vector<double> &vertex_normals)
+      : width(w_width), height(w_height), n_vertices(vertices.size() / 3),
+        faces(faces.data()), n_faces(faces.size() / 3) {
+    // double max = *std::max_element(vertices.begin(), vertices.end());
+    vertexes_attr = new double[vertices.size() * 2];
+    for (unsigned int i = 0; i < n_vertices; ++i) {
+      for (unsigned int j = 0; j < 3; ++j) {
+        vertexes_attr[i * 6 + j] = vertices.at(i * 3 + j);
+        vertexes_attr[i * 6 + j + 3] = vertex_normals.at(i * 3 + j);
+      }
     }
   }
 
