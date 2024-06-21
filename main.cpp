@@ -32,7 +32,7 @@ int main() {
 
   mesh.print();
   // mesh.print_faces();
-  // mesh.print_vertices();
+  mesh.print_normals();
 
   render.init_window();
   render.init_render();

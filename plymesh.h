@@ -37,12 +37,19 @@ public:
 
   PlyMesh(std::vector<double> ivertices, std::vector<unsigned int> ifaces)
       : vertices(ivertices), faces(ifaces), n_vertices(ivertices.size() / 3),
-        n_faces(ifaces.size() / 3) {}
+        n_faces(ifaces.size() / 3) {
+    set_face_normals();
+  }
 
-  PlyMesh(const char *fname) { from_file(fname); }
+  PlyMesh(const char *fname) {
+    from_file(fname);
+    set_face_normals();
+  }
 
+  void set_face_normals();
   void print();
   void print_faces();
   void print_vertices();
+  void print_normals();
 };
 #endif // PLYMESH_H_

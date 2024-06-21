@@ -2,11 +2,49 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <math.h>
 #include <sstream>
 #include <stdlib.h>
 #include <string>
 #include <variant>
 #include <vector>
+
+void normalize(double *w);
+void vector_prod(double *u, double *v, double *w);
+
+void PlyMesh::set_face_normals() {
+  faces_normals.resize(faces.size(), 0);
+  unsigned int i, j, k;
+  double e0[3], e1[3];
+  for (int face_idx = 0; face_idx < n_faces; ++face_idx) {
+    i = faces.at(3 * face_idx);
+    j = faces.at(3 * face_idx + 1);
+    k = faces.at(3 * face_idx + 2);
+
+    e0[0] = vertices[j * 3] - vertices[i * 3];
+    e0[1] = vertices[j * 3 + 1] - vertices[i * 3 + 1];
+    e0[2] = vertices[j * 3 + 2] - vertices[i * 3 + 2];
+
+    e1[0] = vertices[k * 3] - vertices[i * 3];
+    e1[1] = vertices[k * 3 + 1] - vertices[i * 3 + 1];
+    e1[2] = vertices[k * 3 + 2] - vertices[i * 3 + 2];
+    vector_prod(e0, e1, faces_normals.data() + face_idx * 3);
+    normalize(faces_normals.data() + face_idx * 3);
+  }
+}
+
+void normalize(double *w) {
+  double norm = pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
+  w[0] /= norm;
+  w[1] /= norm;
+  w[2] /= norm;
+}
+
+void vector_prod(double *u, double *v, double *w) {
+  w[0] = u[1] * v[2] - u[2] * v[1];
+  w[1] = u[2] * v[0] - u[0] * v[2];
+  w[2] = u[0] * v[1] - u[1] * v[0];
+}
 
 enum Entries {
   VOID = 0,
@@ -223,6 +261,15 @@ void PlyMesh::print_faces() {
   for (int i = 0; i < n_faces; ++i) {
     for (int j = 0; j < 3; ++j) {
       std::cout << faces.at(i * 3 + j) << " ";
+    }
+    std::cout << "\n";
+  }
+}
+
+void PlyMesh::print_normals() {
+  for (int i = 0; i < n_faces; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      std::cout << faces_normals.at(i * 3 + j) << " ";
     }
     std::cout << "\n";
   }
