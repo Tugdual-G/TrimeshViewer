@@ -101,13 +101,17 @@ void MeshRender::init_render() {
 
 int MeshRender::render_loop(int (*data_update_function)(void *fargs),
                             void *fargs) {
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   int flag = 1;
   double time = 0;
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glUseProgram(shader_program);
   unsigned int time_loc = glGetUniformLocation(shader_program, "time");
   glUniform1f(time_loc, 0.01);
+  // Enable depth test
+  glEnable(GL_DEPTH_TEST);
+  // Accept fragment if it closer to the camera than the former one
+  glDepthFunc(GL_LESS);
   if (data_update_function != NULL) {
     while (!glfwWindowShouldClose(window) && flag) {
       keep_aspect_ratio(window, width, height);
@@ -125,14 +129,14 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
     while (!glfwWindowShouldClose(window) && flag) {
       keep_aspect_ratio(window, width, height);
       processInput(window);
-      glClear(GL_COLOR_BUFFER_BIT);
-      // render container
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       glUniform1f(time_loc, time);
+
       glBindVertexArray(VAO);
       glDrawElements(GL_TRIANGLES, n_faces * 3, GL_UNSIGNED_INT, 0);
       glfwSwapBuffers(window);
       glfwPollEvents();
-      time += 0.0015;
+      time += 0.001;
     }
   }
   glCheckError();
