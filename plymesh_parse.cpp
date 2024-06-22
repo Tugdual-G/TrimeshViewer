@@ -1,4 +1,4 @@
-#include "plymesh.h"
+#include "mesh.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -23,7 +23,7 @@ enum Entries {
 
 Entries str2entries(std::string_view word);
 
-int PlyMesh::from_file(const char *fname) {
+int Mesh::from_file(const char *fname) {
   vertices_elements_sizes.resize(10, 0);
   std::ifstream file;
   file.open(fname, std::ios::binary | std::ios::in);
@@ -44,7 +44,7 @@ int PlyMesh::from_file(const char *fname) {
   return 1;
 }
 
-int PlyMesh::load_data(std::ifstream *file) {
+int Mesh::load_data(std::ifstream *file) {
   if (n_dim != 3) {
     std::cout << "Warning, n_dim != 3 \n";
     return 0;
@@ -89,7 +89,7 @@ int PlyMesh::load_data(std::ifstream *file) {
   return 1;
 }
 
-int PlyMesh::parse_header(std::ifstream *file) {
+int Mesh::parse_header(std::ifstream *file) {
   std::string line, word;
   n_vertice_elements = 0;
   n_dim = 0;
@@ -197,7 +197,7 @@ Entries str2entries(std::string_view word) {
   }
 }
 
-void PlyMesh::print() {
+void Mesh::print() {
   std::cout << "ply\n";
   std::cout << "format --------\n";
   std::cout << "comment --------\n";
@@ -211,7 +211,7 @@ void PlyMesh::print() {
   std::cout << "data offset : " << file_data_offset << "\n";
 }
 
-void PlyMesh::print_vertices() {
+void Mesh::print_vertices() {
   for (int i = 0; i < n_vertices; ++i) {
     for (int j = 0; j < 3; ++j) {
       std::cout << vertices.at(i * 3 + j) << " ";
@@ -220,7 +220,7 @@ void PlyMesh::print_vertices() {
   }
 }
 
-void PlyMesh::print_faces() {
+void Mesh::print_faces() {
   for (int i = 0; i < n_faces; ++i) {
     std::cout << "face " << i << " : ";
     for (int j = 0; j < 3; ++j) {
@@ -230,7 +230,7 @@ void PlyMesh::print_faces() {
   }
 }
 
-void PlyMesh::print_face_normals() {
+void Mesh::print_face_normals() {
   for (int i = 0; i < n_faces; ++i) {
     for (int j = 0; j < 3; ++j) {
       std::cout << face_normals.at(i * 3 + j) << " ";
@@ -239,7 +239,7 @@ void PlyMesh::print_face_normals() {
   }
 }
 
-void PlyMesh::print_vertex_adjacent_face() {
+void Mesh::print_vertex_adjacent_face() {
   int n_adja = 0;
   int adja_array_idx = 0;
   int face;
@@ -256,7 +256,7 @@ void PlyMesh::print_vertex_adjacent_face() {
   }
 }
 
-void PlyMesh::print_one_ring() {
+void Mesh::print_one_ring() {
   int n_adja = 0;
   int one_ring_array_idx = 0;
   int vert;
@@ -273,7 +273,7 @@ void PlyMesh::print_one_ring() {
   }
 }
 
-void PlyMesh::print_vertex_normals() {
+void Mesh::print_vertex_normals() {
   for (int i = 0; i < n_vertices; ++i) {
     for (int j = 0; j < 3; ++j) {
       std::cout << vertex_normals.at(i * 3 + j) << " ";

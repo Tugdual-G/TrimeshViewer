@@ -57,13 +57,13 @@ void MeshRender::init_render() {
 
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(double) * n_vertices * 6, vertexes_attr,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, n_vertices * size_vertice_attr,
+               vertexes_attr.data(), GL_STATIC_DRAW);
 
   // Square EBO
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * n_faces * 3,
-               faces, GL_STATIC_DRAW);
+               faces.data(), GL_STATIC_DRAW);
 
   glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double),
                         (void *)0);
@@ -125,6 +125,44 @@ int MeshRender::render_finalize() {
   glDeleteBuffers(1, &VBO);
   glfwTerminate();
   return 0;
+}
+
+void MeshRender::add_vertex_colors(std::vector<double> &colors) {
+  size_vertice_attr += 3 * sizeof(double);
+  n_vertice_attr += 3;
+  std::vector<double> vertexes_attr_tmp(vertexes_attr);
+  vertexes_attr.resize(vertexes_attr.size() + (n_vertices * 3));
+
+  for (unsigned int i = 0; i < n_vertices; ++i) {
+    for (unsigned int j = 0; j < n_vertice_attr - 3; ++j) {
+      vertexes_attr.at(i * n_vertice_attr + j) =
+          vertexes_attr_tmp.at(i * (n_vertice_attr - 3) + j);
+    }
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertexes_attr.at(i * n_vertice_attr + j + n_vertice_attr - 3) =
+          colors.at(i * 3 + j);
+    }
+  }
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, n_vertices * size_vertice_attr,
+               vertexes_attr.data(), GL_STATIC_DRAW);
+
+  // Square EBO
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * n_faces * 3,
+               faces.data(), GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, size_vertice_attr,
+                        (void *)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, size_vertice_attr,
+                        (void *)(3 * sizeof(double)));
+  glEnableVertexAttribArray(1);
+
+  glVertexAttribPointer(2, 3, GL_DOUBLE, GL_FALSE, size_vertice_attr,
+                        (void *)(6 * sizeof(double)));
+  glEnableVertexAttribArray(2);
 }
 
 void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,

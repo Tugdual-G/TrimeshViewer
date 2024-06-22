@@ -1,4 +1,4 @@
-#include "plymesh.h"
+#include "mesh.h"
 // #include <algorithm>
 #include <iostream>
 #include <math.h>
@@ -6,10 +6,13 @@
 // #include <string>
 #include <vector>
 
-void normalize(double *w);
-void vector_prod(double *u, double *v, double *w);
+static void normalize(double *w);
+static void vector_prod(double *u, double *v, double *w);
 
-void PlyMesh::set_one_ring() {
+void Mesh::set_one_ring() {
+  if (vertex_adjacent_faces.size() < (long unsigned int)n_vertices) {
+    set_vertex_adjacent_faces();
+  }
   int adja_array_idx = 0;    // global position in the array
   int onering_array_idx = 0; // global position in the one-ring array
   int triangle_vert_idx;     // index of the vertices in the face [0, 1, 2]
@@ -43,7 +46,7 @@ void PlyMesh::set_one_ring() {
   one_ring.resize(onering_array_idx);
 }
 
-void PlyMesh::order_adjacent_faces() {
+void Mesh::order_adjacent_faces() {
   std::vector<int> unordered_faces(n_adja_faces_max, -1);
 
   // edges oposite to the current vertice [[vert0, vert1],...,[vert0, vert1]]
@@ -112,7 +115,7 @@ void PlyMesh::order_adjacent_faces() {
   }
 }
 
-void PlyMesh::set_vertex_adjacent_faces() {
+void Mesh::set_vertex_adjacent_faces() {
   // TODO do not harcode the max number of adjacent faces.
   vertex_adjacent_faces.resize(vertices.size() * 10, -1);
   int n_adja = 1, n_adja_max = 0;
@@ -150,7 +153,7 @@ void PlyMesh::set_vertex_adjacent_faces() {
   order_adjacent_faces();
 }
 
-void PlyMesh::set_vertex_normals() {
+void Mesh::set_vertex_normals() {
   if (vertex_adjacent_faces.size() == 0) {
     set_vertex_adjacent_faces();
   }
@@ -179,7 +182,7 @@ void PlyMesh::set_vertex_normals() {
   }
 }
 
-void PlyMesh::set_face_normals() {
+void Mesh::set_face_normals() {
   face_normals.resize(faces.size(), 0);
   unsigned int i, j, k;
   double e0[3], e1[3];

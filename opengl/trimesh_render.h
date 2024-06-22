@@ -13,10 +13,13 @@ class MeshRender {
 
 public:
   unsigned int width{0}, height{0};
-  double *vertexes_attr{NULL}; // contains vertices pos and normals (vvvnnn)
+  std::vector<double>
+      vertexes_attr; // contains vertices pos and normals (vvvnnn)
   unsigned int n_vertices{0};
-  unsigned int *faces{NULL};
+  std::vector<unsigned int> faces;
   unsigned int n_faces{0};
+  unsigned int size_vertice_attr; // xxxnnnccc
+  unsigned int n_vertice_attr;
 
   void *userpointer;
   GLFWwindow *window;
@@ -25,13 +28,14 @@ public:
              std::vector<unsigned int> &faces,
              std::vector<double> &vertex_normals)
       : width(w_width), height(w_height), n_vertices(vertices.size() / 3),
-        faces(faces.data()), n_faces(faces.size() / 3) {
-    // double max = *std::max_element(vertices.begin(), vertices.end());
-    vertexes_attr = new double[vertices.size() * 2];
+        faces(faces), n_faces(faces.size() / 3) {
+    size_vertice_attr = 6 * sizeof(double);
+    n_vertice_attr = 6;
+    vertexes_attr.resize(vertices.size() * 2);
     for (unsigned int i = 0; i < n_vertices; ++i) {
       for (unsigned int j = 0; j < 3; ++j) {
-        vertexes_attr[i * 6 + j] = vertices.at(i * 3 + j);
-        vertexes_attr[i * 6 + j + 3] = vertex_normals.at(i * 3 + j);
+        vertexes_attr.at(i * 6 + j) = vertices.at(i * 3 + j);
+        vertexes_attr.at(i * 6 + j + 3) = vertex_normals.at(i * 3 + j);
       }
     }
   }
@@ -42,6 +46,8 @@ public:
   int render_loop(int (*data_update_function)(void *fargs), void *fargs);
   void (*keyboard_callback)(GLFWwindow *window, int key, int scancode,
                             int action, int mods) = NULL;
+  void add_vertex_normals(std::vector<double> &normals);
+  void add_vertex_colors(std::vector<double> &normals);
 };
 
 void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,

@@ -1,5 +1,5 @@
-#ifndef PLYMESH_H_
-#define PLYMESH_H_
+#ifndef MESH_H_
+#define MESH_H_
 #include <fstream>
 #include <string>
 #include <variant>
@@ -11,7 +11,7 @@ enum Types {
   DOUBLE,
 };
 
-class PlyMesh {
+class Mesh {
   int file_data_offset = -1;
   Types vertex_type = NONE;
   Types normal_type = NONE;
@@ -40,7 +40,7 @@ public:
   std::vector<unsigned int> vertex_adjacent_faces;
   std::vector<double> mean_curvature;
 
-  PlyMesh(std::vector<double> ivertices, std::vector<unsigned int> ifaces)
+  Mesh(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces)
       : vertices(ivertices), faces(ifaces), n_vertices(ivertices.size() / 3),
         n_faces(ifaces.size() / 3) {
     set_face_normals();
@@ -48,7 +48,7 @@ public:
     set_vertex_normals();
   }
 
-  PlyMesh(const char *fname) {
+  Mesh(const char *fname) {
     from_file(fname);
     // TODO depending on the ply file, normals migth be provided
     set_face_normals();
@@ -61,6 +61,7 @@ public:
   void set_face_normals();
   void set_vertex_normals();
   void set_mean_curvature();
+  void scalar_mean_curvature(std::vector<double> &k);
   void print();
   void print_faces();
   void print_vertices();
@@ -69,4 +70,4 @@ public:
   void print_vertex_normals();
   void print_face_normals();
 };
-#endif // PLYMESH_H_
+#endif // MESH_H_
