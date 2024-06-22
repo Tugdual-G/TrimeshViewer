@@ -51,21 +51,6 @@ void MeshRender::init_render() {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   keep_aspect_ratio(window, width, height);
 
-  //// Define a list of points
-  // float vertices[] = {
-  //// points coord     // texture coords
-  //-1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // Point 1
-  // 1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // Point 2
-  // 1.0f,  1.0f,  0.0f, 1.0f, 1.0f, // Point 3
-  //-1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // Point 4
-  //};
-  //
-  // unsigned int square_idx[] = {
-  // 0, 1, 2, 2, 3, 0,
-  //};
-
-  unsigned int EBO;
-
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
@@ -86,15 +71,6 @@ void MeshRender::init_render() {
   glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double),
                         (void *)(3 * sizeof(double)));
   glEnableVertexAttribArray(1);
-
-  //// Position attrib
-  // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void
-  // *)0); glEnableVertexAttribArray(0);
-  //
-  // Texture attrib
-  // glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-  //(void *)(3 * sizeof(float)));
-  // glEnableVertexAttribArray(1);
 
   glCheckError();
 }

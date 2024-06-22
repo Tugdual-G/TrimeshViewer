@@ -14,6 +14,7 @@ uniform float time;
 layout(location = 0) in vec3 in_pos;        // Vertex position
 layout(location = 1) in vec3 in_normal;        // Vertex normal
 out vec3 normal;
+out vec3 position;// flat shading
 void main()
 {
     float theta = 3.14*time;
@@ -26,7 +27,7 @@ void main()
 
     vec4 pos = mul_quatern(vec4(0.0, in_pos.xyz), q_c);
     pos = mul_quatern(q, pos);
-    gl_Position = vec4(pos.yzw, 1.0);  // Pass-through transformation
+    position = pos.yzw;// for flat shading
+    gl_Position = vec4(pos.yzw, 1.0);
     normal = normalq.yzw;
-    //TexCoords = aTexCoords;         // Pass the texture coordinates to the fragment shader
 }

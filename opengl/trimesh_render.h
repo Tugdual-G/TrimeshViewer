@@ -9,7 +9,7 @@
 
 class MeshRender {
   unsigned int shader_program, compute_program;
-  unsigned int VAO, VBO;
+  unsigned int VAO, VBO, EBO;
 
 public:
   unsigned int width{0}, height{0};

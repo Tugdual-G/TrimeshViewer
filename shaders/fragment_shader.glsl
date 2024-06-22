@@ -3,8 +3,14 @@
 // Output color
 out vec4 FragColor;
 in vec3 normal;
+in vec3 position; // flat shading
 void main()
 {
-    float intensity =  (1.5+normal.y)/2.5;
-    FragColor = vec4(0.01, 0.8, 1.0, 1.0)*intensity;
+
+    vec3 x_tangent = dFdx(position);
+    vec3 y_tangent = dFdy(position);
+    vec3 face_normal = normalize( cross( x_tangent, y_tangent ) );
+
+    float intensity =  (1.5 + face_normal.z)/2.0;
+    FragColor = vec4(0.01, 0.8, 0.7, 1.0)*intensity;
 }
