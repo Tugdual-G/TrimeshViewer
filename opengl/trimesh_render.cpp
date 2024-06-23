@@ -199,6 +199,16 @@ void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,
   glCheckError();
 }
 
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+  static double x_old{0}, y_old{0};
+  double dx = xpos - x_old, dy = ypos - y_old;
+  dx = dx > 50 ? 0 : dx;
+  dy = dy > 50 ? 0 : dy;
+  double axis[3] = {0};
+  axis[0] = -dy;
+  axis[1] = dx;
+}
+
 void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
                        __attribute__((unused)) int scancode, int action,
                        __attribute__((unused)) int mods) {

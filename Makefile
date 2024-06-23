@@ -27,6 +27,9 @@ mesh_structure.o: mesh_structure.cpp
 libtrimesh_render.so:  opengl/src/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c
 	$(CC) $(CFLAGS) -I opengl -shared -o $@ $^ -lGL -lglfw -fPIC
 
+test_quatern: opengl/test_quatern.cpp
+	$(CCPP) $(CFLAGS) $^ -o $@
+
 clean:
 	rm -f main *.o *.so
 
