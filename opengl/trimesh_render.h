@@ -8,12 +8,19 @@
 #include <numeric>
 #include <vector>
 
+enum SHADER_PROGRAM_TYPE {
+  FLAT_FACES,
+  SMOOTH_FACES,
+};
+
 class MeshRender {
+  SHADER_PROGRAM_TYPE program_type{FLAT_FACES};
   unsigned int shader_program, compute_program;
   unsigned int VAO, VBO, EBO;
   void init_window();
   void init_render();
   void resize_VAO();
+  void set_shader_program();
 
 public:
   unsigned int width{0}, height{0};
@@ -35,6 +42,7 @@ public:
              std::vector<double> &vertex_normals)
       : width(w_width), height(w_height), n_vertices(vertices.size() / 3),
         faces(faces), n_faces(faces.size() / 3) {
+    program_type = SMOOTH_FACES;
     vert_attr_sizes.resize(2, 3 * sizeof(double));
     vert_attr_numbers.resize(2, 3);
     vertices_attr.resize(vertices.size() * 2);
@@ -53,6 +61,7 @@ public:
       : width(w_width), height(w_height), n_vertices(vertices.size() / 3),
         faces(faces), n_faces(faces.size() / 3) {
 
+    program_type = FLAT_FACES;
     vertices_attr.resize(vertices.size());
     vert_attr_sizes.resize(1, 3 * sizeof(double));
     vert_attr_numbers.resize(1, 3);

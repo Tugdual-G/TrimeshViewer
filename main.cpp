@@ -76,8 +76,13 @@ int main() {
     v /= maxv;
   }
 
-  MeshRender render(500, 500, mesh.vertices, mesh.faces, mesh.vertex_normals);
+  MeshRender render0(500, 500, mesh.vertices, mesh.faces);
 
+  render0.add_vertex_colors(colors);
+  render0.render_loop(NULL, NULL);
+  render0.render_finalize();
+
+  MeshRender render(500, 500, mesh.vertices, mesh.faces, mesh.vertex_normals);
   render.add_vertex_colors(colors);
   render.render_loop(NULL, NULL);
   render.render_finalize();

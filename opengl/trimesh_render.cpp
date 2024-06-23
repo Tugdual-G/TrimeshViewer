@@ -12,6 +12,10 @@ extern "C" {
 GLenum glCheckError_(const char *file, int line);
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
+#define SHADER_PATH "shaders/"
+#define SMOOTH_SHADE_NAME SHADER_PATH "smooth_shading_"
+#define FLAT_SHADE_NAME SHADER_PATH "flat_shading_"
+
 void MeshRender::init_window() {
 
   // Init Window
@@ -33,6 +37,30 @@ void MeshRender::init_window() {
   }
 }
 
+void MeshRender::set_shader_program() {
+  // Compile shaders
+  unsigned int vertexShader;
+  unsigned int fragmentShader;
+  switch (program_type) {
+  case FLAT_FACES:
+    vertexShader = compileVertexShader(FLAT_SHADE_NAME "vertex_shader.glsl");
+    fragmentShader =
+        compileFragmentShader(FLAT_SHADE_NAME "fragment_shader.glsl");
+    break;
+  case SMOOTH_FACES:
+    vertexShader = compileVertexShader(SMOOTH_SHADE_NAME "vertex_shader.glsl");
+    fragmentShader =
+        compileFragmentShader(SMOOTH_SHADE_NAME "fragment_shader.glsl");
+    break;
+  }
+
+  shader_program = linkShaders(vertexShader, fragmentShader);
+  glDeleteShader(vertexShader);
+  glDeleteShader(fragmentShader);
+
+  glUseProgram(shader_program);
+}
+
 void MeshRender::init_render() {
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     printf("Failed to initialize GLAD\n");
@@ -40,14 +68,7 @@ void MeshRender::init_render() {
   }
 
   // Compile shaders
-  unsigned int vertexShader = compileVertexShader("shaders/vertex_shader.glsl");
-  unsigned int fragmentShader =
-      compileFragmentShader("shaders/fragment_shader.glsl");
-  shader_program = linkShaders(vertexShader, fragmentShader);
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
-
-  glUseProgram(shader_program);
+  set_shader_program();
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   keep_aspect_ratio(window, width, height);
