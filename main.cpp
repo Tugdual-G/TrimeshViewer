@@ -1,5 +1,6 @@
 #include "mesh.h"
-#include "opengl/cmap.h"
+// #include "opengl/cmap.h"
+#include "colormap.h"
 #include "opengl/trimesh_render.h"
 #include <fstream>
 #include <iostream>
@@ -25,13 +26,14 @@ int main() {
     k_i = (k_i - min) / (max - min);
   }
 
-  std::vector<double> colors(mesh.vertices.size());
+  std::vector<double> colors;
+  get_nearest_colors(k, colors, VIRIDIS);
 
-  for (unsigned int i = 0; i < colors.size() / 3; ++i) {
-    colors[i * 3] = MAGMA[(unsigned int)(254 * k[i]) * 3];
-    colors[i * 3 + 1] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 1];
-    colors[i * 3 + 2] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 2];
-  }
+  // for (unsigned int i = 0; i < colors.size() / 3; ++i) {
+  //   colors[i * 3] = MAGMA[(unsigned int)(254 * k[i]) * 3];
+  //   colors[i * 3 + 1] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 1];
+  //   colors[i * 3 + 2] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 2];
+  // }
 
   auto [minv, maxv] =
       std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
