@@ -8,8 +8,42 @@
 #include <vector>
 
 int main() {
+  // Define a list of points
+  double verticesdata[] = {
+      // points coord
+      -1, -1, -1, // Point 1
+      1,  -1, -1, // Point 2
+      1,  -1, 1,  // Point 3
+      -1, -1, 1,  // Point 4
+      -1, 1,  -1, //
+      1,  1,  -1, //
+      1,  1,  1,  //
+      -1, 1,  1,  //
+  };
 
-  Mesh mesh("deform.ply");
+  int squaredata[] = {
+      0, 1, 2, // 0
+      2, 3, 0, // 1
+      1, 5, 6, // 2
+      6, 2, 1, // 3
+      2, 6, 7, // 4
+      2, 7, 3, // 5
+      0, 3, 4, // 6
+      4, 3, 7, // 7
+      5, 4, 7, // 8
+      5, 7, 6, // 9
+      1, 0, 4, // 10
+      1, 4, 5, // 11
+  };
+
+  for (double *v = verticesdata; v != verticesdata + 24; ++v) {
+    *v /= 5.0;
+  }
+
+  std::vector<double> vertices(verticesdata, verticesdata + 24);
+  std::vector<unsigned int> faces(squaredata, squaredata + 36);
+
+  Mesh mesh(vertices, faces);
 
   mesh.set_one_ring();
 
@@ -20,7 +54,7 @@ int main() {
   double min = *k_min;
   double max = *k_max;
 
-  // std::cout << min << max << " \n";
+  std::cout << min << max << " \n";
   for (auto &k_i : k) {
     k_i = (k_i - min) / (max - min);
   }
@@ -31,15 +65,6 @@ int main() {
     colors[i * 3] = MAGMA[(unsigned int)(254 * k[i]) * 3];
     colors[i * 3 + 1] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 1];
     colors[i * 3 + 2] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 2];
-  }
-
-  auto [minv, maxv] =
-      std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
-
-  double extent_vert = *maxv - *minv;
-  extent_vert *= 1.2;
-  for (auto &v : mesh.vertices) {
-    v /= extent_vert;
   }
 
   MeshRender render0(500, 500, mesh.vertices, mesh.faces);

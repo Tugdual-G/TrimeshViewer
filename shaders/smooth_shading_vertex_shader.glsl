@@ -16,6 +16,7 @@ layout(location = 1) in vec3 in_normal;        // Vertex normal
 layout(location = 2) in vec3 in_color;        // Vertex normal
 out vec3 normal;
 out vec3 color;
+out float z;
 void main()
 {
     float theta = 3.14*time;
@@ -31,5 +32,6 @@ void main()
     gl_Position = vec4(pos.yzw, 1.0);
     normal = normalq.yzw;
     color = in_color;
+    z = pos.w;
 
 }
