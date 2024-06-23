@@ -1,5 +1,5 @@
 #include "mesh.h"
-#include "opengl/cmap.h"
+#include "opengl/colormap.h"
 #include "opengl/trimesh_render.h"
 #include <fstream>
 #include <iostream>
@@ -50,22 +50,9 @@ int main() {
   std::vector<double> k;
   mesh.set_mean_curvature();
   mesh.scalar_mean_curvature(k);
-  auto [k_min, k_max] = std::minmax_element(k.begin(), k.end());
-  double min = *k_min;
-  double max = *k_max;
-
-  std::cout << min << max << " \n";
-  for (auto &k_i : k) {
-    k_i = (k_i - min) / (max - min);
-  }
 
   std::vector<double> colors(mesh.vertices.size());
-
-  for (unsigned int i = 0; i < colors.size() / 3; ++i) {
-    colors[i * 3] = MAGMA[(unsigned int)(254 * k[i]) * 3];
-    colors[i * 3 + 1] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 1];
-    colors[i * 3 + 2] = MAGMA[(unsigned int)(254 * k[i]) * 3 + 2];
-  }
+  get_nearest_colors(k, colors, VIRIDIS);
 
   MeshRender render0(500, 500, mesh.vertices, mesh.faces);
 
@@ -73,9 +60,5 @@ int main() {
   render0.render_loop(NULL, NULL);
   render0.render_finalize();
 
-  // MeshRender render(500, 500, mesh.vertices, mesh.faces,
-  // mesh.vertex_normals); render.add_vertex_colors(colors);
-  // render.render_loop(NULL, NULL);
-  // render.render_finalize();
   return 0;
 }
