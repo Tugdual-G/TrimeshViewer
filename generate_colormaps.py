@@ -18,9 +18,9 @@ head = """
 """
 
 func = """
-void get_interpolated_color(double *val, double &vmin, double &vmax,
-                            double *cmap, double *color) {
-  double normalized_val = (NCOLORS - 1) * (*val - vmin) / (vmax - vmin);
+void interpolated_color(double *val, double &vmin, double &inv_delta,
+                        double *cmap, double *color) {
+  double normalized_val = (NCOLORS - 2) * (*val - vmin) * inv_delta;
   unsigned int i0 = normalized_val;
   unsigned int i1 = (double)1 + normalized_val;
   double coef = (normalized_val - (double)i0);
@@ -29,9 +29,9 @@ void get_interpolated_color(double *val, double &vmin, double &vmax,
   color[2] = cmap[i0 * 3 + 2] * coef + cmap[i1 * 3 + 2] * (1 - coef);
 }
 
-void get_nearest_color(double *val, double &vmin, double &vmax, double *cmap,
-                       double *color) {
-  unsigned int i = (NCOLORS - 1) * (*val - vmin) / (vmax - vmin) + 0.5;
+void nearest_color(double *val, double &vmin, double &inv_delta, double *cmap,
+                   double *color) {
+  unsigned int i = (NCOLORS - 1) * (*val - vmin) * inv_delta + 0.5;
   color[0] = cmap[i * 3];
   color[1] = cmap[i * 3 + 1];
   color[2] = cmap[i * 3 + 2];
@@ -41,9 +41,10 @@ void get_interpolated_colors(std::vector<double> &values,
                              std::vector<double> &colors, double *cmap) {
   auto [min, max] = std::minmax_element(values.begin(), values.end());
   double minv = *min, maxv = *max;
+  double inv_delta = 1 / (maxv - minv);
   colors.resize(values.size() * 3);
   for (unsigned int i = 0; i < values.size(); ++i) {
-    get_interpolated_color(&values[i], minv, maxv, cmap, &colors[i * 3]);
+    interpolated_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
 }
 
@@ -51,8 +52,9 @@ void get_interpolated_colors(std::vector<double> &values,
                              std::vector<double> &colors, double *cmap,
                              double &minv, double &maxv) {
   colors.resize(values.size() * 3);
+  double inv_delta = 1 / (maxv - minv);
   for (unsigned int i = 0; i < values.size(); ++i) {
-    get_interpolated_color(&values[i], minv, maxv, cmap, &colors[i * 3]);
+    interpolated_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
 }
 
@@ -60,18 +62,20 @@ void get_nearest_colors(std::vector<double> &values,
                         std::vector<double> &colors, double *cmap) {
   auto [min, max] = std::minmax_element(values.begin(), values.end());
   double minv = *min, maxv = *max;
+  double inv_delta = 1 / (maxv - minv);
   colors.resize(values.size() * 3);
   for (unsigned int i = 0; i < values.size(); ++i) {
-    get_nearest_color(&values[i], minv, maxv, cmap, &colors[i * 3]);
+    nearest_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
 }
 
 void get_nearest_colors(std::vector<double> &values,
                         std::vector<double> &colors, double *cmap, double &minv,
                         double &maxv) {
+  double inv_delta = 1 / (maxv - minv);
   colors.resize(values.size() * 3);
   for (unsigned int i = 0; i < values.size(); ++i) {
-    get_nearest_color(&values[i], minv, maxv, cmap, &colors[i * 3]);
+    nearest_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
 }
 

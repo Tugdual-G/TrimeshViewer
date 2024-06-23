@@ -1,6 +1,5 @@
 #include "mesh.h"
-// #include "opengl/cmap.h"
-#include "colormap.h"
+#include "opengl/colormap.h"
 #include "opengl/trimesh_render.h"
 #include <fstream>
 #include <iostream>
