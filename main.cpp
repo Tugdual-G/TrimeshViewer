@@ -78,9 +78,6 @@ int main() {
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces, mesh.vertex_normals);
 
-  render.init_window();
-  render.init_render();
-
   render.add_vertex_colors(colors);
   render.render_loop(NULL, NULL);
   render.render_finalize();

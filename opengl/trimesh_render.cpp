@@ -6,6 +6,7 @@ extern "C" {
 #include "include/glad/glad.h" // glad should be included before glfw3
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <numeric>
 #include <stdlib.h>
 
 GLenum glCheckError_(const char *file, int line);
@@ -55,22 +56,12 @@ void MeshRender::init_render() {
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
 
-  glBindVertexArray(VAO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, n_vertices * size_vertice_attr,
-               vertexes_attr.data(), GL_STATIC_DRAW);
+  resize_VAO();
 
   // Square EBO
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * n_faces * 3,
                faces.data(), GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double),
-                        (void *)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 6 * sizeof(double),
-                        (void *)(3 * sizeof(double)));
-  glEnableVertexAttribArray(1);
 
   glCheckError();
 }
@@ -88,6 +79,7 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
   glEnable(GL_DEPTH_TEST);
   // Accept fragment if it closer to the camera than the former one
   glDepthFunc(GL_LESS);
+
   if (data_update_function != NULL) {
     while (!glfwWindowShouldClose(window) && flag) {
       keep_aspect_ratio(window, width, height);
@@ -109,6 +101,7 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
       glUniform1f(time_loc, time);
 
       glBindVertexArray(VAO);
+
       glDrawElements(GL_TRIANGLES, n_faces * 3, GL_UNSIGNED_INT, 0);
       glfwSwapBuffers(window);
       glfwPollEvents();
@@ -127,42 +120,51 @@ int MeshRender::render_finalize() {
   return 0;
 }
 
+void MeshRender::resize_VAO() {
+  unsigned int total_size_vertice_attr =
+      std::reduce(vert_attr_sizes.begin(), vert_attr_sizes.end());
+  unsigned int n_vertice_attr = vert_attr_sizes.size();
+  long unsigned int offset{0 * sizeof(double)};
+
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, n_vertices * total_size_vertice_attr,
+               vertices_attr.data(), GL_STATIC_DRAW);
+
+  for (unsigned int i = 0; i < n_vertice_attr; ++i) {
+    // TODO do not hardcode 3 !
+    glVertexAttribPointer(i, 3, GL_DOUBLE, GL_FALSE, total_size_vertice_attr,
+                          (void *)(offset));
+    glEnableVertexAttribArray(i);
+    offset += vert_attr_sizes[i];
+  }
+}
+
 void MeshRender::add_vertex_colors(std::vector<double> &colors) {
-  size_vertice_attr += 3 * sizeof(double);
-  n_vertice_attr += 3;
-  std::vector<double> vertexes_attr_tmp(vertexes_attr);
-  vertexes_attr.resize(vertexes_attr.size() + (n_vertices * 3));
+  vert_attr_sizes.push_back(3 * sizeof(double));
+  vert_attr_numbers.push_back(3);
+
+  unsigned int n_vertice_attr =
+      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end());
+
+  std::vector<double> vertexes_attr_tmp(vertices_attr);
+
+  vertices_attr.resize(vertices_attr.size() + (n_vertices * 3),
+                       -999); // -999 for debug
 
   for (unsigned int i = 0; i < n_vertices; ++i) {
     for (unsigned int j = 0; j < n_vertice_attr - 3; ++j) {
-      vertexes_attr.at(i * n_vertice_attr + j) =
+      // copies the precedent attributes
+      vertices_attr.at(i * n_vertice_attr + j) =
           vertexes_attr_tmp.at(i * (n_vertice_attr - 3) + j);
     }
     for (unsigned int j = 0; j < 3; ++j) {
-      vertexes_attr.at(i * n_vertice_attr + j + n_vertice_attr - 3) =
+      // adds colors
+      vertices_attr.at(i * n_vertice_attr + j + n_vertice_attr - 3) =
           colors.at(i * 3 + j);
     }
   }
-  glBindVertexArray(VAO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, n_vertices * size_vertice_attr,
-               vertexes_attr.data(), GL_STATIC_DRAW);
-
-  // Square EBO
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * n_faces * 3,
-               faces.data(), GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, size_vertice_attr,
-                        (void *)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, size_vertice_attr,
-                        (void *)(3 * sizeof(double)));
-  glEnableVertexAttribArray(1);
-
-  glVertexAttribPointer(2, 3, GL_DOUBLE, GL_FALSE, size_vertice_attr,
-                        (void *)(6 * sizeof(double)));
-  glEnableVertexAttribArray(2);
+  resize_VAO();
 }
 
 void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,

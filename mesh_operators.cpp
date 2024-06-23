@@ -4,19 +4,19 @@
 #include <stdlib.h>
 #include <vector>
 
-static void disp_vect(double *v, int n) {
-  for (int i = 0; i < n; ++i) {
-    std::cout << v[i] << " ";
-  }
-  std::cout << std::endl;
-}
+// static void disp_vect(double *v, int n) {
+//   for (int i = 0; i < n; ++i) {
+//     std::cout << v[i] << " ";
+//   }
+//   std::cout << std::endl;
+// }
 
-static void normalize(double *w) {
-  double norm = pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
-  w[0] /= norm;
-  w[1] /= norm;
-  w[2] /= norm;
-}
+// static void normalize(double *w) {
+//   double norm = pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
+//   w[0] /= norm;
+//   w[1] /= norm;
+//   w[2] /= norm;
+// }
 
 static double norm(double *w) {
   return pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
@@ -47,7 +47,7 @@ void Mesh::scalar_mean_curvature(std::vector<double> &k) {
 }
 
 void Mesh::set_mean_curvature() {
-  if (one_ring.size() < n_vertices) {
+  if (one_ring.size() < (unsigned int)n_vertices) {
     set_one_ring();
   }
 
@@ -95,7 +95,7 @@ void Mesh::set_mean_curvature() {
       }
       A_x2 = 1 / (2 * A_x2);
 
-      for (int j = 0; j < ring_nv; ++j) {
+      for (unsigned int j = 0; j < ring_nv; ++j) {
         e1 = edges_vect.data() + ((ring_nv + j - 1) % ring_nv) * 3;
         // this is horrendous
         for (unsigned int k = 0; k < 3; ++k) {
