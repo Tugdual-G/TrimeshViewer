@@ -4,6 +4,8 @@ extern "C" {
 #include "display_window.h"
 }
 #include "include/glad/glad.h" // glad should be included before glfw3
+#include "math.h"
+#include "quatern_transform.h"
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <numeric>
@@ -15,7 +17,9 @@ GLenum glCheckError_(const char *file, int line);
 #define SHADER_PATH "shaders/"
 #define SMOOTH_SHADE_NAME SHADER_PATH "smooth_shading_"
 #define FLAT_SHADE_NAME SHADER_PATH "flat_shading_"
+#define MOUSE_SENSITIVITY 0.005
 
+void cursor_callback(GLFWwindow *window, double xpos, double ypos);
 void MeshRender::init_window() {
 
   // Init Window
@@ -32,9 +36,11 @@ void MeshRender::init_window() {
   }
   glfwMakeContextCurrent(window);
   glfwSetWindowUserPointer(window, userpointer);
+
   if (keyboard_callback) {
     glfwSetKeyCallback(window, keyboard_callback);
   }
+  glfwSetCursorPosCallback(window, cursor_callback);
 }
 
 void MeshRender::set_shader_program() {
@@ -59,6 +65,9 @@ void MeshRender::set_shader_program() {
   glDeleteShader(fragmentShader);
 
   glUseProgram(shader_program);
+
+  q_loc = glGetUniformLocation(shader_program, "q");
+  q_inv_loc = glGetUniformLocation(shader_program, "q_inv");
 }
 
 void MeshRender::init_render() {
@@ -91,11 +100,8 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
                             void *fargs) {
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   int flag = 1;
-  double time = 0;
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glUseProgram(shader_program);
-  unsigned int time_loc = glGetUniformLocation(shader_program, "time");
-  glUniform1f(time_loc, 0.01);
   // Enable depth test
   glEnable(GL_DEPTH_TEST);
   // Accept fragment if it closer to the camera than the former one
@@ -119,14 +125,15 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
       keep_aspect_ratio(window, width, height);
       processInput(window);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glUniform1f(time_loc, time);
+      glUniform4f(q_loc, (float)*q.x, (float)*q.y, (float)*q.z, (float)*q.w);
+      glUniform4f(q_inv_loc, (float)*q_inv.x, (float)*q_inv.y, (float)*q_inv.z,
+                  (float)*q_inv.w);
 
       glBindVertexArray(VAO);
 
       glDrawElements(GL_TRIANGLES, n_faces * 3, GL_UNSIGNED_INT, 0);
       glfwSwapBuffers(window);
       glfwPollEvents();
-      time += 0.001;
     }
   }
   glCheckError();
@@ -199,14 +206,34 @@ void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,
   glCheckError();
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
+
+  MeshRender *render = (MeshRender *)glfwGetWindowUserPointer(window);
   static double x_old{0}, y_old{0};
   double dx = xpos - x_old, dy = ypos - y_old;
-  dx = dx > 50 ? 0 : dx;
-  dy = dy > 50 ? 0 : dy;
-  double axis[3] = {0};
-  axis[0] = -dy;
-  axis[1] = dx;
+  x_old = xpos;
+  y_old = ypos;
+
+  if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+
+    dx = dx > 15 ? 0.1 : dx;
+    dy = dy > 15 ? 0.1 : dy;
+    // std::cout << dx << " , " << dy << std::endl;
+    double norm_dm = pow(pow(dy, 2) + pow(dx, 2), 0.5);
+
+    // quaternionic transform
+    double sin_dm = sin(norm_dm * MOUSE_SENSITIVITY) / norm_dm;
+    // std::cout << " sin_dm :" << sin_dm << std::endl;
+    Quaternion q_new(cos(norm_dm * MOUSE_SENSITIVITY), dy * sin_dm, dx * sin_dm,
+                     0);
+
+    render->q = q_new * render->q;
+    render->q_inv = render->q.inv() * q_new.inv();
+  }
+  // std::cout << "q : ";
+
+  // render->q.print_quaternion();
+  // std::cout << std::endl;
 }
 
 void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,

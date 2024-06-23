@@ -5,13 +5,14 @@
 #include <vector>
 
 class Quaternion {
-  std::vector<double> q;
 
 public:
+  std::vector<double> q;
   double *x;
   double *y;
   double *z;
   double *w;
+
   Quaternion() { q.resize(4); }
 
   Quaternion(double x, double y, double z, double w) {

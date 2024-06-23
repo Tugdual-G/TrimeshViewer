@@ -10,7 +10,7 @@ vec4 mul_quatern(vec4 u, vec4 v){
             v.y * u.z - v.z * u.y + v.w * u.x + v.x * u.w);
 }
 
-uniform float time;
+uniform vec4 q, q_inv;
 layout(location = 0) in vec3 in_pos;        // Vertex position
 layout(location = 1) in vec3 in_color;        // Vertex normal
 out vec3 position;// flat shading
@@ -18,12 +18,7 @@ out vec3 color;
 void main()
 {
     // rotation
-    float theta = 3.14*time;
-    vec3 axis = vec3(1/sqrt(3.0),-1/sqrt(3.0), -1/sqrt(3.0));
-    vec4 q = vec4(cos(theta), axis*sin(theta));
-    vec4 q_c = vec4(q.x, -q.yzw);
-
-    vec4 pos = mul_quatern(vec4(0.0, in_pos.xyz), q_c);
+    vec4 pos = mul_quatern(vec4(0.0, in_pos.xyz), q_inv);
     pos = mul_quatern(q, pos);
     position = pos.yzw;// for flat shading
     gl_Position = vec4(pos.yzw, 1.0);

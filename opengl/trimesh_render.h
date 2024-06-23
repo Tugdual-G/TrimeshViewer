@@ -2,6 +2,7 @@
 #define TRIMESH_RENDER_H_
 
 #include "include/glad/glad.h" // glad should be included before glfw3
+#include "quatern_transform.h"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <iostream>
@@ -17,6 +18,8 @@ class MeshRender {
   SHADER_PROGRAM_TYPE program_type{FLAT_FACES};
   unsigned int shader_program, compute_program;
   unsigned int VAO, VBO, EBO;
+  unsigned int q_loc, q_inv_loc;
+
   void init_window();
   void init_render();
   void resize_VAO();
@@ -34,7 +37,10 @@ public:
   std::vector<unsigned int>
       vert_attr_numbers; // number of x, n, c components (xxxnnnccc)
 
-  void *userpointer;
+  // defining the transformation corresponding to the current view.
+  Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
+
+  void *userpointer = this; // for use in glfw callback
   GLFWwindow *window;
 
   MeshRender(int w_width, int w_height, std::vector<double> &vertices,
@@ -81,6 +87,7 @@ public:
                             int action, int mods) = NULL;
   void add_vertex_normals(std::vector<double> &normals);
   void add_vertex_colors(std::vector<double> &normals);
+  // void cursor_callback(GLFWwindow *window, double xpos, double ypos);
 };
 
 void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,

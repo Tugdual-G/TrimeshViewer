@@ -52,5 +52,9 @@ int main() {
   std::cout << "  norm(q1)*norm(q1) =  " << q1.norm() * q1.norm();
   std::cout << std::endl;
 
+  Quaternion gg{0, 1, 2, 3};
+  std::cout << "  gg =  " << std::endl;
+  gg.print_quaternion();
+  std::cout << std::endl;
   return 0;
 }
