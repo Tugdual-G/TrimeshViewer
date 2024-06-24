@@ -4,3 +4,5 @@ main
 *.ccls-*
 little_cube
 test_quatern
+*.ply
+!deform.ply

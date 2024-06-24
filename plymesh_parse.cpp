@@ -23,14 +23,15 @@ enum Entries {
 
 Entries str2entries(std::string_view word);
 
-int Mesh::from_file(const char *fname) {
-  vertices_elements_sizes.resize(10, 0);
+int PlyFile::from_file(const char *fname) {
+  // vertices_elements_sizes.resize(10, 0);
   std::ifstream file;
   file.open(fname, std::ios::binary | std::ios::in);
   if (!parse_header(&file)) {
     std::cout << "Error parsing file : " << fname << " header \n";
     exit(1);
   }
+
   if (vertex_type == NONE) {
     std::cout << "Error : vertex float type = NONE \n";
     exit(1);
@@ -40,11 +41,13 @@ int Mesh::from_file(const char *fname) {
     std::cout << "Error parsing data in : " << fname << "\n";
     exit(1);
   }
+
   file.close();
+
   return 1;
 }
 
-int Mesh::load_data(std::ifstream *file) {
+int PlyFile::load_data(std::ifstream *file) {
   if (n_dim != 3) {
     std::cout << "Warning, n_dim != 3 \n";
     return 0;
@@ -89,9 +92,9 @@ int Mesh::load_data(std::ifstream *file) {
   return 1;
 }
 
-int Mesh::parse_header(std::ifstream *file) {
+int PlyFile::parse_header(std::ifstream *file) {
+  vertices_elem_order.reserve(7);
   std::string line, word;
-  n_vertice_elements = 0;
   n_dim = 0;
   int i = 0;
   if (std::getline(*file, line)) {
@@ -127,29 +130,50 @@ int Mesh::parse_header(std::ifstream *file) {
         break;
       case PROPERTY:
         iss >> word;
-        if (n_vertice_elements == 9) {
-          std::cout << "max elements reached \n";
-          return 0;
-        }
         if (word == "float") {
-          vertices_elements_sizes[n_vertice_elements] = sizeof(float);
-          ++n_vertice_elements;
           iss >> word;
           if (word == "x" || word == "y" || word == "z") {
+            if (vertex_type == DOUBLE) {
+              std::cout
+                  << "Warning, different float types are used to describe "
+                     "the vertices. \n";
+              return 0;
+            }
+            vertices_elem_order.push_back('v');
             vertex_type = FLOAT;
             ++n_dim;
           } else if (word == "nx" || word == "ny" || word == "nz") {
+            if (vertex_type == DOUBLE) {
+              std::cout
+                  << "Warning, different float types are used to describe "
+                     "the normals. \n";
+              return 0;
+            }
+            vertices_elem_order.push_back('n');
             normal_type = FLOAT;
           }
           break;
         } else if (word == "double") {
-          vertices_elements_sizes[n_vertice_elements] = sizeof(double);
-          ++n_vertice_elements;
           iss >> word;
           if (word == "x" || word == "y" || word == "z") {
+            if (vertex_type == FLOAT) {
+              std::cout
+                  << "Warning, different float types are used to describe "
+                     "the vertices. \n";
+              return 0;
+            }
+            vertices_elem_order.push_back('v');
             vertex_type = DOUBLE;
             ++n_dim;
           } else if (word == "nx" || word == "ny" || word == "nz") {
+            if (vertex_type == FLOAT) {
+              std::cout
+                  << "Warning, different float types are used to describe "
+                     "the normals. \n";
+              return 0;
+            }
+
+            vertices_elem_order.push_back('n');
             normal_type = DOUBLE;
           }
           break;
