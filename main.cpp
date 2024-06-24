@@ -18,7 +18,7 @@ int main() {
   mesh.scalar_mean_curvature(k);
 
   std::vector<double> colors;
-  get_nearest_colors(k, colors, VIRIDIS);
+  get_nearest_colors(k, colors, MAGMA);
 
   auto [minv, maxv] =
       std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());

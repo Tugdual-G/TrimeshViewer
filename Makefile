@@ -24,7 +24,7 @@ mesh_operators.o: mesh_operators.cpp
 mesh_structure.o: mesh_structure.cpp
 	$(CCPP) $(CFLAGS) -c $^
 
-libtrimesh_render.so:  opengl/src/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c
+libtrimesh_render.so:  opengl/src/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c opengl/quatern_transform.cpp
 	$(CC) $(CFLAGS) -I opengl -shared -o $@ $^ -lGL -lglfw -fPIC
 
 test_quatern: opengl/test_quatern.cpp

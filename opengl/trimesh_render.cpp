@@ -31,9 +31,9 @@ void MeshRender::init_window() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  window = glfwCreateWindow(width, height, "Budack", NULL, NULL);
+  window = glfwCreateWindow(width, height, "MeshRender", NULL, NULL);
   if (window == NULL) {
-    printf("Failed to create GLFW window\n");
+    printf("Error, failed to create GLFW window\n");
     glfwTerminate();
     exit(1);
   }
@@ -126,9 +126,9 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
       keep_aspect_ratio(window, width, height);
       processInput(window);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      glUniform4f(q_loc, (float)*q.x, (float)*q.y, (float)*q.z, (float)*q.w);
-      glUniform4f(q_inv_loc, (float)*q_inv.x, (float)*q_inv.y, (float)*q_inv.z,
-                  (float)*q_inv.w);
+      glUniform4f(q_loc, (float)q[0], (float)q[1], (float)q[2], (float)q[3]);
+      glUniform4f(q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
+                  (float)q_inv[3]);
 
       glBindVertexArray(VAO);
 
