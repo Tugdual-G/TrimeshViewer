@@ -1,4 +1,4 @@
-#include "mesh.h"
+#include "mesh.hpp"
 // #include <algorithm>
 #include <iostream>
 #include <math.h>

@@ -2,7 +2,7 @@
 #define TRIMESH_RENDER_H_
 
 #include "include/glad/glad.h" // glad should be included before glfw3
-#include "quatern_transform.h"
+#include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
 #include <algorithm>
 #include <iostream>

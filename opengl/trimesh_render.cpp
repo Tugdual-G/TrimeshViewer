@@ -1,11 +1,11 @@
-#include "trimesh_render.h"
+#include "trimesh_render.hpp"
 extern "C" {
 #include "compileShader.h"
 #include "display_window.h"
 }
 #include "include/glad/glad.h" // glad should be included before glfw3
 #include "math.h"
-#include "quatern_transform.h"
+#include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include <numeric>
