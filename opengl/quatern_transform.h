@@ -69,6 +69,13 @@ public:
     return quatern;
   }
 
+  void operator+=(Quaternion v) {
+    this->q[0] = this->q[0] + v.q[0];
+    this->q[1] = this->q[1] + v.q[1];
+    this->q[2] = this->q[2] + v.q[2];
+    this->q[3] = this->q[3] + v.q[3];
+  }
+
   Quaternion operator-(Quaternion v) {
     Quaternion quatern;
     quatern.q[0] = this->q[0] - v.q[0];
@@ -78,8 +85,15 @@ public:
     return quatern;
   }
 
+  void operator-=(Quaternion v) {
+    this->q[0] = this->q[0] - v.q[0];
+    this->q[1] = this->q[1] - v.q[1];
+    this->q[2] = this->q[2] - v.q[2];
+    this->q[3] = this->q[3] - v.q[3];
+  }
+
   Quaternion operator*(Quaternion v) {
-    std::vector<double> q(4);
+    // std::vector<double> q(4);
     Quaternion quatern(-v.q[1] * this->q[1] - v.q[2] * this->q[2] -
                            v.q[3] * this->q[3] + v.q[0] * this->q[0],
                        v.q[1] * this->q[0] + v.q[2] * this->q[3] -
@@ -99,6 +113,20 @@ public:
     quatern.q[2] = this->q[2] * v;
     quatern.q[3] = this->q[3] * v;
     return quatern;
+  }
+
+  void operator*=(double v) {
+    this->q[0] = this->q[0] * v;
+    this->q[1] = this->q[1] * v;
+    this->q[2] = this->q[2] * v;
+    this->q[3] = this->q[3] * v;
+  }
+
+  void operator/=(double v) {
+    this->q[0] = this->q[0] / v;
+    this->q[1] = this->q[1] / v;
+    this->q[2] = this->q[2] / v;
+    this->q[3] = this->q[3] / v;
   }
 
   Quaternion operator/(double v) {

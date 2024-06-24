@@ -19,6 +19,9 @@ GLenum glCheckError_(const char *file, int line);
 #define FLAT_SHADE_NAME SHADER_PATH "flat_shading_"
 #define MOUSE_SENSITIVITY 0.005
 
+void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
+                       __attribute__((unused)) int scancode, int action,
+                       __attribute__((unused)) int mods);
 void cursor_callback(GLFWwindow *window, double xpos, double ypos);
 void MeshRender::init_window() {
 
@@ -37,9 +40,7 @@ void MeshRender::init_window() {
   glfwMakeContextCurrent(window);
   glfwSetWindowUserPointer(window, userpointer);
 
-  if (keyboard_callback) {
-    glfwSetKeyCallback(window, keyboard_callback);
-  }
+  glfwSetKeyCallback(window, keyboard_callback);
   glfwSetCursorPosCallback(window, cursor_callback);
 }
 
@@ -228,7 +229,7 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
                      0);
 
     render->q = q_new * render->q;
-    render->q_inv = render->q.inv() * q_new.inv();
+    render->q_inv = render->q_inv * q_new.inv();
   }
   // std::cout << "q : ";
 
@@ -240,19 +241,27 @@ void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
                        __attribute__((unused)) int scancode, int action,
                        __attribute__((unused)) int mods) {
 
-  // Render_object *rdr = glfwGetWindowUserPointer(window);
+  MeshRender *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
   if (action == GLFW_PRESS) {
     switch (key) {
-    case GLFW_KEY_RIGHT:
+    case GLFW_KEY_I:
+      rdr->q *= 1.1;
+      rdr->q_inv *= 1.1;
       break;
+    case GLFW_KEY_O:
+      rdr->q *= 0.9;
+      rdr->q_inv *= 0.9;
+      break;
+      // case GLFW_KEY_RIGHT:
+      //   break;
 
-    case GLFW_KEY_LEFT:
-      break;
+      // case GLFW_KEY_LEFT:
+      //   break;
 
-    case GLFW_KEY_DOWN:
-      break;
-    case GLFW_KEY_UP:
-      break;
+      // case GLFW_KEY_DOWN:
+      //   break;
+      // case GLFW_KEY_UP:
+      //   break;
     }
   }
 }

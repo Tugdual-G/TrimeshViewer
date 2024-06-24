@@ -83,8 +83,8 @@ public:
 
   int render_finalize();
   int render_loop(int (*data_update_function)(void *fargs), void *fargs);
-  void (*keyboard_callback)(GLFWwindow *window, int key, int scancode,
-                            int action, int mods) = NULL;
+  // void (*keyboard_callback)(GLFWwindow *window, int key, int scancode,
+  //                           int action, int mods) = NULL;
   void add_vertex_normals(std::vector<double> &normals);
   void add_vertex_colors(std::vector<double> &normals);
   // void cursor_callback(GLFWwindow *window, double xpos, double ypos);
