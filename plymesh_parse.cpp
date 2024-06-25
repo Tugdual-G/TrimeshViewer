@@ -95,8 +95,8 @@ int PlyFile::load_data(std::ifstream *file) {
     case DOUBLE: {
       for (double *v = vertices.data(), *n = vertex_normals.data();
            v < vertices.data() + n_vertices * n_dim; v += 3, n += 3) {
-        file->read((char *)v, n_dim * sizeof(float));
-        file->read((char *)n, n_dim * sizeof(float));
+        file->read((char *)v, n_dim * sizeof(double));
+        file->read((char *)n, n_dim * sizeof(double));
       }
       break;
     }
@@ -116,13 +116,16 @@ int PlyFile::load_data(std::ifstream *file) {
   }
   faces.resize(n_faces * 3, -1);
   // store the number of vertices per face given at the begining of each line.
-  char nv = 'q';
+  char nv = -1;
   for (auto i = 0; i < n_faces; ++i) {
     file->read(&nv, sizeof(char));
+    if (nv < 3 || nv > 10) {
+      std::cout << "Warning, cannot read face list." << std::endl;
+      return 0;
+    }
     if (nv != 3) {
       std::cout
           << "Warning, this program cannot handle non-triangular meshes.\n";
-      std::cout << "last caracter read : \n" << nv << std::endl;
       return 0;
     }
     file->read((char *)&faces.data()[3 * i], 3 * sizeof(int));
@@ -289,7 +292,7 @@ Entries str2entries(std::string_view word) {
   }
 }
 
-void Mesh::print() {
+void PlyFile::print() {
   std::cout << "ply\n";
   std::cout << "format --------\n";
   std::cout << "comment --------\n";
