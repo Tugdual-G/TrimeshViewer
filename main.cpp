@@ -13,9 +13,6 @@ int main() {
 
   // std::cout << "okmain0\n";
   Mesh mesh = file.mesh;
-  std::cout << mesh.n_faces << std::endl;
-  std::cout << mesh.n_vertices << std::endl;
-  std::cout << mesh.n_dim << std::endl;
 
   mesh.set_one_ring();
 
@@ -24,7 +21,6 @@ int main() {
 
   mesh.scalar_mean_curvature(k);
 
-  std::cout << "okmain3\n";
   std::vector<double> colors;
   get_nearest_colors(k, colors, MAGMA);
 

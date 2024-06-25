@@ -36,6 +36,10 @@ int PlyFile::from_file(const char *fname) {
     std::cout << "Error : vertex float type = NONE \n";
     exit(1);
   }
+  if (vertex_type != normal_type && (normal_type != NONE)) {
+    std::cout << "Error, normals and vertices are of different float types \n";
+    exit(1);
+  }
 
   if (!load_data(&file)) {
     std::cout << "Error parsing data in : " << fname << "\n";
@@ -54,16 +58,55 @@ int PlyFile::load_data(std::ifstream *file) {
   }
   vertices.resize(n_vertices * n_dim, -1);
 
-  if (vertex_type == FLOAT && (normal_type == FLOAT || normal_type == NONE)) {
-    std::vector<float> vertices_tmp(n_vertices * n_dim);
-    file->read((char *)vertices_tmp.data(), n_vertices * n_dim * sizeof(float));
-    std::copy(vertices_tmp.begin(), vertices_tmp.end(), vertices.begin());
-  } else if (vertex_type == DOUBLE &&
-             (normal_type == DOUBLE || normal_type == NONE)) {
-    file->read((char *)vertices.data(), n_vertices * n_dim * sizeof(double));
+  if (data_layout == "vvv") {
+    switch (vertex_type) {
+    case FLOAT: {
+      std::vector<float> vertices_tmp(n_vertices * n_dim);
+      file->read((char *)vertices_tmp.data(),
+                 n_vertices * n_dim * sizeof(float));
+      std::copy(vertices_tmp.begin(), vertices_tmp.end(), vertices.begin());
+      break;
+    }
+    case DOUBLE:
+      file->read((char *)vertices.data(), n_vertices * n_dim * sizeof(double));
+      break;
+    default:
+      std::cout << "Warning, data has NONE type. \n";
+      break;
+    }
+  } else if (data_layout == "vvvnnn") {
+    vertex_normals.resize(n_vertices * n_dim, -1);
+    switch (vertex_type) {
+    case FLOAT: {
+      std::vector<float> vertices_tmp(2 * n_vertices * n_dim, -99999);
+      file->read((char *)vertices_tmp.data(),
+                 2 * n_vertices * n_dim * sizeof(float));
+
+      double *v = vertices.data();
+      double *n = vertex_normals.data();
+      for (float *v_tmp = vertices_tmp.data();
+           v_tmp < vertices_tmp.data() + 2 * n_vertices * n_dim;
+           v_tmp += 6, v += 3, n += 3) {
+        std::copy(v_tmp, v_tmp + 3, v);
+        std::copy(v_tmp + 3, v_tmp + 6, n);
+      }
+      break;
+    }
+    case DOUBLE: {
+      for (double *v = vertices.data(), *n = vertex_normals.data();
+           v < vertices.data() + n_vertices * n_dim; v += 3, n += 3) {
+        file->read((char *)v, n_dim * sizeof(float));
+        file->read((char *)n, n_dim * sizeof(float));
+      }
+      break;
+    }
+    default:
+      std::cout << "Warning, data has NONE type. \n";
+      return 0;
+    }
   } else {
-    std::cout
-        << "Warning, normals and vertices are of different float types \n";
+    std::cout << "Warning, data layout not implemented :" << data_layout
+              << std::endl;
     return 0;
   }
 
@@ -72,12 +115,14 @@ int PlyFile::load_data(std::ifstream *file) {
     return 0;
   }
   faces.resize(n_faces * 3, -1);
+  // store the number of vertices per face given at the begining of each line.
   char nv = 'q';
   for (auto i = 0; i < n_faces; ++i) {
     file->read(&nv, sizeof(char));
     if (nv != 3) {
       std::cout
           << "Warning, this program cannot handle non-triangular meshes.\n";
+      std::cout << "last caracter read : \n" << nv << std::endl;
       return 0;
     }
     file->read((char *)&faces.data()[3 * i], 3 * sizeof(int));
@@ -93,7 +138,7 @@ int PlyFile::load_data(std::ifstream *file) {
 }
 
 int PlyFile::parse_header(std::ifstream *file) {
-  vertices_elem_order.reserve(7);
+  PlyFile::data_layout.reserve(7);
   std::string line, word;
   n_dim = 0;
   int i = 0;
@@ -101,10 +146,13 @@ int PlyFile::parse_header(std::ifstream *file) {
     std::stringstream iss(line, std::istringstream::in);
     iss >> word;
     if (str2entries(word) != PLY) {
+      std::cout
+          << "Warning, this file doesn't look like a ply file. line read :\n"
+          << line << std::endl;
       return 0;
     }
   }
-  while (std::getline(*file, line) && i < 10) {
+  while (std::getline(*file, line) && i < 20) {
     // std::cout << line << std::endl;
     ++i;
     std::stringstream iss(line, std::istringstream::in);
@@ -117,11 +165,15 @@ int PlyFile::parse_header(std::ifstream *file) {
         if (str2entries(word) == VERTEX) {
           iss >> n_vertices;
           if (!n_vertices) {
+            std::cout << "warning, number of vertices = 0 , last line read :\n"
+                      << line << std::endl;
             return 0;
           }
         } else if (str2entries(word) == FACE) {
           iss >> n_faces;
           if (!n_faces) {
+            std::cout << "warning, number of faces = 0, last line read : \n"
+                      << line << std::endl;
             return 0;
           }
         } else {
@@ -139,7 +191,7 @@ int PlyFile::parse_header(std::ifstream *file) {
                      "the vertices. \n";
               return 0;
             }
-            vertices_elem_order.push_back('v');
+            data_layout.push_back('v');
             vertex_type = FLOAT;
             ++n_dim;
           } else if (word == "nx" || word == "ny" || word == "nz") {
@@ -149,7 +201,7 @@ int PlyFile::parse_header(std::ifstream *file) {
                      "the normals. \n";
               return 0;
             }
-            vertices_elem_order.push_back('n');
+            data_layout.push_back('n');
             normal_type = FLOAT;
           }
           break;
@@ -162,7 +214,7 @@ int PlyFile::parse_header(std::ifstream *file) {
                      "the vertices. \n";
               return 0;
             }
-            vertices_elem_order.push_back('v');
+            data_layout.push_back('v');
             vertex_type = DOUBLE;
             ++n_dim;
           } else if (word == "nx" || word == "ny" || word == "nz") {
@@ -173,29 +225,45 @@ int PlyFile::parse_header(std::ifstream *file) {
               return 0;
             }
 
-            vertices_elem_order.push_back('n');
+            data_layout.push_back('n');
             normal_type = DOUBLE;
           }
           break;
+        } else if (word == "uchar") {
+          iss >> word;
+          if (word == "red" || word == "green" || word == "blue" ||
+              word == "alpha") {
+            std::cout << "Warning, colors not implemented: " << line
+                      << std::endl;
+            data_layout.push_back('c');
+          } else {
+            std::cout << "Warning, property not implemented: " << line
+                      << std::endl;
+          }
         } else if (word == "list") {
         } else {
-          return 0;
+          std::cout << "Warning, unrecognized property : " << line << std::endl;
         }
         iss >> word;
         break;
       case END:
         // std::getline(*file, line);
         file_data_offset = file->tellg();
-        if (file_data_offset == -1) {
-          std::cout << "Data offset error \n";
+        if (file_data_offset < 10) {
+          std::cout << "Data offset error : last line read :\n"
+                    << line << std::endl;
           return 0;
         }
         return 1;
       default:
         break;
       }
+    } else {
+      std::cout << "Warning, cannot read : " << line << std::endl;
     }
   }
+  std::cout << "Warning, end of header not found, last line read :\n"
+            << line << std::endl;
   return 0;
 }
 

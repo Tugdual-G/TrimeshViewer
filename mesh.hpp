@@ -13,8 +13,6 @@ enum Types {
 
 class Mesh {
   int file_data_offset{-1};
-  Types vertex_type{NONE};
-  Types normal_type{NONE};
   // int n_vertice_elements;
   int n_adja_faces_max{0};
   // std::vector<int> vertices_elements_sizes;
@@ -97,7 +95,7 @@ class PlyFile {
   std::vector<double> vertex_normals;
   int n_vertices{0};
   int n_faces{0};
-  std::string vertices_elem_order;
+  std::string data_layout;
   // std::vector<int> vertices_elements_sizes;
   //  int element_faces_bin_size;
   int parse_header(std::ifstream *file);
