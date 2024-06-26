@@ -9,11 +9,14 @@ CFLAGS = -Wall -Wextra -g
 # Targets
 all: main
 
-main: main.cpp plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
+main: main.cpp mesh_print.o plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) -o $@ $^
 
 little_cube: little_cube.cpp plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) -o $@ $^
+
+mesh_print.o: mesh_print.cpp
+	$(CCPP) $(CFLAGS) -c $^
 
 plymesh_parse.o: plymesh_parse.cpp
 	$(CCPP) $(CFLAGS) -c $^

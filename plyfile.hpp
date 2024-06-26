@@ -62,24 +62,14 @@ typedef struct Element {
 } Element;
 
 typedef struct SubElement {
-  std::vector<double> &sub;
   std::vector<PropertyName> property_names;
-  Element parent;
+  Element *parent;
 } SubElement;
 
 class PlyFile {
   int file_data_offset{0};
   // Element &vertex_element;
   // Element &face_element;
-  std::vector<Element> elements{0};
-  int n_dim{3};
-  int vertices_per_face{3};
-  std::vector<double> vertices;
-  std::vector<unsigned int> faces;
-  std::vector<double> vertex_normals;
-  int n_vertices{0};
-  int n_faces{0};
-  std::string data_layout;
   // std::vector<int> vertices_elements_sizes;
 
   std::unordered_map<std::string, Entries> const entries_map{
@@ -149,12 +139,29 @@ class PlyFile {
                              unsigned int n_elem);
 
   void build_inverse_maps();
-  unsigned int get_element_stride(Element elem);
+  unsigned int get_element_stride(Element &elem);
   int get_property_offset(PropertyName name, Element &elem);
-  void fill_subelement(std::vector<SubElement> &subelements);
+
+  template <class IN_TYPE, class OUT_TYPE>
+  void retrieve_vertice_subelement_data(SubElement &subelements,
+                                        std::vector<OUT_TYPE> &sub_data);
+
+  template <class IN_TYPE, class OUT_TYPE>
+  void retrieve_face_data(Element &face_element,
+                          std::vector<OUT_TYPE> &sub_data);
+
   void set_elements_file_begin_position();
 
 public:
+  std::vector<Element> elements{0};
+  int n_dim{3};
+  int vertices_per_face{3};
+  int n_vertices{0};
+  int n_faces{0};
+  std::string data_layout;
+  std::vector<double> vertices;
+  std::vector<unsigned int> faces;
+  std::vector<double> vertex_normals;
   Mesh mesh;
   PlyFile(const char *fname) {
     from_file(fname);

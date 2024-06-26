@@ -10,38 +10,56 @@
 
 int main() {
 
-  PlyFile file0("deformHQ.ply");
+  PlyFile file0("deform.ply");
   file0.print();
 
-  PlyFile file1("deformLQ.ply");
-  file1.print();
-  // // std::cout << "okmain0\n";
-  // Mesh mesh = file.mesh;
-
-  // mesh.set_one_ring();
-
-  // std::vector<double> k;
-  // mesh.set_mean_curvature();
-
-  // mesh.scalar_mean_curvature(k);
-
-  // std::vector<double> colors;
-  // get_nearest_colors(k, colors, MAGMA);
-
-  // auto [minv, maxv] =
-  //     std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
-
-  // double extent_vert = *maxv - *minv;
-  // extent_vert *= 1.2;
-  // for (auto &v : mesh.vertices) {
-  //   v /= extent_vert;
+  // std::cout << "\n";
+  // std::cout << "\n";
+  // for (unsigned int i = 0; i < file0.n_vertices; ++i) {
+  //   for (unsigned int j = 0; j < 3; ++j) {
+  //     std::cout << file0.vertices.at(i * 3 + j) << " ";
+  //   }
+  //   std::cout << "\n";
   // }
 
-  // MeshRender render0(500, 500, mesh.vertices, mesh.faces);
+  // std::cout << "\n";
+  // std::cout << "\n";
+  // for (unsigned int i = 0; i < file0.n_faces; ++i) {
+  //   std::cout << i << " : ";
+  //   for (unsigned int j = 0; j < 3; ++j) {
+  //     std::cout << file0.faces.at(i * 3 + j) << " ";
+  //   }
+  //   std::cout << "\n";
+  // }
 
-  // render0.add_vertex_colors(colors);
-  // render0.render_loop(NULL, NULL);
-  // render0.render_finalize();
+  // // std::cout << "okmain0\n";
+  Mesh mesh = file0.mesh;
+  // mesh.print_vertices();
+
+  mesh.set_one_ring();
+
+  std::vector<double> k;
+  mesh.set_mean_curvature();
+
+  mesh.scalar_mean_curvature(k);
+
+  std::vector<double> colors;
+  get_nearest_colors(k, colors, MAGMA);
+
+  auto [minv, maxv] =
+      std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
+
+  double extent_vert = *maxv - *minv;
+  extent_vert *= 1.2;
+  for (auto &v : mesh.vertices) {
+    v /= extent_vert;
+  }
+
+  MeshRender render0(500, 500, mesh.vertices, mesh.faces);
+
+  render0.add_vertex_colors(colors);
+  render0.render_loop(NULL, NULL);
+  render0.render_finalize();
 
   // MeshRender render(500, 500, mesh.vertices, mesh.faces,
   // mesh.vertex_normals); render.add_vertex_colors(colors);
