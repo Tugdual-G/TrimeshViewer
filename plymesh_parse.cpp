@@ -1,4 +1,5 @@
-#include "mesh.hpp"
+// #include "mesh.hpp"
+#include "plyfile.hpp"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -6,40 +7,16 @@
 #include <sstream>
 #include <stdlib.h>
 #include <string>
-#include <variant>
+#include <unordered_map>
 #include <vector>
 
-enum Entries {
-  VOID = 0,
-  PLY,
-  FORMAT,
-  ELEMENT,
-  PROPERTY,
-  FACE,
-  VERTEX,
-  COMMENT,
-  END,
-};
-
-Entries str2entries(std::string_view word);
+static unsigned int get_property_index(PropertyName name, Element &elem);
 
 int PlyFile::from_file(const char *fname) {
   // vertices_elements_sizes.resize(10, 0);
   std::ifstream file;
   file.open(fname, std::ios::binary | std::ios::in);
-  if (!parse_header(&file)) {
-    std::cout << "Error parsing file : " << fname << " header \n";
-    exit(1);
-  }
-
-  if (vertex_type == NONE) {
-    std::cout << "Error : vertex float type = NONE \n";
-    exit(1);
-  }
-  if (vertex_type != normal_type && (normal_type != NONE)) {
-    std::cout << "Error, normals and vertices are of different float types \n";
-    exit(1);
-  }
+  parse_header(&file);
 
   if (!load_data(&file)) {
     std::cout << "Error parsing data in : " << fname << "\n";
@@ -51,90 +28,73 @@ int PlyFile::from_file(const char *fname) {
   return 1;
 }
 
+int check_same_type(Element &elem, const std::vector<PropertyName> &names) {
+  int idx;
+  idx = get_property_index(names.at(0), elem);
+  if (idx == -1) {
+    return 1;
+  }
+  PropertyType previous_type = elem.property_types.at(idx);
+  for (auto &name : names) {
+    idx = get_property_index(name, elem);
+    if (idx == -1) {
+      return 1;
+    }
+    if (elem.property_types.at(idx) != previous_type) {
+      return 0;
+    }
+    previous_type = elem.property_types.at(idx);
+  }
+  return 1;
+}
+
 int PlyFile::load_data(std::ifstream *file) {
-  if (n_dim != 3) {
-    std::cout << "Warning, n_dim != 3 \n";
-    return 0;
-  }
-  vertices.resize(n_vertices * n_dim, -1);
 
-  if (data_layout == "vvv") {
-    switch (vertex_type) {
-    case FLOAT: {
-      std::vector<float> vertices_tmp(n_vertices * n_dim);
-      file->read((char *)vertices_tmp.data(),
-                 n_vertices * n_dim * sizeof(float));
-      std::copy(vertices_tmp.begin(), vertices_tmp.end(), vertices.begin());
-      break;
-    }
-    case DOUBLE:
-      file->read((char *)vertices.data(), n_vertices * n_dim * sizeof(double));
-      break;
-    default:
-      std::cout << "Warning, data has NONE type. \n";
-      break;
-    }
-  } else if (data_layout == "vvvnnn") {
-    vertex_normals.resize(n_vertices * n_dim, -1);
-    switch (vertex_type) {
-    case FLOAT: {
-      std::vector<float> vertices_tmp(2 * n_vertices * n_dim, -99999);
-      file->read((char *)vertices_tmp.data(),
-                 2 * n_vertices * n_dim * sizeof(float));
+  //     std::vector<float> vertices_tmp(2 * n_vertices * n_dim, -99999);
+  //     file->read((char *)vertices_tmp.data(),
+  //                2 * n_vertices * n_dim * sizeof(float));
 
-      double *v = vertices.data();
-      double *n = vertex_normals.data();
-      for (float *v_tmp = vertices_tmp.data();
-           v_tmp < vertices_tmp.data() + 2 * n_vertices * n_dim;
-           v_tmp += 6, v += 3, n += 3) {
-        std::copy(v_tmp, v_tmp + 3, v);
-        std::copy(v_tmp + 3, v_tmp + 6, n);
+  //     double *v = vertices.data();
+  //     double *n = vertex_normals.data();
+  //     for (float *v_tmp = vertices_tmp.data();
+  //          v_tmp < vertices_tmp.data() + 2 * n_vertices * n_dim;
+  //          v_tmp += 6, v += 3, n += 3) {
+  //       std::copy(v_tmp, v_tmp + 3, v);
+  //       std::copy(v_tmp + 3, v_tmp + 6, n);
+  //     }
+  // vertices.resize(n_vertices * n_dim, -1);
+  unsigned int stride;
+  int i;
+
+  const std::vector<PropertyName> vertex_pos = {
+      PropertyName::x, PropertyName::y, PropertyName::z};
+
+  const std::vector<PropertyName> normal_pos = {
+      PropertyName::nx, PropertyName::ny, PropertyName::nz};
+
+  for (auto &elem : elements) {
+    stride = get_element_stride(elem);
+    switch (elem.type) {
+    case ElementType::VERTEX: {
+      if (!check_same_type(elem, vertex_pos)) {
+        std::cout << "Error, vertex position must use the same type of float\n";
+        exit(1);
+      }
+      if (!check_same_type(elem, normal_pos)) {
+        std::cout
+            << "Error, normal coordinates must use the same type of float\n";
+        exit(1);
       }
       break;
     }
-    case DOUBLE: {
-      for (double *v = vertices.data(), *n = vertex_normals.data();
-           v < vertices.data() + n_vertices * n_dim; v += 3, n += 3) {
-        file->read((char *)v, n_dim * sizeof(double));
-        file->read((char *)n, n_dim * sizeof(double));
-      }
+    case ElementType::FACE: {
       break;
     }
-    default:
-      std::cout << "Warning, data has NONE type. \n";
-      return 0;
+    default: {
+      std::cout << "Warning, element type not handled \n";
+      break;
     }
-  } else {
-    std::cout << "Warning, data layout not implemented :" << data_layout
-              << std::endl;
-    return 0;
-  }
-
-  if (n_faces < 1) {
-    std::cout << "Warning, wrong number of faces \n";
-    return 0;
-  }
-  faces.resize(n_faces * 3, -1);
-  // store the number of vertices per face given at the begining of each line.
-  char nv = -1;
-  for (auto i = 0; i < n_faces; ++i) {
-    file->read(&nv, sizeof(char));
-    if (nv < 3 || nv > 10) {
-      std::cout << "Warning, cannot read face list." << std::endl;
-      return 0;
     }
-    if (nv != 3) {
-      std::cout
-          << "Warning, this program cannot handle non-triangular meshes.\n";
-      return 0;
-    }
-    file->read((char *)&faces.data()[3 * i], 3 * sizeof(int));
-  }
-  vertices_per_face = (int)nv;
-  const auto [min, max] = std::minmax_element(vertices.begin(), vertices.end());
-  if (*min == *max) {
-    std::cout << "Error, all coordinates ares equal.\n"; // paranoid check
-    return 0;
   }
 
   return 1;
@@ -143,120 +103,56 @@ int PlyFile::load_data(std::ifstream *file) {
 int PlyFile::parse_header(std::ifstream *file) {
   PlyFile::data_layout.reserve(7);
   std::string line, word;
-  n_dim = 0;
   int i = 0;
   if (std::getline(*file, line)) {
-    std::stringstream iss(line, std::istringstream::in);
-    iss >> word;
-    if (str2entries(word) != PLY) {
+    // std::stringstream iss(line, std::istringstream::in);
+    // iss >> word;
+    if (line != "ply") {
       std::cout
-          << "Warning, this file doesn't look like a ply file. line read :\n"
+          << "Error, this file doesn't look like a ply file. line read :\n"
           << line << std::endl;
-      return 0;
+      exit(1);
     }
   }
-  while (std::getline(*file, line) && i < 20) {
+  while (std::getline(*file, line) && i < 10) {
     // std::cout << line << std::endl;
     ++i;
     std::stringstream iss(line, std::istringstream::in);
     if (iss >> word) {
-      switch (str2entries(word)) {
-      case FORMAT:
+      switch (entries_map.at(word)) {
+      case Entries::FORMAT:
+        // TODO handle binary format
         break;
-      case ELEMENT:
+      case Entries::ELEMENT:
         iss >> word;
-        if (str2entries(word) == VERTEX) {
+        switch (elem_type_map.at(word)) {
+        case ElementType::VERTEX:
           iss >> n_vertices;
           if (!n_vertices) {
-            std::cout << "warning, number of vertices = 0 , last line read :\n"
+            std::cout << "Error, number of vertices = 0 , last line read :\n"
                       << line << std::endl;
-            return 0;
+            exit(1);
           }
-        } else if (str2entries(word) == FACE) {
+          parse_vertices_properties(line, file, n_vertices);
+          break;
+        case ElementType::FACE:
           iss >> n_faces;
           if (!n_faces) {
-            std::cout << "warning, number of faces = 0, last line read : \n"
+            std::cout << "Error, number of faces = 0, last line read : \n"
                       << line << std::endl;
-            return 0;
+            exit(1);
           }
-        } else {
-          return 0;
+          parse_faces_properties(line, file, n_faces);
+          break;
+        default:
+          std::cout << "Error, " << word << " element type not implemented \n";
+          exit(1);
+          break;
         }
         break;
-      case PROPERTY:
-        iss >> word;
-        if (word == "float") {
-          iss >> word;
-          if (word == "x" || word == "y" || word == "z") {
-            if (vertex_type == DOUBLE) {
-              std::cout
-                  << "Warning, different float types are used to describe "
-                     "the vertices. \n";
-              return 0;
-            }
-            data_layout.push_back('v');
-            vertex_type = FLOAT;
-            ++n_dim;
-          } else if (word == "nx" || word == "ny" || word == "nz") {
-            if (vertex_type == DOUBLE) {
-              std::cout
-                  << "Warning, different float types are used to describe "
-                     "the normals. \n";
-              return 0;
-            }
-            data_layout.push_back('n');
-            normal_type = FLOAT;
-          }
-          break;
-        } else if (word == "double") {
-          iss >> word;
-          if (word == "x" || word == "y" || word == "z") {
-            if (vertex_type == FLOAT) {
-              std::cout
-                  << "Warning, different float types are used to describe "
-                     "the vertices. \n";
-              return 0;
-            }
-            data_layout.push_back('v');
-            vertex_type = DOUBLE;
-            ++n_dim;
-          } else if (word == "nx" || word == "ny" || word == "nz") {
-            if (vertex_type == FLOAT) {
-              std::cout
-                  << "Warning, different float types are used to describe "
-                     "the normals. \n";
-              return 0;
-            }
-
-            data_layout.push_back('n');
-            normal_type = DOUBLE;
-          }
-          break;
-        } else if (word == "uchar") {
-          iss >> word;
-          if (word == "red" || word == "green" || word == "blue" ||
-              word == "alpha") {
-            std::cout << "Warning, colors not implemented: " << line
-                      << std::endl;
-            data_layout.push_back('c');
-          } else {
-            std::cout << "Warning, property not implemented: " << line
-                      << std::endl;
-          }
-        } else if (word == "list") {
-        } else {
-          std::cout << "Warning, unrecognized property : " << line << std::endl;
-        }
-        iss >> word;
-        break;
-      case END:
-        // std::getline(*file, line);
+      case Entries::END:
+        std::cout << "header read" << std::endl;
         file_data_offset = file->tellg();
-        if (file_data_offset < 10) {
-          std::cout << "Data offset error : last line read :\n"
-                    << line << std::endl;
-          return 0;
-        }
         return 1;
       default:
         break;
@@ -267,112 +163,177 @@ int PlyFile::parse_header(std::ifstream *file) {
   }
   std::cout << "Warning, end of header not found, last line read :\n"
             << line << std::endl;
-  return 0;
+  exit(1);
 }
 
-Entries str2entries(std::string_view word) {
-  if (word == "ply") {
-    return PLY;
-  } else if (word == "format") {
-    return FORMAT;
-  } else if (word == "element") {
-    return ELEMENT;
-  } else if (word == "property") {
-    return PROPERTY;
-  } else if (word == "face") {
-    return FACE;
-  } else if (word == "vertex" || word == "vertice" || word == "vertices") {
-    return VERTEX;
-  } else if (word == "end_header") {
-    return END;
-  } else if (word == "comment") {
-    return COMMENT;
-  } else {
-    return VOID;
+int PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
+                                       unsigned int n_elem) {
+  Element vertex_element;
+  vertex_element.n_elem = n_elem;
+  vertex_element.type = ElementType::VERTEX;
+  vertex_element.property_names.reserve(9);
+  vertex_element.property_types.reserve(9);
+  int i = 0;
+  std::string word;
+  int last_offset = file->tellg();
+  while (std::getline(*file, line) && i < 9) {
+    std::stringstream iss(line, std::istringstream::in);
+    iss >> word;
+    if (entries_map.at(word) != Entries::PROPERTY) {
+      if (i == 0) {
+        std::cout << "Error, expected element definition line to be folowed by "
+                     "property statement \n";
+        exit(1);
+      }
+      elements.push_back(vertex_element);
+      file->seekg(last_offset);
+      return 1;
+    }
+    iss >> word;
+    vertex_element.property_types.push_back(prop_type_map.at(word));
+
+    iss >> word;
+    vertex_element.property_names.push_back(prop_name_map.at(word));
+
+    last_offset = file->tellg();
+    ++i;
+  }
+  std::cout << "Warning, max number of vertex properties reached : " << i
+            << std::endl;
+
+  elements.push_back(vertex_element);
+  file->seekg(last_offset);
+  return 0;
+};
+
+int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
+                                    unsigned int n_elem) {
+  Element face_element;
+  face_element.n_elem = n_elem;
+  face_element.type = ElementType::FACE;
+  face_element.property_names.reserve(9);
+  face_element.property_types.reserve(9);
+  face_element.lists.reserve(1);
+  int i = 0;
+  std::string word;
+  int last_offset = file->tellg();
+
+  while (std::getline(*file, line) && i < 9) {
+    std::stringstream iss(line, std::istringstream::in);
+    iss >> word;
+    if (entries_map.at(word) != Entries::PROPERTY) {
+      if (i == 0) {
+        std::cout << "Error, expected element definition line to be folowed by "
+                     "property statement \n";
+        exit(1);
+      }
+      elements.push_back(face_element);
+      file->seekg(last_offset);
+      return 1;
+    }
+
+    iss >> word;
+    switch (prop_type_map.at(word)) {
+    case PropertyType::LIST: {
+      std::vector<PropertyType> types;
+      types.reserve(2);
+      while (iss >> word) {
+        if (prop_type_map.find(word) != prop_type_map.end()) {
+          types.push_back(prop_type_map.at(word));
+        } else if ((word != "vertex_indices") && (word != "vetex_indices")) {
+          std::cout << "Error: face list of " << word << " not recognized \n";
+          exit(1);
+        } else {
+          break;
+        }
+      }
+
+      if (prop_name_map.find(word) == prop_name_map.end()) {
+        std::cout << " Error, this should not have hapenend =( \n";
+        std::cout << word << std::endl;
+        exit(1);
+      }
+      face_element.property_types.push_back(PropertyType::LIST);
+      face_element.property_names.push_back(prop_name_map.at(word));
+      face_element.lists.push_back(types);
+      break;
+    }
+    default:
+      face_element.property_types.push_back(prop_type_map.at(word));
+      iss >> word;
+      face_element.property_names.push_back(prop_name_map.at(word));
+      break;
+    }
+
+    ++i;
+  }
+
+  elements.push_back(face_element);
+  file->seekg(last_offset);
+  std::cout << "Warning, max number of face properties reached : " << i
+            << std::endl;
+  std::cout << line << std::endl;
+
+  return 0;
+};
+
+unsigned int get_property_index(PropertyName name, Element &elem) {
+  unsigned int i = 0;
+  std::vector<PropertyName>::iterator n = elem.property_names.begin();
+  while (n != elem.property_names.end()) {
+    if (*n != name) {
+      return i;
+    }
+    ++n;
+    ++i;
+  }
+  return -1; // Returns -1 if not found
+};
+
+unsigned int PlyFile::get_element_stride(Element elem) {
+  unsigned int stride; // stride in bytes
+  for (auto &type : elem.property_types) {
+    stride += type_size_map.at(type);
+  }
+  return stride;
+}
+
+template <class T, class U>
+void inverse_map(std::unordered_map<T, U> const &map,
+                 std::unordered_map<U, T> &rmap) {
+  rmap.clear();
+  for (const auto &[key, value] : map) {
+    rmap[value] = key;
   }
 }
+void PlyFile::build_inverse_maps() {
+  inverse_map<std::string, Entries>(entries_map, entries_rmap);
+  inverse_map<std::string, PropertyType>(prop_type_map, prop_type_rmap);
+  inverse_map<std::string, PropertyName>(prop_name_map, prop_name_rmap);
+  inverse_map<std::string, ElementType>(elem_type_map, elem_type_rmap);
+};
 
 void PlyFile::print() {
+  build_inverse_maps();
   std::cout << "ply\n";
   std::cout << "format --------\n";
   std::cout << "comment --------\n";
-  std::cout << "element vertex " << n_vertices << "\n";
-  std::cout << "property float x--- \n";
-  std::cout << "property float y--- \n";
-  std::cout << "property float z--- \n";
-  std::cout << "element face " << n_faces << "\n";
-  std::cout << "property --------\n";
+  unsigned int list_idx = 0;
+  for (auto &elem : elements) {
+    std::cout << "element " << elem_type_rmap.at(elem.type);
+    std::cout << " " << elem.n_elem << "\n";
+    for (unsigned int i = 0; i < elem.property_types.size(); ++i) {
+      std::cout << "property " << prop_type_rmap.at(elem.property_types.at(i));
+
+      if (elem.property_types.at(i) == PropertyType::LIST) {
+        for (auto &lp : elem.lists.at(list_idx)) {
+          std::cout << " " << prop_type_rmap.at(lp);
+        }
+        ++list_idx;
+      }
+      std::cout << " " << prop_name_rmap.at(elem.property_names.at(i)) << "\n";
+    }
+  }
   std::cout << "end_header\n";
   std::cout << "data offset : " << file_data_offset << "\n";
-}
-
-void Mesh::print_vertices() {
-  for (int i = 0; i < n_vertices; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      std::cout << vertices.at(i * 3 + j) << " ";
-    }
-    std::cout << "\n";
-  }
-}
-
-void Mesh::print_faces() {
-  for (int i = 0; i < n_faces; ++i) {
-    std::cout << "face " << i << " : ";
-    for (int j = 0; j < 3; ++j) {
-      std::cout << faces.at(i * 3 + j) << " ";
-    }
-    std::cout << "\n";
-  }
-}
-
-void Mesh::print_face_normals() {
-  for (int i = 0; i < n_faces; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      std::cout << face_normals.at(i * 3 + j) << " ";
-    }
-    std::cout << "\n";
-  }
-}
-
-void Mesh::print_vertex_adjacent_face() {
-  int n_adja = 0;
-  int adja_array_idx = 0;
-  int face;
-  for (int i = 0; i < n_vertices; ++i) {
-    n_adja = vertex_adjacent_faces.at(adja_array_idx);
-    std::cout << "vert  " << i << " : ";
-    for (int j = 0; j < n_adja; ++j) {
-      ++adja_array_idx;
-      face = vertex_adjacent_faces.at(adja_array_idx);
-      std::cout << face << " ";
-    }
-    std::cout << std::endl;
-    ++adja_array_idx;
-  }
-}
-
-void Mesh::print_one_ring() {
-  int n_adja = 0;
-  int one_ring_array_idx = 0;
-  int vert;
-  for (int i = 0; i < n_vertices; ++i) {
-    n_adja = one_ring.at(one_ring_array_idx);
-    std::cout << "vert  " << i << " : ";
-    for (int j = 0; j < n_adja; ++j) {
-      ++one_ring_array_idx;
-      vert = one_ring.at(one_ring_array_idx);
-      std::cout << vert << " ";
-    }
-    std::cout << std::endl;
-    ++one_ring_array_idx;
-  }
-}
-
-void Mesh::print_vertex_normals() {
-  for (int i = 0; i < n_vertices; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      std::cout << vertex_normals.at(i * 3 + j) << " ";
-    }
-    std::cout << std::endl;
-  }
 }
