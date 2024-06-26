@@ -57,10 +57,18 @@ typedef struct Element {
   std::vector<PropertyName> property_names;
   std::vector<PropertyType> property_types;
   std::vector<std::vector<PropertyType>> lists{0};
+  std::vector<char> data;
+  int file_begin_pos{-1};
 } Element;
 
+typedef struct SubElement {
+  std::vector<double> &sub;
+  std::vector<PropertyName> property_names;
+  Element parent;
+} SubElement;
+
 class PlyFile {
-  int file_data_offset{-1};
+  int file_data_offset{0};
   // Element &vertex_element;
   // Element &face_element;
   std::vector<Element> elements{0};
@@ -115,8 +123,6 @@ class PlyFile {
 
   std::unordered_map<PropertyType, unsigned int> const type_size_map{
       // type             bytes
-      {PropertyType::NONE, 0},   //
-      {PropertyType::LIST, 0},   //
       {PropertyType::CHAR, 1},   //
       {PropertyType::UCHAR, 1},  //
       {PropertyType::SHORT, 2},  //
@@ -144,6 +150,9 @@ class PlyFile {
 
   void build_inverse_maps();
   unsigned int get_element_stride(Element elem);
+  int get_property_offset(PropertyName name, Element &elem);
+  void fill_subelement(std::vector<SubElement> &subelements);
+  void set_elements_file_begin_position();
 
 public:
   Mesh mesh;
