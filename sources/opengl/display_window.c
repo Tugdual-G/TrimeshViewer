@@ -1,5 +1,5 @@
 #include "display_window.h"
-#include "include/glad/glad.h"
+#include "glad/include/glad/glad.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 

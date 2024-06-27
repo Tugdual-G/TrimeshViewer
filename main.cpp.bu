@@ -1,7 +1,7 @@
-#include "mesh.hpp"
-#include "opengl/colormap.hpp"
-#include "opengl/trimesh_render.hpp"
-#include "plyfile.hpp"
+#include "sources/mesh.hpp"
+#include "sources/opengl/colormap.hpp"
+#include "sources/opengl/trimesh_render.hpp"
+#include "sources/plyfile.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -10,7 +10,7 @@
 
 int main() {
 
-  PlyFile file0("deformHQ.ply");
+  PlyFile file0("meshes/deformHQ.ply");
 
   Mesh &mesh = file0.mesh;
 

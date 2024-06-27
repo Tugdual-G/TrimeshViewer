@@ -4,5 +4,6 @@ main
 *.ccls-*
 little_cube
 test_quatern
+meshviewer
 *.ply
 !deform.ply

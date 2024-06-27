@@ -3,7 +3,7 @@ extern "C" {
 #include "compileShader.h"
 #include "display_window.h"
 }
-#include "include/glad/glad.h" // glad should be included before glfw3
+#include "glad/include/glad/glad.h" // glad should be included before glfw3
 #include "math.h"
 #include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
@@ -240,7 +240,8 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
   // std::cout << std::endl;
 }
 
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow *window, __attribute__((unused)) double xoffset,
+                     double yoffset) {
   MeshRender *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
   rdr->q *= 1.0 + yoffset * SCROLL_SENSITIVITY;
   rdr->q_inv *= 1.0 + yoffset * SCROLL_SENSITIVITY;

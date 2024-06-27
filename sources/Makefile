@@ -7,10 +7,13 @@ CCPP = g++
 CC = gcc
 CFLAGS = -Wall -Wextra -g
 # Targets
-all: main
+all: ../meshviewer
 
-main: main.cpp mesh_print.o plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
+../meshviewer: meshviewer.cpp mesh_print.o plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) -o $@ $^
+
+#../main: ../main.cpp mesh_print.o plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
+#	$(CCPP) $(CFLAGS) -o $@ $^
 
 little_cube: little_cube.cpp plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) -o $@ $^
@@ -27,7 +30,7 @@ mesh_operators.o: mesh_operators.cpp
 mesh_structure.o: mesh_structure.cpp
 	$(CCPP) $(CFLAGS) -c $^
 
-libtrimesh_render.so:  opengl/src/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c opengl/quatern_transform.cpp
+libtrimesh_render.so:  opengl/glad/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c opengl/quatern_transform.cpp
 	$(CC) $(CFLAGS) -I opengl -shared -o $@ $^ -lGL -lglfw -fPIC
 
 test_quatern: opengl/test_quatern.cpp

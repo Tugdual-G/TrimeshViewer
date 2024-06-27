@@ -1,6 +1,6 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
-#include "include/glad/glad.h"
+#include "glad/include/glad/glad.h"
 #include <GLFW/glfw3.h>
 
 void processInput(GLFWwindow *window);
