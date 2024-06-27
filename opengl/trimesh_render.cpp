@@ -18,11 +18,13 @@ GLenum glCheckError_(const char *file, int line);
 #define SMOOTH_SHADE_NAME SHADER_PATH "smooth_shading_"
 #define FLAT_SHADE_NAME SHADER_PATH "flat_shading_"
 #define MOUSE_SENSITIVITY 0.005
+#define SCROLL_SENSITIVITY 0.05
 
 void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
                        __attribute__((unused)) int scancode, int action,
                        __attribute__((unused)) int mods);
 void cursor_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void MeshRender::init_window() {
 
   // Init Window
@@ -42,6 +44,7 @@ void MeshRender::init_window() {
 
   glfwSetKeyCallback(window, keyboard_callback);
   glfwSetCursorPosCallback(window, cursor_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 }
 
 void MeshRender::set_shader_program() {
@@ -235,6 +238,12 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
 
   // render->q.print_quaternion();
   // std::cout << std::endl;
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  MeshRender *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
+  rdr->q *= 1.0 + yoffset * SCROLL_SENSITIVITY;
+  rdr->q_inv *= 1.0 + yoffset * SCROLL_SENSITIVITY;
 }
 
 void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
