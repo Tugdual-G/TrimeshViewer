@@ -22,18 +22,20 @@ int main(int argc, char *argv[]) {
   mesh.scalar_mean_curvature(k);
 
   std::vector<double> colors;
-  get_nearest_colors(k, colors, INFERNO);
+  get_interpolated_colors(k, colors, INFERNO);
 
   auto [minv, maxv] =
       std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
 
+  double max{*maxv}, min{*minv};
+  std::cout << "max " << max << ", min " << min << "\n";
   double extent_vert = *maxv - *minv;
   extent_vert *= 1.2;
   for (auto &v : mesh.vertices) {
     v /= extent_vert;
   }
 
-  MeshRender render(1000, 500, mesh.vertices, mesh.faces);
+  MeshRender render(500, 500, mesh.vertices, mesh.faces);
 
   render.add_vertex_colors(colors);
   render.render_loop(NULL, NULL);

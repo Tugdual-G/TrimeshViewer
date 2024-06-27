@@ -413,8 +413,8 @@ double VIRIDIS[] = {0.267004, 0.004874, 0.329415,  //
                     0.974417, 0.90359,  0.130215,  //
                     0.993248, 0.906157, 0.143936}; //
 
-void interpolated_color(double *val, double &vmin, double &inv_delta,
-                        double *cmap, double *color) {
+static void interpolated_color(double *val, double &vmin, double &inv_delta,
+                               double *cmap, double *color) {
   double normalized_val = (NCOLORS - 2) * (*val - vmin) * inv_delta;
   unsigned int i0 = normalized_val;
   unsigned int i1 = (double)1 + normalized_val;
@@ -424,8 +424,8 @@ void interpolated_color(double *val, double &vmin, double &inv_delta,
   color[2] = cmap[i0 * 3 + 2] * coef + cmap[i1 * 3 + 2] * (1 - coef);
 }
 
-void nearest_color(double *val, double &vmin, double &inv_delta, double *cmap,
-                   double *color) {
+static void nearest_color(double *val, double &vmin, double &inv_delta,
+                          double *cmap, double *color) {
   unsigned int i = (NCOLORS - 1) * (*val - vmin) * inv_delta + 0.5;
   color[0] = cmap[i * 3];
   color[1] = cmap[i * 3 + 1];

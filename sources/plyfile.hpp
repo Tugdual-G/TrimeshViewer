@@ -18,15 +18,17 @@ enum class Entries {
 };
 
 enum class PropertyType {
-  NONE,   // bytes
-  CHAR,   // 1
-  UCHAR,  // 1
-  SHORT,  // 2
-  USHORT, // 2
-  INT,    // 4
-  UINT,   // 4
-  FLOAT,  // 4
-  DOUBLE, // 8
+  NONE,    // bytes
+  CHAR,    // 1
+  UCHAR,   // 1
+  SHORT,   // 2
+  USHORT,  // 2
+  INT,     // 4
+  UINT,    // 4
+  FLOAT,   // 4
+  FLOAT32, //
+  FLOAT64, //
+  DOUBLE,  // 8
   LIST,
 };
 
@@ -83,15 +85,17 @@ class PlyFile {
   std::unordered_map<Entries, std::string> entries_rmap;
 
   std::unordered_map<std::string, PropertyType> const prop_type_map{
-      {"", PropertyType::NONE},         //
-      {"char", PropertyType::CHAR},     //
-      {"uchar", PropertyType::UCHAR},   //
-      {"short", PropertyType::SHORT},   //
-      {"ushort", PropertyType::USHORT}, //
-      {"int", PropertyType::INT},       //
-      {"uint", PropertyType::UINT},     //
-      {"float", PropertyType::FLOAT},   //
-      {"double", PropertyType::DOUBLE}, //
+      {"", PropertyType::NONE},          //
+      {"char", PropertyType::CHAR},      //
+      {"uchar", PropertyType::UCHAR},    //
+      {"short", PropertyType::SHORT},    //
+      {"ushort", PropertyType::USHORT},  //
+      {"int", PropertyType::INT},        //
+      {"uint", PropertyType::UINT},      //
+      {"float", PropertyType::FLOAT},    //
+      {"float32", PropertyType::FLOAT},  //
+      {"float64", PropertyType::DOUBLE}, //
+      {"double", PropertyType::DOUBLE},  //
       {"list", PropertyType::LIST}};
   std::unordered_map<PropertyType, std::string> prop_type_rmap;
 

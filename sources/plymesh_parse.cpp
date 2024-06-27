@@ -11,6 +11,7 @@
 #include <vector>
 
 static unsigned int get_property_index(PropertyName name, Element &elem);
+
 template <class T> void print_vect(std::vector<T> v, int m, int n);
 
 template <class IN_TYPE, class OUT_TYPE>
@@ -80,6 +81,7 @@ int PlyFile::from_file(const char *fname) {
     std::cout << "Error parsing data in : " << fname << "\n";
     exit(1);
   }
+
   file.close();
   print();
 
@@ -305,6 +307,10 @@ int PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
       return 1;
     }
     iss >> word;
+    if (prop_type_map.find(word) == prop_type_map.end()) {
+      std::cout << "Warning, uknown type \" " << word << " \" \n";
+      exit(1);
+    }
     vertex_element.property_types.push_back(prop_type_map.at(word));
 
     iss >> word;
@@ -344,12 +350,17 @@ int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
         file->close();
         exit(1);
       }
+      // End of faces propr
       elements.push_back(face_element);
       file->seekg(last_offset);
       return 1;
     }
 
     iss >> word;
+    if (prop_type_map.find(word) == prop_type_map.end()) {
+      std::cout << "Warning, uknown type \" " << word << " \" \n";
+      exit(1);
+    }
     switch (prop_type_map.at(word)) {
     case PropertyType::LIST: {
       std::vector<PropertyType> types;
@@ -357,7 +368,7 @@ int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
       while (iss >> word) {
         if (prop_type_map.find(word) != prop_type_map.end()) {
           types.push_back(prop_type_map.at(word));
-        } else if ((word != "vertex_indices") && (word != "vetex_indices")) {
+        } else if (prop_name_map.find(word) == prop_name_map.end()) {
           std::cout << "Error: face list of " << word << " not recognized \n";
           file->close();
           exit(1);
