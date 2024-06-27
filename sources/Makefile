@@ -5,23 +5,21 @@
 # @version 0.1
 CCPP = g++
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra
+LDFLAGS='-Wl,-rpath,$$ORIGIN/sources/'
 # Targets
 all: ../meshviewer
 
-../meshviewer: meshviewer.cpp mesh_print.o plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
-	$(CCPP) $(CFLAGS) -o $@ $^
-
-#../main: ../main.cpp mesh_print.o plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
-#	$(CCPP) $(CFLAGS) -o $@ $^
+../meshviewer: meshviewer.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
+	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 ../little_cube: ../little_cube.cpp plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
-	$(CCPP) $(CFLAGS) -o $@ $^
+	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 mesh_print.o: mesh_print.cpp
 	$(CCPP) $(CFLAGS) -c $^
 
-plymesh_parse.o: plymesh_parse.cpp
+plyfile_parse.o: plyfile_parse.cpp
 	$(CCPP) $(CFLAGS) -c $^
 
 mesh_operators.o: mesh_operators.cpp
