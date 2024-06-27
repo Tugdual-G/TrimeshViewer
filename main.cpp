@@ -8,9 +8,36 @@
 #include <string>
 #include <vector>
 
+// double verticesdata[] = {
+//     // points coord
+//     -1, -1, -1, // Point 1
+//     1,  -1, -1, // Point 2
+//     1,  -1, 1,  // Point 3
+//     -1, -1, 1,  // Point 4
+//     -1, 1,  -1, //
+//     1,  1,  -1, //
+//     1,  1,  1,  //
+//     -1, 1,  1,  //
+// };
+
+// int squaredata[] = {
+//     0, 1, 2, // 0
+//     2, 3, 0, // 1
+//     1, 5, 6, // 2
+//     6, 2, 1, // 3
+//     2, 6, 7, // 4
+//     2, 7, 3, // 5
+//     0, 3, 4, // 6
+//     4, 3, 7, // 7
+//     5, 4, 7, // 8
+//     5, 7, 6, // 9
+//     1, 0, 4, // 10
+//     1, 4, 5, // 11
+// };
+
 int main() {
 
-  PlyFile file0("deform.ply");
+  PlyFile file0("deformHQ.ply");
   file0.print();
 
   // std::cout << "\n";
@@ -35,6 +62,8 @@ int main() {
   // // std::cout << "okmain0\n";
   Mesh mesh = file0.mesh;
   // mesh.print_vertices();
+  // std::cout << "\n";
+  // mesh.print_faces();
 
   mesh.set_one_ring();
 

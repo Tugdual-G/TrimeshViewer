@@ -143,12 +143,12 @@ class PlyFile {
   int get_property_offset(PropertyName name, Element &elem);
 
   template <class IN_TYPE, class OUT_TYPE>
-  void retrieve_vertice_subelement_data(SubElement &subelements,
-                                        std::vector<OUT_TYPE> &sub_data);
+  void retrieve_subelement_data(SubElement &subelements,
+                                std::vector<OUT_TYPE> &sub_data);
 
-  template <class IN_TYPE, class OUT_TYPE>
+  template <class IN_TYPE>
   void retrieve_face_data(Element &face_element,
-                          std::vector<OUT_TYPE> &sub_data);
+                          std::vector<unsigned int> &sub_data);
 
   void set_elements_file_begin_position();
 

@@ -11,10 +11,11 @@
 #include <vector>
 
 static unsigned int get_property_index(PropertyName name, Element &elem);
+template <class T> void print_vect(std::vector<T> v, int m, int n);
 
 template <class IN_TYPE, class OUT_TYPE>
-void PlyFile::retrieve_vertice_subelement_data(
-    SubElement &subelement, std::vector<OUT_TYPE> &sub_data) {
+void PlyFile::retrieve_subelement_data(SubElement &subelement,
+                                       std::vector<OUT_TYPE> &sub_data) {
   /* Retrieve the data for a subset of element property in
    * separated vector. For example, if only the vertices position are needed.
    * */
@@ -22,7 +23,9 @@ void PlyFile::retrieve_vertice_subelement_data(
   unsigned int stride = get_element_stride(*subelement.parent);
 
   std::vector<int> parent_elem_data_offset;
+
   parent_elem_data_offset.reserve(subelement.property_names.size());
+
   for (auto &prop : subelement.property_names) {
     // hopefully the layout in the file is in the right order.
     parent_elem_data_offset.push_back(
@@ -35,36 +38,31 @@ void PlyFile::retrieve_vertice_subelement_data(
   for (char *p_data = parent_data.data();
        p_data < parent_data.data() + parent_data.size(); p_data += stride) {
     for (auto &offset : parent_elem_data_offset) {
-      sub_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)p_data + offset);
+      sub_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)(p_data + offset));
       ++i;
     }
   }
 };
 
-template <class IN_TYPE, class OUT_TYPE>
+template <class IN_TYPE>
 void PlyFile::retrieve_face_data(Element &face_element,
-                                 std::vector<OUT_TYPE> &sub_data) {
+                                 std::vector<unsigned int> &sub_data) {
 
   unsigned int offset, size;
   offset = get_property_offset(PropertyName::vertex_indices, face_element);
   // TODO is it the right list ? not always
   offset += type_size_map.at(face_element.lists.at(0).at(0));
   size = type_size_map.at(face_element.lists.at(0).at(1));
-  unsigned int stride = 3 * size + offset;
 
-  // std::cout << "stride  : " << stride << "\n";
-  // std::cout << "offset  : " << offset << "\n";
-  // std::cout << "size  : " << size << "\n";
+  unsigned int stride = get_element_stride(face_element);
   unsigned int tail = stride - offset - 3 * size;
-
-  // std::cout << "tail of faces offset : " << tail << "\n";
 
   char *p_data = face_element.data.data();
   unsigned int i = 0;
   while (p_data < face_element.data.data() + face_element.data.size()) {
     p_data += offset;
     for (unsigned int j = 0; j < 3; ++j) {
-      sub_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)p_data);
+      sub_data.at(i) = (unsigned int)*((IN_TYPE *)p_data);
       p_data += size;
       ++i;
     }
@@ -83,6 +81,7 @@ int PlyFile::from_file(const char *fname) {
     exit(1);
   }
   file.close();
+  print();
 
   SubElement vertices_sub, faces_sub;
   vertices_sub.property_names = {PropertyName::x, PropertyName::y,
@@ -96,12 +95,10 @@ int PlyFile::from_file(const char *fname) {
     }
   }
 
-  n_vertices = (vertices_sub.parent)->n_elem;
-  n_faces = (faces_sub.parent)->n_elem;
-  vertices.resize(n_vertices * 3, -0);
-  faces.resize(n_faces * 3, -0);
-  retrieve_vertice_subelement_data<float, double>(vertices_sub, vertices);
-  retrieve_face_data<int, unsigned int>(*faces_sub.parent, faces);
+  vertices.resize(n_vertices * 3, -9999);
+  faces.resize(n_faces * 3, -9999);
+  retrieve_subelement_data<float, double>(vertices_sub, vertices);
+  retrieve_face_data<int>(*faces_sub.parent, faces);
 
   return 1;
 }
@@ -185,13 +182,7 @@ int PlyFile::load_data(std::ifstream *file) {
         file->close();
         exit(1);
       }
-      // std::cout << "\n ny offset : "
-      //           << get_property_offset(PropertyName::ny, elem) << "\n";
-
-      // std::cout << "\n z offset : "
-      //           << get_property_offset(PropertyName::z, elem) << "\n";
-      std::cout << "vertex stride :" << stride;
-      elem.data.resize(stride * elem.n_elem);
+      elem.data.resize(stride * elem.n_elem, -127);
       file->read(elem.data.data(), stride * elem.n_elem);
       break;
     }
@@ -203,19 +194,8 @@ int PlyFile::load_data(std::ifstream *file) {
         file->close();
         exit(1);
       }
-
-      // std::cout << "\n vertex file offset : " << elem.file_begin_pos << "\n";
-
-      // std::cout << "\n red offset : "
-      //           << get_property_offset(PropertyName::red, elem) << "\n";
-
-      // std::cout << "\n vertex_indices offset : "
-      //           << get_property_offset(PropertyName::vertex_indices, elem)
-      //           << "\n";
-      // TODO do not hardcode this thing, even if this is horendous
-      std::cout << "face stride :" << stride << "\n";
-      elem.data.resize(13 * elem.n_elem, 127);
-      file->read(elem.data.data(), 13 * elem.n_elem);
+      elem.data.resize(stride * elem.n_elem, 127);
+      file->read(elem.data.data(), stride * elem.n_elem);
       break;
     }
     default: {
@@ -283,7 +263,6 @@ int PlyFile::parse_header(std::ifstream *file) {
         }
         break;
       case Entries::END:
-        std::cout << "header read" << std::endl;
         file_data_offset = file->tellg();
         return 1;
       default:
@@ -421,6 +400,7 @@ int PlyFile::get_property_offset(PropertyName name, Element &elem) {
   /* Return the property (x, ny, blue) position in the element data. */
   unsigned int offset{0};  // offset in bytes
   unsigned int n_list = 0; // number of list read
+  PropertyType list_type;
   std::vector<PropertyName>::iterator n_current_name =
       elem.property_names.begin();
   for (auto &type : elem.property_types) {
@@ -428,9 +408,11 @@ int PlyFile::get_property_offset(PropertyName name, Element &elem) {
       return offset;
     }
     if (type == PropertyType::LIST) {
-      for (auto &list_type : elem.lists.at(n_list)) {
-        offset += type_size_map.at(list_type);
-      }
+      list_type = elem.lists.at(n_list).at(0);
+      offset += type_size_map.at(list_type);
+      // TODO will only work for triangular meshes
+      list_type = elem.lists.at(n_list).at(1);
+      offset += type_size_map.at(list_type) * 3;
       ++n_list;
     } else {
       offset += type_size_map.at(type);
@@ -456,11 +438,14 @@ unsigned int get_property_index(PropertyName name, Element &elem) {
 unsigned int PlyFile::get_element_stride(Element &elem) {
   unsigned int stride{0};  // stride in bytes
   unsigned int n_list = 0; // number of list read
+  PropertyType list_type;
   for (auto &type : elem.property_types) {
     if (type == PropertyType::LIST) {
-      for (auto &list_type : elem.lists.at(n_list)) {
-        stride += type_size_map.at(list_type);
-      }
+      list_type = elem.lists.at(n_list).at(0);
+      stride += type_size_map.at(list_type);
+      // TODO will only work for triangular meshes
+      list_type = elem.lists.at(n_list).at(1);
+      stride += type_size_map.at(list_type) * 3;
       ++n_list;
     } else {
       stride += type_size_map.at(type);
@@ -520,4 +505,14 @@ void PlyFile::print() {
   }
   std::cout << "end_header\n";
   std::cout << "data offset : " << file_data_offset << "\n";
+}
+
+template <class T> void print_vect(std::vector<T> v, int m, int n) {
+  std::cout << "\n";
+  for (int i = 0; i < m; ++i) {
+    for (int j = 0; j < n; ++j) {
+      std::cout << v.at(i * n + j) << " ";
+    }
+    std::cout << "\n";
+  }
 }
