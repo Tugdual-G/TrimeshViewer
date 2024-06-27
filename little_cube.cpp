@@ -1,10 +1,10 @@
-#include "mesh.hpp"
-#include "opengl/colormap.hpp"
-#include "opengl/trimesh_render.hpp"
-#include <fstream>
+/* Basic script to debug and test implementation */
+#include "sources/mesh.hpp"
+#include "sources/opengl/colormap.hpp"
+#include "sources/opengl/trimesh_render.hpp"
 #include <iostream>
-#include <sstream>
-#include <string>
+// #include <sstream>
+// #include <string>
 #include <vector>
 
 int main() {
