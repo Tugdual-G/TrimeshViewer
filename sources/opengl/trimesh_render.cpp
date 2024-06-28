@@ -20,11 +20,11 @@ GLenum glCheckError_(const char *file, int line);
 #define MOUSE_SENSITIVITY 0.005
 #define SCROLL_SENSITIVITY 0.05
 
-void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
-                       __attribute__((unused)) int scancode, int action,
-                       __attribute__((unused)) int mods);
+void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
+                       int mods);
 void cursor_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
+
 void MeshRender::init_window() {
 
   // Init Window
@@ -49,8 +49,8 @@ void MeshRender::init_window() {
 
 void MeshRender::set_shader_program() {
   // Compile shaders
-  unsigned int vertexShader;
-  unsigned int fragmentShader;
+  unsigned int vertexShader{0};
+  unsigned int fragmentShader{0};
   switch (program_type) {
   case FLAT_FACES:
     vertexShader = compileVertexShader(FLAT_SHADE_NAME "vertex_shader.glsl");

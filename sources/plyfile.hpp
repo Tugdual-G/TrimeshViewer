@@ -147,14 +147,6 @@ class PlyFile {
   unsigned int get_element_stride(Element &elem);
   int get_property_offset(PropertyName name, Element &elem);
 
-  template <class IN_TYPE, class OUT_TYPE>
-  void retrieve_subelement_data(std::string const element_type,
-                                std::vector<PropertyName> &property_names,
-                                std::vector<OUT_TYPE> &out_data);
-
-  template <class IN_TYPE>
-  void retrieve_face_data(std::vector<unsigned int> &out_data);
-
   void set_elements_file_begin_position();
 
 public:
@@ -167,6 +159,18 @@ public:
   std::vector<double> vertices;
   std::vector<unsigned int> faces;
   std::vector<double> vertex_normals;
+
+  int check_same_type(Element &elem, const std::vector<PropertyName> &names,
+                      PropertyType &type);
+
+  template <class OUT_TYPE>
+  void get_subelement_data(std::string const element_type,
+                           std::vector<PropertyName> &property_names,
+                           std::vector<OUT_TYPE> &out_data);
+
+  template <class IN_TYPE>
+  void get_face_data(std::vector<unsigned int> &out_data);
+
   // Mesh mesh;
   PlyFile() {}
   PlyFile(const char *fname) {

@@ -9,18 +9,46 @@
 #include <unordered_map>
 #include <vector>
 
+static int check_same_type(Element &elem,
+                           const std::vector<PropertyName> &names,
+                           PropertyType &type);
+/* Checks if a list of property names share the same type.
+ * return :
+ *  0 if none of the requested properties is in the header;
+ *  1 if same type
+ *  1 if only one propertie is known
+ *  1 if the recognised properties share the same type
+ *  */
+
 static unsigned int get_property_index(PropertyName name, Element &elem);
+/* Return the indice of the property in the element vectors. */
 
 template <class T> void print_vect(std::vector<T> v, int m, int n);
 
 template <class IN_TYPE, class OUT_TYPE>
-void PlyFile::retrieve_subelement_data(
-    std::string const element_type, std::vector<PropertyName> &property_names,
-    std::vector<OUT_TYPE> &out_data) {
+void extract_data(std::vector<char> &in_data, std::vector<OUT_TYPE> &out_data,
+                  unsigned int stride, std::vector<int> &data_offsets) {
+  /* Copy data selected by columns. */
+  unsigned int i = 0;
+  for (char *p_data = in_data.data(); p_data < in_data.data() + in_data.size();
+       p_data += stride) {
+    for (auto &offset : data_offsets) {
+      out_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)(p_data + offset));
+      ++i;
+    }
+  }
+}
+
+template <class OUT_TYPE>
+void PlyFile::get_subelement_data(std::string const element_type,
+                                  std::vector<PropertyName> &property_names,
+                                  std::vector<OUT_TYPE> &out_data) {
   /* Retrieve the data for a subset of element property in
    * separated vector. For example, if only the vertices position are needed.
+   * !! Warning element_type can be vertex , face or none. !!
    * */
 
+  // Checking the validity of the passed element type.
   if (elem_type_map.find(element_type) == elem_type_map.end()) {
     std::cout << "Error, invalid element type:\" " << element_type << " \" .\n";
     std::cout << "valid element types are : ";
@@ -30,6 +58,7 @@ void PlyFile::retrieve_subelement_data(
     std::cout << "\n";
     exit(1);
   }
+  // finding the element in the parsed data.
   ElementType elem_type_enum = elem_type_map.find(element_type)->second;
   std::vector<Element>::iterator elem = elements.begin();
   while (elem->type != elem_type_enum) {
@@ -41,6 +70,14 @@ void PlyFile::retrieve_subelement_data(
     exit(1);
   }
   Element &element = *elem;
+  PropertyType type{PropertyType::NONE};
+  if (!check_same_type(element, property_names, type)) {
+    std::cout << "Error, the element properties specified in the list "
+                 "doesn't share the same type. \n ";
+    exit(1);
+  }
+
+  out_data.resize(element.n_elem * property_names.size(), 999);
 
   unsigned int stride = get_element_stride(element);
 
@@ -56,30 +93,54 @@ void PlyFile::retrieve_subelement_data(
     } else {
       std::cout << "Error, the requested property is not part of the provided "
                    "element. \n";
+      exit(1);
     }
   }
 
-  unsigned int i = 0;
-  for (char *p_data = element.data.data();
-       p_data < element.data.data() + element.data.size(); p_data += stride) {
-    for (auto &offset : elem_data_offsets) {
-      out_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)(p_data + offset));
-      ++i;
-    }
+  switch (type) {
+  case PropertyType::CHAR:
+    extract_data<int8_t>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  case PropertyType::UCHAR:
+    extract_data<u_int8_t>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  case PropertyType::SHORT:
+    extract_data<int16_t>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  case PropertyType::USHORT:
+    extract_data<u_int16_t>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  case PropertyType::INT:
+    extract_data<int32_t>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  case PropertyType::UINT:
+    extract_data<u_int32_t>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  case PropertyType::FLOAT32:
+  case PropertyType::FLOAT:
+    extract_data<float>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  case PropertyType::FLOAT64:
+  case PropertyType::DOUBLE:
+    extract_data<double>(element.data, out_data, stride, elem_data_offsets);
+    break;
+  default:
+    build_inverse_maps();
+    std::cout << "Error, data type not handled in get_subelement_data. ";
+    std::cout << "Type : " << prop_type_rmap.at(type) << "\n";
+    exit(1);
   }
 };
 
 template <class IN_TYPE>
-void PlyFile::retrieve_face_data(std::vector<unsigned int> &out_data) {
+void PlyFile::get_face_data(std::vector<unsigned int> &out_data) {
 
   std::vector<Element>::iterator elem = elements.begin();
   while (elem->type != ElementType::FACE) {
     ++elem;
   }
   Element &face_element = *elem;
-
-  vertices.resize(n_vertices * 3, -9999);
-  faces.resize(n_faces * 3, -9999);
+  out_data.resize(face_element.n_elem * 3);
 
   unsigned int offset, size;
   offset = get_property_offset(PropertyName::vertex_indices, face_element);
@@ -121,44 +182,49 @@ int PlyFile::from_file(const char *fname) {
   std::vector<PropertyName> vertice_property_names = {
       PropertyName::x, PropertyName::y, PropertyName::z};
 
-  vertices.resize(n_vertices * 3, -9999);
-  faces.resize(n_faces * 3, -9999);
-  retrieve_subelement_data<float, double>("vertices", vertice_property_names,
-                                          vertices);
-  retrieve_face_data<int>(faces);
+  get_subelement_data<double>("vertices", vertice_property_names, vertices);
+  get_face_data<int>(faces);
 
   return 1;
 }
 
-int check_same_type(Element &elem, const std::vector<PropertyName> &names,
-                    PropertyType &type) {
+int PlyFile::check_same_type(Element &elem,
+                             const std::vector<PropertyName> &names,
+                             PropertyType &type) {
   /*
    * Checks if a list of property names share the same type.
+   * return :
+   *  0 if the requested properties differ in types;
+   *  1 if same type
+   *  1 if none propertie is known
+   *  1 if the recognised properties share the same type
    *
    *  */
+
   type = PropertyType::NONE;
-  auto name = names.begin();
+  auto name_iterator = names.begin();
   int idx = -1;
   // finding the first known property
-  // get_property_index return -1 if unknown
-  while (idx == -1 && name != names.end()) {
-    idx = get_property_index(*name, elem);
-    ++name;
+  // get_property_index return 0 if no property is known
+  while (idx == -1 && name_iterator != names.end()) {
+    idx = get_property_index(*name_iterator, elem);
+    ++name_iterator;
   }
   if (idx == -1) {
     return 1;
   }
 
   type = elem.property_types.at(idx);
-  while (name != names.end()) {
-    idx = get_property_index(*name, elem);
+
+  while (name_iterator != names.end()) {
+    idx = get_property_index(*name_iterator, elem);
     if (idx != -1) {
       if (elem.property_types.at(idx) != type) { // check against previous type
         return 0;
       }
       type = elem.property_types.at(idx);
     }
-    ++name;
+    ++name_iterator;
   }
   return 1;
 }
@@ -462,7 +528,7 @@ unsigned int get_property_index(PropertyName name, Element &elem) {
   unsigned int i = 0;
   std::vector<PropertyName>::iterator n = elem.property_names.begin();
   while (n != elem.property_names.end()) {
-    if (*n != name) {
+    if (*n == name) {
       return i;
     }
     ++n;

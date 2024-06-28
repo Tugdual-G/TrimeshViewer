@@ -13,11 +13,11 @@ void Mesh::set_one_ring() {
   if (vertex_adjacent_faces.size() < (long unsigned int)n_vertices) {
     set_vertex_adjacent_faces();
   }
-  int adja_array_idx = 0;    // global position in the array
-  int onering_array_idx = 0; // global position in the one-ring array
-  int triangle_vert_idx;     // index of the vertices in the face [0, 1, 2]
-  int face;                  // face index in faces
-  int n_adja;                // number of adjacent faces for the current vertice
+  int adja_array_idx{0};    // global position in the array
+  int onering_array_idx{0}; // global position in the one-ring array
+  int triangle_vert_idx{0}; // index of the vertices in the face [0, 1, 2]
+  int face{0};              // face index in faces
+  int n_adja{0};            // number of adjacent faces for the current vertice
 
   one_ring.resize(n_vertices * (1 + n_adja_faces_max));
   for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {

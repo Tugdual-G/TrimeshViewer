@@ -1,24 +1,20 @@
-#include "mesh.hpp"
-#include "opengl/colormap.hpp"
-#include "opengl/trimesh_render.hpp"
-#include "plyfile.hpp"
-// #include <fstream>
+#include "sources/mesh.hpp"
+#include "sources/opengl/colormap.hpp"
+#include "sources/opengl/trimesh_render.hpp"
+#include "sources/plyfile.hpp"
 #include <iostream>
-// #include <sstream>
-// #include <string>
 #include <vector>
 
-int main(__attribute__((unused)) int argc, char *argv[]) {
+int main() {
 
-  PlyFile file(argv[1]);
-
-  std::vector<PropertyName> normal_prop_names = {
-      PropertyName::red, PropertyName::green, PropertyName::blue};
-
-  std::vector<double> colors;
-  file.get_subelement_data<double>("faces", normal_prop_names, colors);
+  PlyFile file("meshes/deformHQ.ply");
 
   Mesh mesh(file.vertices, file.faces);
+
+  std::vector<PropertyName> normal_property_names = {
+      PropertyName::nx, PropertyName::ny, PropertyName::nz};
+  std::vector<double> normals;
+  file.get_subelement_data<double>("vertices", normal_property_names, normals);
 
   mesh.set_one_ring();
 
@@ -27,7 +23,7 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
 
   mesh.scalar_mean_curvature(k);
 
-  // std::vector<double> colors;
+  std::vector<double> colors;
   get_interpolated_colors(k, colors, INFERNO);
 
   auto [minv, maxv] =
@@ -41,7 +37,7 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
     v /= extent_vert;
   }
 
-  MeshRender render(500, 500, mesh.vertices, mesh.faces);
+  MeshRender render(500, 500, mesh.vertices, mesh.faces, normals);
 
   render.add_vertex_colors(colors);
   render.render_loop(NULL, NULL);

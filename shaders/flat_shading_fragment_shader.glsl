@@ -11,6 +11,6 @@ void main()
     vec3 y_tangent = dFdy(position);
     vec3 face_normal = normalize( cross( x_tangent, y_tangent ) );
 
-    float intensity =  (1.2 + face_normal.x)/2.2;
+    float intensity =  (1.2 + face_normal.z)/2.2;
     FragColor = vec4(color, 1.0)*intensity;
 }

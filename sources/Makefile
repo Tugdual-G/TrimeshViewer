@@ -13,6 +13,9 @@ all: ../meshviewer
 ../meshviewer: meshviewer.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
+../demo: ../demo.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
+	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
+
 ../little_cube: ../little_cube.cpp plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
