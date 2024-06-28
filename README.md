@@ -23,7 +23,7 @@ __Capabilities:__
 
 __Code example :__
 
-```
+```cpp
 int main() {
 
   PlyFile file("meshes/deformHQ.ply");
