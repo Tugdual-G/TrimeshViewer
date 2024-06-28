@@ -5,7 +5,7 @@
 # @version 0.1
 CCPP = g++
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -g
 LDFLAGS='-Wl,-rpath,$$ORIGIN/sources/'
 # Targets
 all: ../meshviewer

@@ -2,10 +2,10 @@
 #include "opengl/colormap.hpp"
 #include "opengl/trimesh_render.hpp"
 #include "plyfile.hpp"
-#include <fstream>
+// #include <fstream>
 #include <iostream>
-#include <sstream>
-#include <string>
+// #include <sstream>
+// #include <string>
 #include <vector>
 
 int main(int argc, char *argv[]) {

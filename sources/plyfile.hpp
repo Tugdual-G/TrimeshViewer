@@ -63,10 +63,10 @@ typedef struct Element {
   int file_begin_pos{-1};
 } Element;
 
-typedef struct SubElement {
-  std::vector<PropertyName> property_names;
-  Element *parent;
-} SubElement;
+// typedef struct SubElement {
+//   std::vector<PropertyName> property_names;
+//   Element *parent;
+// } SubElement;
 
 class PlyFile {
   int file_data_offset{0};
@@ -131,7 +131,8 @@ class PlyFile {
       {"vertice", ElementType::VERTEX},  //
       {"vertices", ElementType::VERTEX}, //
       {"vertex", ElementType::VERTEX},   //
-      {"face", ElementType::FACE}};
+      {"faces", ElementType::FACE},      //
+      {"face", ElementType::FACE}};      //
   std::unordered_map<ElementType, std::string> elem_type_rmap;
 
   int parse_header(std::ifstream *file);
@@ -147,12 +148,12 @@ class PlyFile {
   int get_property_offset(PropertyName name, Element &elem);
 
   template <class IN_TYPE, class OUT_TYPE>
-  void retrieve_subelement_data(SubElement &subelements,
+  void retrieve_subelement_data(std::string const element_type,
+                                std::vector<PropertyName> &property_names,
                                 std::vector<OUT_TYPE> &sub_data);
 
   template <class IN_TYPE>
-  void retrieve_face_data(Element &face_element,
-                          std::vector<unsigned int> &sub_data);
+  void retrieve_face_data(std::vector<unsigned int> &sub_data);
 
   void set_elements_file_begin_position();
 

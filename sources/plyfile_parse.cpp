@@ -1,4 +1,3 @@
-// #include "mesh.hpp"
 #include "plyfile.hpp"
 #include <algorithm>
 #include <fstream>
@@ -15,30 +14,50 @@ static unsigned int get_property_index(PropertyName name, Element &elem);
 template <class T> void print_vect(std::vector<T> v, int m, int n);
 
 template <class IN_TYPE, class OUT_TYPE>
-void PlyFile::retrieve_subelement_data(SubElement &subelement,
-                                       std::vector<OUT_TYPE> &sub_data) {
+void PlyFile::retrieve_subelement_data(
+    std::string const element_type, std::vector<PropertyName> &property_names,
+    std::vector<OUT_TYPE> &sub_data) {
   /* Retrieve the data for a subset of element property in
    * separated vector. For example, if only the vertices position are needed.
    * */
 
-  unsigned int stride = get_element_stride(*subelement.parent);
+  if (elem_type_map.find(element_type) == elem_type_map.end()) {
+    std::cout << "Error, invalid element type:\" " << element_type << " \" .\n";
+    std::cout << "valid element types are : ";
+    for (const auto &[key, value] : elem_type_map) {
+      std::cout << key << ", ";
+    }
+    std::cout << "\n";
+    exit(1);
+  }
+  ElementType elem_type_enum = elem_type_map.find(element_type)->second;
+  std::vector<Element>::iterator elem = elements.begin();
+  while (elem->type != elem_type_enum) {
+    ++elem;
+  }
+  Element &element = *elem;
 
-  std::vector<int> parent_elem_data_offset;
+  unsigned int stride = get_element_stride(element);
 
-  parent_elem_data_offset.reserve(subelement.property_names.size());
+  std::vector<int> elem_data_offsets;
 
-  for (auto &prop : subelement.property_names) {
+  elem_data_offsets.reserve(property_names.size());
+
+  int offset;
+  for (auto &prop : property_names) {
     // hopefully the layout in the file is in the right order.
-    parent_elem_data_offset.push_back(
-        get_property_offset(prop, *subelement.parent));
+    if ((offset = get_property_offset(prop, element)) != -1) {
+      elem_data_offsets.push_back(offset);
+    } else {
+      std::cout << "Error, the requested property is not part of the provided "
+                   "element. \n";
+    }
   }
 
-  std::vector<char> &parent_data = subelement.parent->data;
-
   unsigned int i = 0;
-  for (char *p_data = parent_data.data();
-       p_data < parent_data.data() + parent_data.size(); p_data += stride) {
-    for (auto &offset : parent_elem_data_offset) {
+  for (char *p_data = element.data.data();
+       p_data < element.data.data() + element.data.size(); p_data += stride) {
+    for (auto &offset : elem_data_offsets) {
       sub_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)(p_data + offset));
       ++i;
     }
@@ -46,8 +65,16 @@ void PlyFile::retrieve_subelement_data(SubElement &subelement,
 };
 
 template <class IN_TYPE>
-void PlyFile::retrieve_face_data(Element &face_element,
-                                 std::vector<unsigned int> &sub_data) {
+void PlyFile::retrieve_face_data(std::vector<unsigned int> &sub_data) {
+
+  std::vector<Element>::iterator elem = elements.begin();
+  while (elem->type != ElementType::FACE) {
+    ++elem;
+  }
+  Element &face_element = *elem;
+
+  vertices.resize(n_vertices * 3, -9999);
+  faces.resize(n_faces * 3, -9999);
 
   unsigned int offset, size;
   offset = get_property_offset(PropertyName::vertex_indices, face_element);
@@ -85,22 +112,15 @@ int PlyFile::from_file(const char *fname) {
   file.close();
   print();
 
-  SubElement vertices_sub, faces_sub;
-  vertices_sub.property_names = {PropertyName::x, PropertyName::y,
-                                 PropertyName::z};
-  for (auto &elem : elements) {
-    if (elem.type == ElementType::VERTEX) {
-      vertices_sub.parent = &elem;
-    }
-    if (elem.type == ElementType::FACE) {
-      faces_sub.parent = &elem;
-    }
-  }
+  // Get vertices and faces
+  std::vector<PropertyName> vertice_property_names = {
+      PropertyName::x, PropertyName::y, PropertyName::z};
 
   vertices.resize(n_vertices * 3, -9999);
   faces.resize(n_faces * 3, -9999);
-  retrieve_subelement_data<float, double>(vertices_sub, vertices);
-  retrieve_face_data<int>(*faces_sub.parent, faces);
+  retrieve_subelement_data<float, double>("vertices", vertice_property_names,
+                                          vertices);
+  retrieve_face_data<int>(faces);
 
   return 1;
 }

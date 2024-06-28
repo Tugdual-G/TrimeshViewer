@@ -3,13 +3,13 @@ __A small project to learn c++.__
 The program can parse .ply files for triangular mesh,
 and plot the data.
 
-_Capabilities:_
+__Capabilities:__
 - flat shading and smooth shading
 - Use different colormaps to show the scalar mean curvature
 - zoom and rotate with the mouse
 
 ## Requirements
-- opengl 4.60
+- opengl 4.6
 - glfw
 
 ## Compilation
