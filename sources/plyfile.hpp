@@ -160,9 +160,6 @@ public:
   std::vector<unsigned int> faces;
   std::vector<double> vertex_normals;
 
-  int check_same_type(Element &elem, const std::vector<PropertyName> &names,
-                      PropertyType &type);
-
   template <class OUT_TYPE>
   void get_subelement_data(std::string const element_type,
                            std::vector<PropertyName> &property_names,

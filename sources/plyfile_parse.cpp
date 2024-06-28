@@ -14,10 +14,9 @@ static int check_same_type(Element &elem,
                            PropertyType &type);
 /* Checks if a list of property names share the same type.
  * return :
- *  0 if none of the requested properties is in the header;
- *  1 if same type
- *  1 if only one propertie is known
- *  1 if the recognised properties share the same type
+ *  0 if two or more properties differ in datatype ;
+ *  1 if no property is known
+ *  1 if all the recognised properties share the same type
  *  */
 
 static unsigned int get_property_index(PropertyName name, Element &elem);
@@ -188,9 +187,8 @@ int PlyFile::from_file(const char *fname) {
   return 1;
 }
 
-int PlyFile::check_same_type(Element &elem,
-                             const std::vector<PropertyName> &names,
-                             PropertyType &type) {
+int check_same_type(Element &elem, const std::vector<PropertyName> &names,
+                    PropertyType &type) {
   /*
    * Checks if a list of property names share the same type.
    * return :

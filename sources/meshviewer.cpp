@@ -12,12 +12,6 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
 
   PlyFile file(argv[1]);
 
-  std::vector<PropertyName> normal_prop_names = {
-      PropertyName::red, PropertyName::green, PropertyName::blue};
-
-  std::vector<double> colors;
-  file.get_subelement_data<double>("faces", normal_prop_names, colors);
-
   Mesh mesh(file.vertices, file.faces);
 
   mesh.set_one_ring();
@@ -27,7 +21,7 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
 
   mesh.scalar_mean_curvature(k);
 
-  // std::vector<double> colors;
+  std::vector<double> colors;
   get_interpolated_colors(k, colors, INFERNO);
 
   auto [minv, maxv] =
