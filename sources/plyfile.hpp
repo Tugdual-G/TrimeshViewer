@@ -150,10 +150,10 @@ class PlyFile {
   template <class IN_TYPE, class OUT_TYPE>
   void retrieve_subelement_data(std::string const element_type,
                                 std::vector<PropertyName> &property_names,
-                                std::vector<OUT_TYPE> &sub_data);
+                                std::vector<OUT_TYPE> &out_data);
 
   template <class IN_TYPE>
-  void retrieve_face_data(std::vector<unsigned int> &sub_data);
+  void retrieve_face_data(std::vector<unsigned int> &out_data);
 
   void set_elements_file_begin_position();
 

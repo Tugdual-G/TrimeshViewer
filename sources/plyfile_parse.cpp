@@ -16,7 +16,7 @@ template <class T> void print_vect(std::vector<T> v, int m, int n);
 template <class IN_TYPE, class OUT_TYPE>
 void PlyFile::retrieve_subelement_data(
     std::string const element_type, std::vector<PropertyName> &property_names,
-    std::vector<OUT_TYPE> &sub_data) {
+    std::vector<OUT_TYPE> &out_data) {
   /* Retrieve the data for a subset of element property in
    * separated vector. For example, if only the vertices position are needed.
    * */
@@ -63,14 +63,14 @@ void PlyFile::retrieve_subelement_data(
   for (char *p_data = element.data.data();
        p_data < element.data.data() + element.data.size(); p_data += stride) {
     for (auto &offset : elem_data_offsets) {
-      sub_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)(p_data + offset));
+      out_data.at(i) = (OUT_TYPE) * ((IN_TYPE *)(p_data + offset));
       ++i;
     }
   }
 };
 
 template <class IN_TYPE>
-void PlyFile::retrieve_face_data(std::vector<unsigned int> &sub_data) {
+void PlyFile::retrieve_face_data(std::vector<unsigned int> &out_data) {
 
   std::vector<Element>::iterator elem = elements.begin();
   while (elem->type != ElementType::FACE) {
@@ -95,7 +95,7 @@ void PlyFile::retrieve_face_data(std::vector<unsigned int> &sub_data) {
   while (p_data < face_element.data.data() + face_element.data.size()) {
     p_data += offset;
     for (unsigned int j = 0; j < 3; ++j) {
-      sub_data.at(i) = (unsigned int)*((IN_TYPE *)p_data);
+      out_data.at(i) = (unsigned int)*((IN_TYPE *)p_data);
       p_data += size;
       ++i;
     }
