@@ -1,7 +1,7 @@
 ## Viewer for triangular mesh .ply files
 __A small project to learn c++.__
-The program can parse .ply files for triangular mesh,
-and plot the data.
+The program can parse .ply binary files triangular mesh,
+and render them.
 
 __Capabilities:__
 - flat shading and smooth shading
@@ -21,7 +21,7 @@ __Capabilities:__
 
         ./meshviewer meshes/deform.ply
 
-__Code example :__
+__Code API example :__
 
 ```cpp
 // Read a ply file and show the object and it's curvature
@@ -32,8 +32,10 @@ int main() {
   // Retrieving the vertices's normals from the file.
   std::vector<PropertyName> normal_property_names = {
       PropertyName::nx, PropertyName::ny, PropertyName::nz};
-  std::vector<double> normals;
+
+  std::vector<double> normals; // The data will be converted to double automatically
   file.get_subelement_data<double>("vertices", normal_property_names, normals);
+
 
 
   Mesh mesh(file.vertices, file.faces);
