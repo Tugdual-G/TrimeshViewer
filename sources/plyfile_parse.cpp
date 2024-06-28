@@ -35,6 +35,11 @@ void PlyFile::retrieve_subelement_data(
   while (elem->type != elem_type_enum) {
     ++elem;
   }
+  if (elem->type != elem_type_enum) {
+    std::cout << "Error, could not find element : \"" << element_type
+              << " \" in current file.\n";
+    exit(1);
+  }
   Element &element = *elem;
 
   unsigned int stride = get_element_stride(element);

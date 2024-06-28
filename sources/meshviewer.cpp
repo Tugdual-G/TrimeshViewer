@@ -12,7 +12,7 @@ int main(int argc, char *argv[]) {
 
   PlyFile file(argv[1]);
 
-  Mesh &mesh = file.mesh;
+  Mesh mesh(file.vertices, file.faces);
 
   mesh.set_one_ring();
 

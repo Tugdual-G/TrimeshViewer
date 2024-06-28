@@ -5,7 +5,7 @@
 # @version 0.1
 CCPP = g++
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -Wall -Wextra -O2
 LDFLAGS='-Wl,-rpath,$$ORIGIN/sources/'
 # Targets
 all: ../meshviewer
@@ -16,10 +16,13 @@ all: ../meshviewer
 ../little_cube: ../little_cube.cpp plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-mesh_print.o: mesh_print.cpp
+plyfile_parse.o: plyfile_parse.cpp
 	$(CCPP) $(CFLAGS) -c $^
 
-plyfile_parse.o: plyfile_parse.cpp
+# libmesh.so: mesh_structure.o mesh_operators.o mesh_print.o
+# 	$(CC) $(CFLAGS) -shared -o $@ $^ -fPIC
+
+mesh_print.o: mesh_print.cpp
 	$(CCPP) $(CFLAGS) -c $^
 
 mesh_operators.o: mesh_operators.cpp

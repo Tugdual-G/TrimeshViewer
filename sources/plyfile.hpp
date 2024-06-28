@@ -1,7 +1,7 @@
 #ifndef PLYFILE_H_
 #define PLYFILE_H_
 
-#include "mesh.hpp"
+// #include "mesh.hpp"
 #include <fstream>
 #include <string>
 #include <unordered_map>
@@ -167,10 +167,11 @@ public:
   std::vector<double> vertices;
   std::vector<unsigned int> faces;
   std::vector<double> vertex_normals;
-  Mesh mesh;
+  // Mesh mesh;
+  PlyFile() {}
   PlyFile(const char *fname) {
     from_file(fname);
-    mesh.init(vertices, faces);
+    // mesh.init(vertices, faces);
   }
 
   void print();

@@ -7,3 +7,5 @@ test_quatern
 meshviewer
 *.ply
 !deform.ply
+prof*
+*.prof

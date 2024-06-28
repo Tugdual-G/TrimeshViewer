@@ -33,9 +33,9 @@ public:
   Mesh(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces)
       : vertices(ivertices), faces(ifaces), n_vertices(ivertices.size() / 3),
         n_faces(ifaces.size() / 3) {
-    set_face_normals();
-    set_vertex_adjacent_faces();
-    set_vertex_normals();
+    // set_face_normals();
+    // set_vertex_adjacent_faces();
+    // set_vertex_normals();
   }
 
   void init(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces) {
@@ -43,14 +43,14 @@ public:
     faces = ifaces;
     n_vertices = ivertices.size() / 3;
     n_faces = ifaces.size() / 3;
-    set_face_normals();
-    set_vertex_adjacent_faces();
-    set_vertex_normals();
-    // set_one_ring(); // Migth trow errors with open meshes
+    // set_face_normals();
+    // set_vertex_adjacent_faces();
+    // set_vertex_normals();
+    //  set_one_ring(); // Migth trow errors with open meshes
   }
 
   void set_one_ring();
-  void set_vertex_adjacent_faces();
+  void set_vertex_adjacent_faces(); // ordered faces
   void set_face_normals();
   void set_vertex_normals();
   void set_mean_curvature();
