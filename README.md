@@ -24,11 +24,12 @@ __Capabilities:__
 __Code example :__
 
 ```cpp
+// Read a ply file and show the object and it's curvature
 int main() {
 
   PlyFile file("meshes/deformHQ.ply");
 
-  // Retrieving the vertices normals from the file.
+  // Retrieving the vertices's normals from the file.
   std::vector<PropertyName> normal_property_names = {
       PropertyName::nx, PropertyName::ny, PropertyName::nz};
   std::vector<double> normals;
