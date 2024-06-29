@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
+#define error() error_(const char msg[], __FILE__, __LINE__)
+
 static int check_same_type(Element &elem,
                            const std::vector<PropertyName> &names,
                            PropertyType &type);
@@ -78,8 +80,6 @@ void PlyFile::get_subelement_data(std::string const element_type,
 
   out_data.resize(element.n_elem * property_names.size(), 999);
 
-  unsigned int stride = get_element_stride(element);
-
   std::vector<int> elem_data_offsets;
 
   elem_data_offsets.reserve(property_names.size());
@@ -96,32 +96,45 @@ void PlyFile::get_subelement_data(std::string const element_type,
     }
   }
 
+  if (!element.stride) {
+    std::cout << "Error, undefined stride at line " << __LINE__ << ", file "
+              << __FILE__ << " \n";
+    exit(1);
+  }
   switch (type) {
   case PropertyType::CHAR:
-    extract_data<int8_t>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<int8_t>(element.data, out_data, element.stride,
+                         elem_data_offsets);
     break;
   case PropertyType::UCHAR:
-    extract_data<u_int8_t>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<u_int8_t>(element.data, out_data, element.stride,
+                           elem_data_offsets);
     break;
   case PropertyType::SHORT:
-    extract_data<int16_t>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<int16_t>(element.data, out_data, element.stride,
+                          elem_data_offsets);
     break;
   case PropertyType::USHORT:
-    extract_data<u_int16_t>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<u_int16_t>(element.data, out_data, element.stride,
+                            elem_data_offsets);
     break;
   case PropertyType::INT:
-    extract_data<int32_t>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<int32_t>(element.data, out_data, element.stride,
+                          elem_data_offsets);
     break;
   case PropertyType::UINT:
-    extract_data<u_int32_t>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<u_int32_t>(element.data, out_data, element.stride,
+                            elem_data_offsets);
     break;
   case PropertyType::FLOAT32:
   case PropertyType::FLOAT:
-    extract_data<float>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<float>(element.data, out_data, element.stride,
+                        elem_data_offsets);
     break;
   case PropertyType::FLOAT64:
   case PropertyType::DOUBLE:
-    extract_data<double>(element.data, out_data, stride, elem_data_offsets);
+    extract_data<double>(element.data, out_data, element.stride,
+                         elem_data_offsets);
     break;
   default:
     build_inverse_maps();
@@ -147,7 +160,12 @@ void PlyFile::get_face_data(std::vector<unsigned int> &out_data) {
   offset += type_size_map.at(face_element.lists.at(0).at(0));
   size = type_size_map.at(face_element.lists.at(0).at(1));
 
-  unsigned int stride = get_element_stride(face_element);
+  if (!face_element.stride) {
+    std::cout << "Error, undefined stride at line " << __LINE__ << ", file "
+              << __FILE__ << " \n";
+    exit(1);
+  }
+  unsigned int stride = face_element.stride;
   unsigned int tail = stride - offset - 3 * size;
 
   char *p_data = face_element.data.data();
@@ -231,7 +249,7 @@ int PlyFile::load_data(std::ifstream *file) {
 
   set_elements_file_begin_position(); // where each_element data starts in the
                                       // file
-  unsigned int stride;
+  unsigned int stride{0};
   PropertyType type;
 
   const std::vector<PropertyName> vertex_pos = {
@@ -245,7 +263,13 @@ int PlyFile::load_data(std::ifstream *file) {
       PropertyName::alpha};
 
   for (auto &elem : elements) {
-    stride = get_element_stride(elem);
+    stride = elem.stride;
+    if (!stride) {
+      std::cout << "Error, undefined stride at line " << __LINE__ << ", file "
+                << __FILE__ << " \n";
+      std::cout << "elemtype " << (int)elem.type << "\n";
+      exit(1);
+    }
     if (stride > 100) {
       std::cout
           << "Error, element stride to large, might consume to much memory \n";
@@ -274,6 +298,7 @@ int PlyFile::load_data(std::ifstream *file) {
         exit(1);
       }
       elem.data.resize(stride * elem.n_elem, -127);
+      file->seekg(elem.file_begin_pos);
       file->read(elem.data.data(), stride * elem.n_elem);
       break;
     }
@@ -285,7 +310,8 @@ int PlyFile::load_data(std::ifstream *file) {
         file->close();
         exit(1);
       }
-      elem.data.resize(stride * elem.n_elem, 127);
+      elem.data.resize(stride * elem.n_elem, -127);
+      file->seekg(elem.file_begin_pos);
       file->read(elem.data.data(), stride * elem.n_elem);
       break;
     }
@@ -355,6 +381,10 @@ int PlyFile::parse_header(std::ifstream *file) {
         break;
       case Entries::END:
         file_data_offset = file->tellg();
+        // get the position in the file of each element's data.
+        for (auto &elem : elements) {
+          elem.file_begin_pos = file_data_offset + elem.n_elem * elem.stride;
+        }
         return 1;
       default:
         break;
@@ -391,6 +421,7 @@ int PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
         file->close();
         exit(1);
       }
+      vertex_element.stride = get_element_stride(vertex_element);
       elements.push_back(vertex_element);
       file->seekg(last_offset);
       return 1;
@@ -411,6 +442,7 @@ int PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
   std::cout << "Warning, max number of vertex properties reached : " << i
             << std::endl;
 
+  vertex_element.stride = get_element_stride(vertex_element);
   elements.push_back(vertex_element);
   file->seekg(last_offset);
   return 0;
@@ -440,6 +472,7 @@ int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
         exit(1);
       }
       // End of faces propr
+      face_element.stride = get_element_stride(face_element);
       elements.push_back(face_element);
       file->seekg(last_offset);
       return 1;
@@ -466,12 +499,6 @@ int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
         }
       }
 
-      if (prop_name_map.find(word) == prop_name_map.end()) {
-        std::cout << " Error, this should not have hapenend =( \n";
-        std::cout << word << std::endl;
-        file->close();
-        exit(1);
-      }
       face_element.property_types.push_back(PropertyType::LIST);
       face_element.property_names.push_back(prop_name_map.at(word));
       face_element.lists.push_back(types);
@@ -487,6 +514,7 @@ int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
     ++i;
   }
 
+  face_element.stride = get_element_stride(face_element);
   elements.push_back(face_element);
   file->seekg(last_offset);
   std::cout << "Warning, max number of face properties reached : " << i
@@ -615,4 +643,10 @@ template <class T> void print_vect(std::vector<T> v, int m, int n) {
     }
     std::cout << "\n";
   }
+}
+
+void error_(const char msg[], int line, const char file[]) {
+  std::cout << msg;
+  std::cout << "line " << line << " , file " << file;
+  exit(1);
 }

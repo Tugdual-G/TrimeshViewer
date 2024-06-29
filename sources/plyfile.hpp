@@ -55,7 +55,7 @@ enum class ElementType {
 
 typedef struct Element {
   ElementType type{ElementType::NONE};
-  unsigned int n_elem{0};
+  unsigned int n_elem{0}, stride{0};
   std::vector<PropertyName> property_names;
   std::vector<PropertyType> property_types;
   std::vector<std::vector<PropertyType>> lists{0};
