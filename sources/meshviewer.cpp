@@ -37,7 +37,7 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces);
 
-  render.add_vertex_colors(colors);
+  render.update_vertex_colors(colors);
   render.render_loop(NULL, NULL);
   render.render_finalize();
   return 0;
