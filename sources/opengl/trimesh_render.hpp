@@ -33,9 +33,10 @@ public:
   std::vector<unsigned int> faces;
   unsigned int n_faces{0};
   std::vector<unsigned int>
-      vert_attr_sizes; // size in bytes of x, n, c (xxxnnnccc)
+      vert_attr_sizes; // size in bytes of x, n, c
+                       // (xxxnnnccc)->[3*sizeof(double), 3*sizeof()...]
   std::vector<unsigned int>
-      vert_attr_numbers; // number of x, n, c components (xxxnnnccc)
+      vert_attr_numbers; // number of x, n, c components (xxxnnnccc)->[3,3,3]
 
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
@@ -52,14 +53,16 @@ public:
       : width(w_width), height(w_height), n_vertices(vertices.size() / 3),
         faces(faces), n_faces(faces.size() / 3) {
     program_type = SMOOTH_FACES;
-    vert_attr_sizes.resize(2, 3 * sizeof(double));
-    vert_attr_numbers.resize(2, 3);
-    vertices_attr.resize(vertices.size() * 2);
+    vert_attr_sizes.resize(3, 3 * sizeof(double));
+    vert_attr_numbers.resize(3, 3);
+    vertices_attr.resize(vertices.size() * 3, 0);
     for (unsigned int i = 0; i < n_vertices; ++i) {
       for (unsigned int j = 0; j < 3; ++j) {
-        vertices_attr.at(i * 6 + j) = vertices.at(i * 3 + j);
-        vertices_attr.at(i * 6 + j + 3) = vertex_normals.at(i * 3 + j);
+        vertices_attr.at(i * 9 + j) = vertices.at(i * 3 + j);
+        vertices_attr.at(i * 9 + j + 3) = vertex_normals.at(i * 3 + j);
       }
+      vertices_attr.at(i * 9 + 7) = 0.7; // intial colors
+      vertices_attr.at(i * 9 + 8) = 0.8;
     }
     init_window();
     init_render();
@@ -71,14 +74,16 @@ public:
         faces(faces), n_faces(faces.size() / 3) {
 
     program_type = FLAT_FACES;
-    vertices_attr.resize(vertices.size());
-    vert_attr_sizes.resize(1, 3 * sizeof(double));
-    vert_attr_numbers.resize(1, 3);
+    vertices_attr.resize(vertices.size() * 2);
+    vert_attr_sizes.resize(2, 3 * sizeof(double));
+    vert_attr_numbers.resize(2, 3);
 
     for (unsigned int i = 0; i < n_vertices; ++i) {
       for (unsigned int j = 0; j < 3; ++j) {
-        vertices_attr.at(i * 3 + j) = vertices.at(i * 3 + j);
+        vertices_attr.at(i * 6 + j) = vertices.at(i * 3 + j);
       }
+      vertices_attr.at(i * 6 + 4) = 0.7; // intial colors
+      vertices_attr.at(i * 6 + 5) = 0.8;
     }
     init_window();
     init_render();
@@ -89,7 +94,7 @@ public:
   // void (*keyboard_callback)(GLFWwindow *window, int key, int scancode,
   //                           int action, int mods) = NULL;
   void add_vertex_normals(std::vector<double> &normals);
-  void add_vertex_colors(std::vector<double> &normals);
+  void update_vertex_colors(std::vector<double> &colors);
   // void cursor_callback(GLFWwindow *window, double xpos, double ypos);
 };
 

@@ -20,19 +20,19 @@ all: ../meshviewer
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 plyfile_parse.o: plyfile_parse.cpp
-	$(CCPP) $(CFLAGS) -c $^
+	$(CCPP) $(CFLAGS) -c $<
 
 # libmesh.so: mesh_structure.o mesh_operators.o mesh_print.o
 # 	$(CC) $(CFLAGS) -shared -o $@ $^ -fPIC
 
 mesh_print.o: mesh_print.cpp
-	$(CCPP) $(CFLAGS) -c $^
+	$(CCPP) $(CFLAGS) -c $<
 
 mesh_operators.o: mesh_operators.cpp
-	$(CCPP) $(CFLAGS) -c $^
+	$(CCPP) $(CFLAGS) -c $<
 
 mesh_structure.o: mesh_structure.cpp
-	$(CCPP) $(CFLAGS) -c $^
+	$(CCPP) $(CFLAGS) -c $<
 
 libtrimesh_render.so:  opengl/glad/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c opengl/quatern_transform.cpp
 	$(CC) $(CFLAGS) -I opengl -shared -o $@ $^ -lGL -lglfw -fPIC

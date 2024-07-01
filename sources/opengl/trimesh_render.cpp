@@ -156,6 +156,7 @@ int MeshRender::render_finalize() {
 }
 
 void MeshRender::resize_VAO() {
+  // Resize the VAO and update vertex attributes data
   unsigned int total_size_vertice_attr =
       std::reduce(vert_attr_sizes.begin(), vert_attr_sizes.end());
   unsigned int n_vertice_attr = vert_attr_sizes.size();
@@ -175,31 +176,24 @@ void MeshRender::resize_VAO() {
   }
 }
 
-void MeshRender::add_vertex_colors(std::vector<double> &colors) {
-  vert_attr_sizes.push_back(3 * sizeof(double));
-  vert_attr_numbers.push_back(3);
-
+void MeshRender::update_vertex_colors(std::vector<double> &colors) {
   unsigned int n_vertice_attr =
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end());
-
-  std::vector<double> vertexes_attr_tmp(vertices_attr);
-
-  vertices_attr.resize(vertices_attr.size() + (n_vertices * 3),
-                       -999); // -999 for debug
-
   for (unsigned int i = 0; i < n_vertices; ++i) {
-    for (unsigned int j = 0; j < n_vertice_attr - 3; ++j) {
-      // copies the precedent attributes
-      vertices_attr.at(i * n_vertice_attr + j) =
-          vertexes_attr_tmp.at(i * (n_vertice_attr - 3) + j);
-    }
     for (unsigned int j = 0; j < 3; ++j) {
-      // adds colors
-      vertices_attr.at(i * n_vertice_attr + j + n_vertice_attr - 3) =
+      // copies the precedent attributes
+      vertices_attr.at(i * n_vertice_attr + n_vertice_attr - 3 + j) =
           colors.at(i * 3 + j);
     }
   }
-  resize_VAO();
+
+  unsigned int total_size_vertice_attr =
+      std::reduce(vert_attr_sizes.begin(), vert_attr_sizes.end());
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  // TODO do not reload all data
+  glBufferData(GL_ARRAY_BUFFER, n_vertices * total_size_vertice_attr,
+               vertices_attr.data(), GL_STATIC_DRAW);
 }
 
 void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,

@@ -38,8 +38,8 @@ int main() {
   }
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces, normals);
-
-  render.add_vertex_colors(colors);
+  // MeshRender render(500, 500, mesh.vertices, mesh.faces);
+  render.update_vertex_colors(colors);
   render.render_loop(NULL, NULL);
   render.render_finalize();
   return 0;
