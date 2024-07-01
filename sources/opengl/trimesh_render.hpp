@@ -18,7 +18,7 @@ class MeshRender {
   SHADER_PROGRAM_TYPE program_type{FLAT_FACES};
   unsigned int shader_program, compute_program;
   unsigned int VAO, VBO, EBO;
-  unsigned int q_loc, q_inv_loc;
+  unsigned int q_loc, q_inv_loc, zoom_loc;
 
   void init_window();
   void init_render();
@@ -37,8 +37,11 @@ public:
   std::vector<unsigned int>
       vert_attr_numbers; // number of x, n, c components (xxxnnnccc)
 
-  // defining the transformation corresponding to the current view.
+  // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
+  // defining the zoom level
+  double zoom_level{1}; // zoom is separate from quaternion since we don't want
+                        // to break through the object.
 
   void *userpointer = this; // for use in glfw callback
   GLFWwindow *window;

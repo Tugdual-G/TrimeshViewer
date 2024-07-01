@@ -71,6 +71,7 @@ void MeshRender::set_shader_program() {
 
   q_loc = glGetUniformLocation(shader_program, "q");
   q_inv_loc = glGetUniformLocation(shader_program, "q_inv");
+  zoom_loc = glGetUniformLocation(shader_program, "zoom_level");
 }
 
 void MeshRender::init_render() {
@@ -128,9 +129,12 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
       keep_aspect_ratio(window, width, height);
       processInput(window);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      // Mouse rotation
       glUniform4f(q_loc, (float)q[0], (float)q[1], (float)q[2], (float)q[3]);
       glUniform4f(q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
                   (float)q_inv[3]);
+      // Zoom
+      glUniform1f(zoom_loc, zoom_level);
 
       glBindVertexArray(VAO);
 
@@ -210,15 +214,10 @@ void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,
 }
 
 void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
-
-  MeshRender *render = (MeshRender *)glfwGetWindowUserPointer(window);
   static double x_old{0}, y_old{0};
-  double dx = xpos - x_old, dy = ypos - y_old;
-  x_old = xpos;
-  y_old = ypos;
-
   if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-
+    MeshRender *render = (MeshRender *)glfwGetWindowUserPointer(window);
+    double dx = xpos - x_old, dy = ypos - y_old;
     dx = dx > 15 ? 0.1 : dx;
     dy = dy > 15 ? 0.1 : dy;
     // std::cout << dx << " , " << dy << std::endl;
@@ -233,17 +232,15 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
     render->q = q_new * render->q;
     render->q_inv = render->q_inv * q_new.inv();
   }
-  // std::cout << "q : ";
 
-  // render->q.print_quaternion();
-  // std::cout << std::endl;
+  x_old = xpos;
+  y_old = ypos;
 }
 
 void scroll_callback(GLFWwindow *window, __attribute__((unused)) double xoffset,
                      double yoffset) {
   MeshRender *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
-  rdr->q *= 1.0 + yoffset * SCROLL_SENSITIVITY;
-  rdr->q_inv *= 1.0 + yoffset * SCROLL_SENSITIVITY;
+  rdr->zoom_level *= 1.0 + yoffset * SCROLL_SENSITIVITY;
 }
 
 void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,

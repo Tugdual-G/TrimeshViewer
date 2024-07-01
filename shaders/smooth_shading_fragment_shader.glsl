@@ -4,7 +4,6 @@
 out vec4 FragColor;
 in vec3 normal;
 in vec3 color;
-in float z;
 void main()
 {
     //float intensity =  (1.8 + z)/2.8 * (1.5 + normal.z)/2.5;
