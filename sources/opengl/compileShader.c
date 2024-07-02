@@ -34,6 +34,7 @@ unsigned int compileVertexShader(const char *sourcefname) {
   glShaderSource(v_shader, 1, &s, NULL);
   glCompileShader(v_shader);
   glGetShaderiv(v_shader, GL_COMPILE_STATUS, &success);
+
   if (!success) {
     glGetShaderInfoLog(v_shader, 512, NULL, infoLog);
     printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n");

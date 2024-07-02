@@ -5,7 +5,7 @@
 # @version 0.1
 CCPP = g++
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -Wall -Wextra -O2 -g
 LDFLAGS='-Wl,-rpath,$$ORIGIN/sources/'
 # Targets
 all: ../meshviewer
@@ -13,7 +13,7 @@ all: ../meshviewer
 ../meshviewer: meshviewer.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-../axiscross: ../axiscross.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
+../demo: ../demo.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 ../little_cube: ../little_cube.cpp plymesh_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
@@ -34,7 +34,7 @@ mesh_operators.o: mesh_operators.cpp
 mesh_structure.o: mesh_structure.cpp
 	$(CCPP) $(CFLAGS) -c $<
 
-libtrimesh_render.so:  opengl/glad/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c opengl/quatern_transform.cpp
+libtrimesh_render.so:  opengl/glad/glad.c opengl/trimesh_render.cpp opengl/display_window.c opengl/compileShader.c opengl/quatern_transform.cpp opengl/axis_cross.cpp
 	$(CC) $(CFLAGS) -I opengl -shared -o $@ $^ -lGL -lglfw -fPIC
 
 test_quatern: opengl/test_quatern.cpp

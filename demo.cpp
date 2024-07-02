@@ -13,8 +13,9 @@ int main() {
 
   std::vector<PropertyName> normal_property_names = {
       PropertyName::nx, PropertyName::ny, PropertyName::nz};
-  std::vector<double> normals;
-  file.get_subelement_data<double>("vertices", normal_property_names, normals);
+  // std::vector<double> normals;
+  // file.get_subelement_data<double>("vertices", normal_property_names,
+  // normals);
 
   mesh.set_one_ring();
 
@@ -37,9 +38,9 @@ int main() {
     v /= extent_vert;
   }
 
-  MeshRender render(500, 500, mesh.vertices, mesh.faces, normals);
-  // MeshRender render(500, 500, mesh.vertices, mesh.faces);
-  render.update_vertex_colors(colors);
+  // MeshRender render(500, 500, mesh.vertices, mesh.faces, normals);
+  MeshRender render(500, 500, mesh.vertices, mesh.faces);
+  render.update_vertex_colors(colors, 1);
   render.render_loop(NULL, NULL);
   render.render_finalize();
   return 0;

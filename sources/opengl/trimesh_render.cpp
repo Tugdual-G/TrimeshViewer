@@ -17,6 +17,7 @@ GLenum glCheckError_(const char *file, int line);
 #define SHADER_PATH "shaders/"
 #define SMOOTH_SHADE_NAME SHADER_PATH "smooth_shading_"
 #define FLAT_SHADE_NAME SHADER_PATH "flat_shading_"
+#define AXIS_CROSS_NAME SHADER_PATH "axis_cross_"
 #define MOUSE_SENSITIVITY 0.005
 #define SCROLL_SENSITIVITY 0.05
 
@@ -44,9 +45,14 @@ void MeshRender::init_window() {
   glfwSetKeyCallback(window, keyboard_callback);
   glfwSetCursorPosCallback(window, cursor_callback);
   glfwSetScrollCallback(window, scroll_callback);
+
+  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+    printf("Failed to initialize GLAD\n");
+    exit(1);
+  }
 }
 
-void MeshRender::set_shader_program() {
+void MeshRender::Object::set_shader_program() {
   // Compile shaders
   unsigned int vertexShader{0};
   unsigned int fragmentShader{0};
@@ -60,6 +66,11 @@ void MeshRender::set_shader_program() {
     vertexShader = compileVertexShader(SMOOTH_SHADE_NAME "vertex_shader.glsl");
     fragmentShader =
         compileFragmentShader(SMOOTH_SHADE_NAME "fragment_shader.glsl");
+    break;
+  case AXIS_CROSS:
+    vertexShader = compileVertexShader(AXIS_CROSS_NAME "vertex_shader.glsl");
+    fragmentShader =
+        compileFragmentShader(FLAT_SHADE_NAME "fragment_shader.glsl");
     break;
   }
 
@@ -75,13 +86,6 @@ void MeshRender::set_shader_program() {
 }
 
 void MeshRender::init_render() {
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    printf("Failed to initialize GLAD\n");
-    exit(1);
-  }
-
-  // Compile shaders
-  set_shader_program();
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
   keep_aspect_ratio(window, width, height);
@@ -94,8 +98,9 @@ void MeshRender::init_render() {
 
   // Square EBO
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * n_faces * 3,
-               faces.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               sizeof(unsigned int) * n_total_faces * 3, faces.data(),
+               GL_STATIC_DRAW);
 
   glCheckError();
 }
@@ -105,44 +110,43 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   int flag = 1;
   glClearColor(0.0, 0.0, 0.0, 0.0);
-  glUseProgram(shader_program);
   // Enable depth test
   glEnable(GL_DEPTH_TEST);
   // Accept fragment if it closer to the camera than the former one
   glDepthFunc(GL_LESS);
 
-  if (data_update_function != NULL) {
-    while (!glfwWindowShouldClose(window) && flag) {
-      keep_aspect_ratio(window, width, height);
-      processInput(window);
-      glClear(GL_COLOR_BUFFER_BIT);
-      flag = data_update_function(fargs);
-      // render container
-      glBindVertexArray(VAO);
-      glDrawElements(GL_TRIANGLES, n_faces * 3, GL_INT, 0);
-      glfwSwapBuffers(window);
-      glfwPollEvents();
-    }
+  // if (data_update_function != NULL) {
+  //   while (!glfwWindowShouldClose(window) && flag) {
+  //     keep_aspect_ratio(window, width, height);
+  //     processInput(window);
+  //     glClear(GL_COLOR_BUFFER_BIT);
+  //     flag = data_update_function(fargs);
+  //     // render container
+  //     glBindVertexArray(VAO);
+  //     glDrawElements(GL_TRIANGLES, n_faces * 3, GL_INT, 0);
+  //     glfwSwapBuffers(window);
+  //     glfwPollEvents();
+  //   }
 
-  } else {
-    while (!glfwWindowShouldClose(window) && flag) {
-      keep_aspect_ratio(window, width, height);
-      processInput(window);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      // Mouse rotation
-      glUniform4f(q_loc, (float)q[0], (float)q[1], (float)q[2], (float)q[3]);
-      glUniform4f(q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
-                  (float)q_inv[3]);
-      // Zoom
-      glUniform1f(zoom_loc, zoom_level);
+  // } else {
+  while (!glfwWindowShouldClose(window) && flag) {
 
-      glBindVertexArray(VAO);
+    glBindVertexArray(VAO);
 
-      glDrawElements(GL_TRIANGLES, n_faces * 3, GL_UNSIGNED_INT, 0);
-      glfwSwapBuffers(window);
-      glfwPollEvents();
-    }
+    keep_aspect_ratio(window, width, height);
+    processInput(window);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    objects.at(0).draw();
+
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    objects.at(1).draw();
+
+    glfwSwapBuffers(window);
+    glfwPollEvents();
   }
+  //}
   glCheckError();
   return 0;
 }
@@ -155,6 +159,77 @@ int MeshRender::render_finalize() {
   return 0;
 }
 
+int MeshRender::add_object(std::vector<double> &ivertices,
+                           std::vector<unsigned int> ifaces,
+                           SHADER_PROGRAM_TYPE shader_type) {
+
+  Object new_mesh(
+      q, q_inv, zoom_level,
+      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+  new_mesh.attr_offset = vertices_attr.size();
+  new_mesh.attr_length = ivertices.size() * 2;
+  new_mesh.faces_indices_offset = faces.size();
+  new_mesh.faces_indices_length = ifaces.size();
+  new_mesh.n_faces = ifaces.size() / 3;
+  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.program_type = shader_type;
+
+  vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
+  faces.resize(faces.size() + ifaces.size());
+
+  std::copy(ifaces.begin(), ifaces.end(), faces.begin() + n_total_faces * 3);
+  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+
+  for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at((n_total_vertices + i) * 6 + j) =
+          ivertices.at(i * 3 + j);
+    }
+    vertices_attr.at((n_total_vertices + i) * 6 + 4) = 0.7; // intial colors
+    vertices_attr.at((n_total_vertices + i) * 6 + 5) = 0.8;
+  }
+  n_total_vertices += ivertices.size() / 3;
+  new_mesh.set_shader_program();
+  objects.push_back(new_mesh);
+  return objects.size() - 1;
+}
+
+int MeshRender::add_object(std::vector<double> &ivertices,
+                           std::vector<unsigned int> ifaces,
+                           std::vector<double> colors,
+                           SHADER_PROGRAM_TYPE shader_type) {
+
+  Object new_mesh(
+      q, q_inv, zoom_level,
+      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+  new_mesh.attr_offset = vertices_attr.size();
+  new_mesh.attr_length = ivertices.size() * 2;
+  new_mesh.faces_indices_offset = faces.size();
+  new_mesh.faces_indices_length = ifaces.size();
+  new_mesh.n_faces = ifaces.size() / 3;
+  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.program_type = shader_type;
+
+  vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
+  faces.resize(faces.size() + ifaces.size());
+
+  std::copy(ifaces.begin(), ifaces.end(), faces.begin() + n_total_faces * 3);
+  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+
+  for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at((n_total_vertices + i) * 6 + j) =
+          ivertices.at(i * 3 + j);
+      vertices_attr.at((n_total_vertices + i) * 6 + 3 + j) =
+          colors.at(i * 3 + j); // intial colors
+    }
+  }
+  n_total_vertices += ivertices.size() / 3;
+  new_mesh.set_shader_program();
+  objects.push_back(new_mesh);
+  return objects.size() - 1;
+}
+
 void MeshRender::resize_VAO() {
   // Resize the VAO and update vertex attributes data
   unsigned int total_size_vertice_attr =
@@ -164,7 +239,7 @@ void MeshRender::resize_VAO() {
 
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, n_vertices * total_size_vertice_attr,
+  glBufferData(GL_ARRAY_BUFFER, n_total_vertices * total_size_vertice_attr,
                vertices_attr.data(), GL_STATIC_DRAW);
 
   for (unsigned int i = 0; i < n_vertice_attr; ++i) {
@@ -176,14 +251,17 @@ void MeshRender::resize_VAO() {
   }
 }
 
-void MeshRender::update_vertex_colors(std::vector<double> &colors) {
+void MeshRender::update_vertex_colors(std::vector<double> &colors,
+                                      unsigned int object_idx) {
+  // TODO vertices attr numbers might vary
   unsigned int n_vertice_attr =
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end());
-  for (unsigned int i = 0; i < n_vertices; ++i) {
+  Object &obj = objects.at(object_idx);
+  for (unsigned int i = 0; i < obj.n_vertices; ++i) {
     for (unsigned int j = 0; j < 3; ++j) {
       // copies the precedent attributes
-      vertices_attr.at(i * n_vertice_attr + n_vertice_attr - 3 + j) =
-          colors.at(i * 3 + j);
+      vertices_attr.at(obj.attr_offset + i * n_vertice_attr + n_vertice_attr -
+                       3 + j) = colors.at(i * 3 + j);
     }
   }
 
@@ -192,7 +270,7 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors) {
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // TODO do not reload all data
-  glBufferData(GL_ARRAY_BUFFER, n_vertices * total_size_vertice_attr,
+  glBufferData(GL_ARRAY_BUFFER, total_size_vertice_attr * n_total_vertices,
                vertices_attr.data(), GL_STATIC_DRAW);
 }
 
