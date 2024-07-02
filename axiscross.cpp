@@ -58,10 +58,12 @@ int main() {
       23, 16, 24, //
   };
 
-  std::vector<double> vertices_xaxis((3 * N + 1) * 3, 0);
+  unsigned int n_vertices = 3 * N + 2;
+  unsigned int n_faces = 6 * N;
+  std::vector<double> vertices_xaxis(n_vertices * 3, 0);
   std::vector<Quaternion> vert_quat;
-  vert_quat.resize(3 * N + 1);
-  std::vector<unsigned int> faces((5 * N) * 3, 0);
+  vert_quat.resize(n_vertices);
+  std::vector<unsigned int> faces(n_faces * 3, 0);
   std::vector<double> theta_ext(N);
   std::vector<double> theta_int(N);
 
@@ -72,55 +74,62 @@ int main() {
 
   // shaft base
   for (unsigned int i = 0; i < N; ++i) {
-    vertices_xaxis[3 * i + 1] = r_i * sin(theta_int.at(i));
-    vertices_xaxis[3 * i + 2] = r_i * cos(theta_int.at(i));
+    vertices_xaxis[3 * (i + 1) + 1] = r_i * sin(theta_int.at(i));
+    vertices_xaxis[3 * (i + 1) + 2] = r_i * cos(theta_int.at(i));
   }
   // cone junction
   for (unsigned int i = 0; i < N; ++i) {
-    vertices_xaxis[3 * (i + N)] = base_length;
-    vertices_xaxis[3 * (i + N) + 1] = r_i * sin(theta_int.at(i));
-    vertices_xaxis[3 * (i + N) + 2] = r_i * cos(theta_int.at(i));
+    vertices_xaxis[3 * (i + N + 1)] = base_length;
+    vertices_xaxis[3 * (i + N + 1) + 1] = r_i * sin(theta_int.at(i));
+    vertices_xaxis[3 * (i + N + 1) + 2] = r_i * cos(theta_int.at(i));
   }
   // cone base
   for (unsigned int i = 0; i < N; ++i) {
-    vertices_xaxis[3 * (i + 2 * N)] = base_length;
-    vertices_xaxis[3 * (i + 2 * N) + 1] = r_e * sin(theta_ext.at(i));
-    vertices_xaxis[3 * (i + 2 * N) + 2] = r_e * cos(theta_ext.at(i));
+    vertices_xaxis[3 * (i + 2 * N + 1)] = base_length;
+    vertices_xaxis[3 * (i + 2 * N + 1) + 1] = r_e * sin(theta_ext.at(i));
+    vertices_xaxis[3 * (i + 2 * N + 1) + 2] = r_e * cos(theta_ext.at(i));
   }
   // tip
-  vertices_xaxis.at(3 * (3 * N)) = 1;
-  vertices_xaxis.at(3 * (3 * N) + 1) = 0;
-  vertices_xaxis.at(3 * (3 * N) + 2) = 0;
+  vertices_xaxis.at(3 * (3 * N + 1)) = 1;
+  vertices_xaxis.at(3 * (3 * N + 1) + 1) = 0;
+  vertices_xaxis.at(3 * (3 * N + 1) + 2) = 0;
+
+  // shaft base
+  for (unsigned int i = 0; i < N; ++i) {
+    faces.at(3 * i) = (i + 1) % N + 1;
+    faces.at(3 * i + 1) = i + 1;
+    faces.at(3 * i + 2) = 0;
+  }
 
   // shaft
   for (unsigned int i = 0; i < N; ++i) {
-    faces[3 * i] = i;
-    faces[3 * i + 1] = (i + 1) % N;
-    faces[3 * i + 2] = N + i;
+    faces[3 * (i + N)] = i + 1;
+    faces[3 * (i + N) + 1] = (i + 1) % N + 1;
+    faces[3 * (i + N) + 2] = N + i + 1;
   }
   for (unsigned int i = 0; i < N; ++i) {
-    faces[3 * (i + N)] = (i + 1) % N;
-    faces[3 * (i + N) + 1] = N + (i + 1) % N;
-    faces[3 * (i + N) + 2] = N + i;
+    faces[3 * (i + 2 * N)] = (i + 1) % N + 1;
+    faces[3 * (i + 2 * N) + 1] = N + (i + 1) % N + 1;
+    faces[3 * (i + 2 * N) + 2] = N + i + 1;
   }
 
   // Cone base
   for (unsigned int i = 0; i < N; ++i) {
-    faces[3 * (i + 2 * N)] = N + i % N;
-    faces[3 * (i + 2 * N) + 1] = N + (i + 1) % N;
-    faces[3 * (i + 2 * N) + 2] = 2 * N + i;
+    faces[3 * (i + 3 * N)] = N + i % N + 1;
+    faces[3 * (i + 3 * N) + 1] = N + (i + 1) % N + 1;
+    faces[3 * (i + 3 * N) + 2] = 2 * N + i + 1;
   }
   for (unsigned int i = 0; i < N; ++i) {
-    faces[3 * (i + 3 * N)] = N + (i + 1) % N;
-    faces[3 * (i + 3 * N) + 1] = 2 * N + (i + 1) % N;
-    faces[3 * (i + 3 * N) + 2] = 2 * N + i;
+    faces[3 * (i + 4 * N)] = N + (i + 1) % N + 1;
+    faces[3 * (i + 4 * N) + 1] = 2 * N + (i + 1) % N + 1;
+    faces[3 * (i + 4 * N) + 2] = 2 * N + i + 1;
   }
 
   // Cone tip
   for (unsigned int i = 0; i < N; ++i) {
-    faces.at(3 * (i + 4 * N)) = 2 * N + i;
-    faces.at(3 * (i + 4 * N) + 1) = 2 * N + (i + 1) % N;
-    faces.at(3 * (i + 4 * N) + 2) = 3 * N;
+    faces.at(3 * (i + 5 * N)) = 2 * N + i + 1;
+    faces.at(3 * (i + 5 * N) + 1) = 2 * N + (i + 1) % N + 1;
+    faces.at(3 * (i + 5 * N) + 2) = 3 * N + 1;
   }
 
   // for (unsigned int i = 0; i < 15 * N; ++i) {
@@ -138,33 +147,35 @@ int main() {
 
   // transform
 
-  std::vector<double> vertices_yaxis((3 * N + 1) * 3, 0);
-  std::vector<double> vertices_zaxis((3 * N + 1) * 3, 0);
-  Quaternion qx_y(sqrt2 / 2.0, 0, 0, sqrt2 / 2);
-  Quaternion qx_z(sqrt2 / 2.0, 0, sqrt2 / 2, 0);
+  std::vector<double> vertices_yaxis(vertices_xaxis.size(), 0);
+  std::vector<double> vertices_zaxis(vertices_xaxis.size(), 0);
+  Quaternion qx_y(sqrt2 / 2.0, 0, 0, -sqrt2 / 2);
+  Quaternion qx_z(sqrt2 / 2.0, 0, -sqrt2 / 2, 0);
   Quaternion vert_tmp;
 
-  for (unsigned int i = 0; i < 3 * N + 1; ++i) {
+  for (unsigned int i = 0; i < n_vertices; ++i) {
     vert_quat.at(i)[0] = 0;
     vert_quat.at(i)[1] = vertices_xaxis[3 * i];
     vert_quat.at(i)[2] = vertices_xaxis[3 * i + 1];
     vert_quat.at(i)[3] = vertices_xaxis[3 * i + 2];
   }
 
-  for (unsigned int i = 0; i < 3 * N + 1; ++i) {
+  for (unsigned int i = 0; i < n_vertices; ++i) {
     vert_tmp.multiply(qx_y, vert_quat.at(i));
+    vert_tmp = vert_tmp * qx_y.inv();
     vertices_yaxis.at(i * 3) = vert_tmp[1];
     vertices_yaxis.at(i * 3 + 1) = vert_tmp[2];
     vertices_yaxis.at(i * 3 + 2) = vert_tmp[3];
   }
-  for (unsigned int i = 0; i < 3 * N + 1; ++i) {
+  for (unsigned int i = 0; i < n_vertices; ++i) {
     vert_tmp.multiply(qx_z, vert_quat.at(i));
+    vert_tmp = vert_tmp * qx_z.inv();
     vertices_zaxis.at(i * 3) = vert_tmp[1];
     vertices_zaxis.at(i * 3 + 1) = vert_tmp[2];
     vertices_zaxis.at(i * 3 + 2) = vert_tmp[3];
   }
 
-  MeshRender render(500, 500, vertices_xaxis, faces);
+  MeshRender render(500, 500, vertices_zaxis, faces);
   render.render_loop(NULL, NULL);
   render.render_finalize();
 
