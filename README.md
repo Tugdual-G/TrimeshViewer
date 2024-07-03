@@ -1,19 +1,28 @@
 ## Viewer for triangular mesh .ply files
+__A small project to learn c++__
 <img src="example.png" alt="example" width="400"/>
 
-__A small project to learn c++.__
-The program can parse .ply binary files triangular mesh,
-and render them.
+This repository contains three modules: a .ply file parser,
+a mesh analyze toolset, and a simple render library.
 
-__Capabilities:__
-- flat shading and smooth shading
-- Use colormaps to show scalar quantities
-- compute curvature & normal
+The goal was to implement a fast and simple meshviewer using shaders and c++.
+All transformations are matrix-free and rely on quaternions to keep things simple and efficient.
+
+__Features:__
+- display multiples meshes
+- flat shading/smooth shading
+- colormaps
 - zoom and rotate with the mouse
+- show the current orientation
+- orthographic projection
+- curvature, normal, ordered one-ring, and ordered-adjacency computation
+
 
 ## Requirements
+- Linux
 - opengl 4.6
 - glfw
+
 
 ## Compilation
 
@@ -23,7 +32,7 @@ __Capabilities:__
 
         ./meshviewer meshes/deform.ply
 
-__Code API example :__
+__Code API example:__
 
 ```cpp
 // Read a ply file and show the object and it's curvature
@@ -52,9 +61,12 @@ int main() {
   std::vector<double> colors;
   get_interpolated_colors(k, colors, INFERNO);
 
-  MeshRender render(500, 500, mesh.vertices, mesh.faces, normals);
+  MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
 
-  render.add_vertex_colors(colors);
+  // adding another mesh to the display
+  PlyFile file2("meshes/spinningtop.ply");
+  render.add_object(file2.vertices, file2.faces, ShaderProgramType::FLAT_FACES);
+
   render.render_loop(NULL, NULL);
   render.render_finalize();
   return 0;
