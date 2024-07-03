@@ -1,5 +1,6 @@
 ## Viewer for triangular mesh .ply files
 __A small project to learn c++__
+
 <img src="example.png" alt="example" width="400"/>
 
 This repository contains three modules: a .ply file parser,
