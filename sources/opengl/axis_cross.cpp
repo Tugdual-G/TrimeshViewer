@@ -132,7 +132,7 @@ void MeshRender::set_axis_cross() {
 
   // scaling and translation
   for (unsigned int i = 0; i < n_vertices * 9; ++i) {
-    axis_vertices.at(i) *= 0.30;
+    axis_vertices.at(i) *= 0.25;
   }
 
   add_object(axis_vertices, axis_faces, axis_color,

@@ -1,7 +1,6 @@
 #include "trimesh_render.hpp"
 extern "C" {
 #include "compileShader.h"
-#include "display_window.h"
 }
 #include "glad/include/glad/glad.h" // glad should be included before glfw3
 #include "math.h"
@@ -97,10 +96,13 @@ void MeshRender::Object::set_shader_program() {
       shader_program, "viewport_size"); // for the aspect ratio
 }
 
+void framebuffer_size_callback(__attribute__((unused)) GLFWwindow *window,
+                               int width, int height) {
+  glViewport(0, 0, width, height);
+}
 void MeshRender::init_render() {
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  // keep_aspect_ratio(window, width, height);
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -145,13 +147,9 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
   while (!glfwWindowShouldClose(window) && flag) {
     glfwGetWindowSize(window, &width, &height);
     glBindVertexArray(VAO);
-    // keep_aspect_ratio(window, width, height);
-    processInput(window);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // objects.at(0).draw(); // axis cross
-
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     for (auto &obj : objects) {
       draw(obj);
@@ -365,6 +363,9 @@ void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
     case GLFW_KEY_O:
       rdr->q *= 0.9;
       rdr->q_inv *= 0.9;
+      break;
+    case GLFW_KEY_ESCAPE:
+      glfwSetWindowShouldClose(window, 1);
       break;
       // case GLFW_KEY_RIGHT:
       //   break;
