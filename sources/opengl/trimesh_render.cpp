@@ -103,9 +103,10 @@ void MeshRender::init_render() {
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
+  glCheckError();
+}
 
-  resize_VAO();
-
+void MeshRender::resize_EBO() {
   // Square EBO
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -148,10 +149,12 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    objects.at(0).draw();
+    // objects.at(0).draw(); // axis cross
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    objects.at(1).draw();
+    for (auto &obj : objects) {
+      obj.draw();
+    }
 
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -201,6 +204,8 @@ int MeshRender::add_object(std::vector<double> &ivertices,
   n_total_vertices += ivertices.size() / 3;
   new_mesh.set_shader_program();
   objects.push_back(new_mesh);
+  resize_VAO();
+  resize_EBO();
   return objects.size() - 1;
 }
 
@@ -237,6 +242,8 @@ int MeshRender::add_object(std::vector<double> &ivertices,
   n_total_vertices += ivertices.size() / 3;
   new_mesh.set_shader_program();
   objects.push_back(new_mesh);
+  resize_VAO();
+  resize_EBO();
   return objects.size() - 1;
 }
 

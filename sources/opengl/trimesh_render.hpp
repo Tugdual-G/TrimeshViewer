@@ -68,6 +68,7 @@ class MeshRender {
   void init_window();
   void init_render();
   void resize_VAO();
+  void resize_EBO();
   // void set_shader_program();
 
 public:
@@ -146,11 +147,11 @@ public:
     vert_attr_sizes.resize(2, 3 * sizeof(double));
     vert_attr_numbers.resize(2, 3);
     init_window();
+    init_render();
     vertices_attr.resize(0);
     faces.resize(0);
     set_axis_cross();
     add_object(ivertices, ifaces, icolors, ShaderProgramType::FLAT_FACES);
-    init_render();
   }
 
   int render_finalize();
