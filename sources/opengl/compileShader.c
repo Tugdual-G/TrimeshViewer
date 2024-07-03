@@ -47,7 +47,8 @@ unsigned int compileVertexShader(const char *sourcefname) {
 unsigned int compileFragmentShader(const char *sourcefname) {
   FILE *fp = fopen(sourcefname, "rb+");
   if (!fp) {
-    printf("error: cannot open fragment shader source file \n");
+    printf("error: cannot open fragment shader source file :  %s  \n",
+           sourcefname);
     exit(1);
   }
   fseek(fp, 0, SEEK_END);

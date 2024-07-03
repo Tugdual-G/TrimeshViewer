@@ -21,7 +21,7 @@ void main()
     // rotation
     vec4 pos = mul_quatern(vec4(0.0, in_pos.xyz), q_inv);
     pos = mul_quatern(q, pos);
-    pos -= 0.72;
+    pos.yzw -= 0.72;
     position = pos.yzw;// for flat shading
     gl_Position = vec4(pos.yzw, 1.0);
     color = in_color;

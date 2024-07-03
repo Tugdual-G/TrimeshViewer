@@ -9,10 +9,11 @@
 #include <numeric>
 #include <vector>
 
-enum SHADER_PROGRAM_TYPE {
+enum class ShaderProgramType {
   FLAT_FACES,
   SMOOTH_FACES,
-  AXIS_CROSS,
+  AXIS_CROSS_FLAT,
+  AXIS_CROSS_SMOOTH,
 };
 
 class MeshRender {
@@ -30,7 +31,7 @@ class MeshRender {
     unsigned int q_loc{0}, q_inv_loc{0}, zoom_loc{0};
     Quaternion &q, &q_inv;
     double &zoom_level;
-    SHADER_PROGRAM_TYPE program_type{FLAT_FACES};
+    ShaderProgramType program_type{ShaderProgramType::FLAT_FACES};
     unsigned int total_number_attr;
 
     void set_shader_program();
@@ -117,11 +118,11 @@ public:
 
   int add_object(std::vector<double> &ivertices,
                  std::vector<unsigned int> ifaces,
-                 SHADER_PROGRAM_TYPE shader_type);
+                 ShaderProgramType shader_type);
 
   int add_object(std::vector<double> &ivertices,
                  std::vector<unsigned int> ifaces, std::vector<double> colors,
-                 SHADER_PROGRAM_TYPE shader_type);
+                 ShaderProgramType shader_type);
 
   void set_axis_cross();
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
@@ -134,7 +135,21 @@ public:
     vertices_attr.resize(0);
     faces.resize(0);
     set_axis_cross();
-    add_object(ivertices, ifaces, FLAT_FACES);
+    add_object(ivertices, ifaces, ShaderProgramType::FLAT_FACES);
+    init_render();
+  }
+
+  MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
+             std::vector<unsigned int> &ifaces, std::vector<double> &icolors)
+      : width(w_width), height(w_height) {
+
+    vert_attr_sizes.resize(2, 3 * sizeof(double));
+    vert_attr_numbers.resize(2, 3);
+    init_window();
+    vertices_attr.resize(0);
+    faces.resize(0);
+    set_axis_cross();
+    add_object(ivertices, ifaces, icolors, ShaderProgramType::FLAT_FACES);
     init_render();
   }
 

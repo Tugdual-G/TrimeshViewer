@@ -15,9 +15,9 @@ GLenum glCheckError_(const char *file, int line);
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 #define SHADER_PATH "shaders/"
-#define SMOOTH_SHADE_NAME SHADER_PATH "smooth_shading_"
-#define FLAT_SHADE_NAME SHADER_PATH "flat_shading_"
-#define AXIS_CROSS_NAME SHADER_PATH "axis_cross_"
+#define SMOOTH_SHADE_NAME "smooth_shading_"
+#define FLAT_SHADE_NAME "flat_shading_"
+#define AXIS_CROSS_NAME "axis_cross_"
 #define MOUSE_SENSITIVITY 0.005
 #define SCROLL_SENSITIVITY 0.05
 
@@ -57,20 +57,30 @@ void MeshRender::Object::set_shader_program() {
   unsigned int vertexShader{0};
   unsigned int fragmentShader{0};
   switch (program_type) {
-  case FLAT_FACES:
-    vertexShader = compileVertexShader(FLAT_SHADE_NAME "vertex_shader.glsl");
-    fragmentShader =
-        compileFragmentShader(FLAT_SHADE_NAME "fragment_shader.glsl");
+  case ShaderProgramType::FLAT_FACES:
+    vertexShader =
+        compileVertexShader(SHADER_PATH FLAT_SHADE_NAME "vertex_shader.glsl");
+    fragmentShader = compileFragmentShader(SHADER_PATH FLAT_SHADE_NAME
+                                           "fragment_shader.glsl");
     break;
-  case SMOOTH_FACES:
-    vertexShader = compileVertexShader(SMOOTH_SHADE_NAME "vertex_shader.glsl");
-    fragmentShader =
-        compileFragmentShader(SMOOTH_SHADE_NAME "fragment_shader.glsl");
+  case ShaderProgramType::SMOOTH_FACES:
+    vertexShader =
+        compileVertexShader(SHADER_PATH SMOOTH_SHADE_NAME "vertex_shader.glsl");
+    fragmentShader = compileFragmentShader(SHADER_PATH SMOOTH_SHADE_NAME
+                                           "fragment_shader.glsl");
     break;
-  case AXIS_CROSS:
-    vertexShader = compileVertexShader(AXIS_CROSS_NAME "vertex_shader.glsl");
-    fragmentShader =
-        compileFragmentShader(FLAT_SHADE_NAME "fragment_shader.glsl");
+  case ShaderProgramType::AXIS_CROSS_FLAT:
+    vertexShader = compileVertexShader(
+        SHADER_PATH AXIS_CROSS_NAME FLAT_SHADE_NAME "vertex_shader.glsl");
+    fragmentShader = compileFragmentShader(SHADER_PATH FLAT_SHADE_NAME
+                                           "fragment_shader.glsl");
+    break;
+
+  case ShaderProgramType::AXIS_CROSS_SMOOTH:
+    vertexShader = compileVertexShader(
+        SHADER_PATH AXIS_CROSS_NAME SMOOTH_SHADE_NAME "vertex_shader.glsl");
+    fragmentShader = compileFragmentShader(SHADER_PATH SMOOTH_SHADE_NAME
+                                           "fragment_shader.glsl");
     break;
   }
 
@@ -161,7 +171,7 @@ int MeshRender::render_finalize() {
 
 int MeshRender::add_object(std::vector<double> &ivertices,
                            std::vector<unsigned int> ifaces,
-                           SHADER_PROGRAM_TYPE shader_type) {
+                           ShaderProgramType shader_type) {
 
   Object new_mesh(
       q, q_inv, zoom_level,
@@ -197,7 +207,7 @@ int MeshRender::add_object(std::vector<double> &ivertices,
 int MeshRender::add_object(std::vector<double> &ivertices,
                            std::vector<unsigned int> ifaces,
                            std::vector<double> colors,
-                           SHADER_PROGRAM_TYPE shader_type) {
+                           ShaderProgramType shader_type) {
 
   Object new_mesh(
       q, q_inv, zoom_level,

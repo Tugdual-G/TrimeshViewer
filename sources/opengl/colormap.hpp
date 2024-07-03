@@ -445,7 +445,7 @@ void get_interpolated_colors(std::vector<double> &values,
 
 void get_interpolated_colors(std::vector<double> &values,
                              std::vector<double> &colors, double *cmap,
-                             double &minv, double &maxv) {
+                             double minv, double maxv) {
   colors.resize(values.size() * 3);
   double inv_delta = 1 / (maxv - minv);
   for (unsigned int i = 0; i < values.size(); ++i) {

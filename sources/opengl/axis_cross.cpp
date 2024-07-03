@@ -91,8 +91,8 @@ void MeshRender::set_axis_cross() {
   }
 
   // Creating the y and z arrows by rotation
-  Quaternion qx_y(sqrt2 / 2.0, 0, 0, -sqrt2 / 2);
-  Quaternion qx_z(sqrt2 / 2.0, 0, -sqrt2 / 2, 0);
+  Quaternion qx_y(sqrt2 / 2.0, 0, 0, sqrt2 / 2);
+  Quaternion qx_z(sqrt2 / 2.0, 0, sqrt2 / 2, 0);
   Quaternion vert_tmp;
 
   for (unsigned int i = 0; i < n_vertices; ++i) {
@@ -132,10 +132,11 @@ void MeshRender::set_axis_cross() {
 
   // scaling and translation
   for (unsigned int i = 0; i < n_vertices * 9; ++i) {
-    axis_vertices.at(i) *= 0.25;
+    axis_vertices.at(i) *= 0.30;
   }
 
-  add_object(axis_vertices, axis_faces, axis_color, AXIS_CROSS);
+  add_object(axis_vertices, axis_faces, axis_color,
+             ShaderProgramType::AXIS_CROSS_FLAT);
 
   // MeshRender render(500, 500, axis_vertices, axis_faces);
   // render.update_vertex_colors(axis_color, 0);

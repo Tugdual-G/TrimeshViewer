@@ -22,7 +22,9 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
   mesh.scalar_mean_curvature(k);
 
   std::vector<double> colors;
-  get_interpolated_colors(k, colors, INFERNO);
+  auto [minvk, maxvk] = std::minmax_element(k.begin(), k.end());
+  double mink = *minvk, maxk = *maxvk;
+  get_interpolated_colors(k, colors, INFERNO, mink - 0.1, maxk);
 
   auto [minv, maxv] =
       std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
@@ -35,9 +37,7 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
     v /= extent_vert;
   }
 
-  MeshRender render(500, 500, mesh.vertices, mesh.faces);
-
-  render.update_vertex_colors(colors);
+  MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
   render.render_loop(NULL, NULL);
   render.render_finalize();
   return 0;

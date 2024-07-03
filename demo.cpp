@@ -7,7 +7,7 @@
 
 int main() {
 
-  PlyFile file("meshes/deformHQ.ply");
+  PlyFile file("meshes/deform.ply");
 
   Mesh mesh(file.vertices, file.faces);
 
