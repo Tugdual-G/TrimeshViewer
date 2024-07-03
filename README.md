@@ -1,11 +1,11 @@
 ## Viewer for triangular mesh .ply files
+__A small project to learn c++__
 <img src="example.png" alt="example" width="400"/>
 
-__A small project to learn c++.__
 This repository contains three modules: a .ply file parser,
 a mesh analyze toolset, and a simple render library.
 
-The initial goal was to implement a fast and simple meshviewer using shaders and c++.
+The goal was to implement a fast and simple meshviewer using shaders and c++.
 All transformations are matrix-free and rely on quaternions to keep things simple and efficient.
 
 __Features:__
@@ -17,10 +17,12 @@ __Features:__
 - orthographic projection
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
 
+
 ## Requirements
 - Linux
 - opengl 4.6
 - glfw
+
 
 ## Compilation
 
@@ -30,7 +32,7 @@ __Features:__
 
         ./meshviewer meshes/deform.ply
 
-__Code API example :__
+__Code API example:__
 
 ```cpp
 // Read a ply file and show the object and it's curvature
