@@ -12,6 +12,7 @@ vec4 mul_quatern(vec4 u, vec4 v){
 
 uniform vec4 q, q_inv;
 uniform float zoom_level;
+uniform vec2 viewport_size;
 layout(location = 0) in vec3 in_pos;        // Vertex position
 layout(location = 1) in vec3 in_color;        // Vertex normal
 out vec3 position;// flat shading
@@ -23,6 +24,7 @@ void main()
     pos = mul_quatern(q, pos);
     position = pos.yzw;// for flat shading
     pos.yz = pos.yz * zoom_level;
+    pos.y *= viewport_size.y/viewport_size.x; //aspect ratio
     gl_Position = vec4(pos.yzw, 1.0);
     color = in_color;
 

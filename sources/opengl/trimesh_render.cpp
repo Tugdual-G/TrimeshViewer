@@ -93,12 +93,14 @@ void MeshRender::Object::set_shader_program() {
   q_loc = glGetUniformLocation(shader_program, "q");
   q_inv_loc = glGetUniformLocation(shader_program, "q_inv");
   zoom_loc = glGetUniformLocation(shader_program, "zoom_level");
+  viewport_size_loc = glGetUniformLocation(
+      shader_program, "viewport_size"); // for the aspect ratio
 }
 
 void MeshRender::init_render() {
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  keep_aspect_ratio(window, width, height);
+  // keep_aspect_ratio(window, width, height);
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -128,7 +130,7 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
 
   // if (data_update_function != NULL) {
   //   while (!glfwWindowShouldClose(window) && flag) {
-  //     keep_aspect_ratio(window, width, height);
+  //     //keep_aspect_ratio(window, width, height);
   //     processInput(window);
   //     glClear(GL_COLOR_BUFFER_BIT);
   //     flag = data_update_function(fargs);
@@ -141,10 +143,9 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
 
   // } else {
   while (!glfwWindowShouldClose(window) && flag) {
-
+    glfwGetWindowSize(window, &width, &height);
     glBindVertexArray(VAO);
-
-    keep_aspect_ratio(window, width, height);
+    // keep_aspect_ratio(window, width, height);
     processInput(window);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -153,7 +154,7 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     for (auto &obj : objects) {
-      obj.draw();
+      draw(obj);
     }
 
     glfwSwapBuffers(window);
@@ -177,8 +178,8 @@ int MeshRender::add_object(std::vector<double> &ivertices,
                            ShaderProgramType shader_type) {
 
   Object new_mesh(
-      q, q_inv, zoom_level,
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+
   new_mesh.attr_offset = vertices_attr.size();
   new_mesh.attr_length = ivertices.size() * 2;
   new_mesh.faces_indices_offset = faces.size();
@@ -215,8 +216,8 @@ int MeshRender::add_object(std::vector<double> &ivertices,
                            ShaderProgramType shader_type) {
 
   Object new_mesh(
-      q, q_inv, zoom_level,
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+
   new_mesh.attr_offset = vertices_attr.size();
   new_mesh.attr_length = ivertices.size() * 2;
   new_mesh.faces_indices_offset = faces.size();
@@ -246,6 +247,24 @@ int MeshRender::add_object(std::vector<double> &ivertices,
   resize_EBO();
   return objects.size() - 1;
 }
+
+void MeshRender::draw(Object &obj) {
+  glUseProgram(obj.shader_program);
+  // Mouse rotation
+  glUniform4f(obj.q_loc, (float)q[0], (float)q[1], (float)q[2], (float)q[3]);
+  glUniform4f(obj.q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
+              (float)q_inv[3]);
+  // Zoom
+  glUniform1f(obj.zoom_loc, zoom_level);
+
+  glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
+  // glDrawElements(GL_TRIANGLES, faces_indices_length, GL_UNSIGNED_INT,
+  //                (void *)(faces_indices_offset * sizeof(unsigned int)));
+  glDrawElementsBaseVertex(
+      GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+      (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+      obj.attr_offset / obj.total_number_attr);
+};
 
 void MeshRender::resize_VAO() {
   // Resize the VAO and update vertex attributes data

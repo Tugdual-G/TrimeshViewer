@@ -29,34 +29,14 @@ class MeshRender {
 
     unsigned int shader_program{0};
     unsigned int q_loc{0}, q_inv_loc{0}, zoom_loc{0};
-    Quaternion &q, &q_inv;
-    double &zoom_level;
+    unsigned int viewport_size_loc{0}; // for the aspect ratio
     ShaderProgramType program_type{ShaderProgramType::FLAT_FACES};
     unsigned int total_number_attr;
 
     void set_shader_program();
 
-    Object(Quaternion &q, Quaternion &q_inv, double &zoom_level,
-           unsigned int total_length_attr)
-        : q(q), q_inv(q_inv), zoom_level(zoom_level),
-          total_number_attr(total_length_attr){};
-
-    void draw() {
-      glUseProgram(shader_program);
-      // Mouse rotation
-      glUniform4f(q_loc, (float)q[0], (float)q[1], (float)q[2], (float)q[3]);
-      glUniform4f(q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
-                  (float)q_inv[3]);
-      // Zoom
-      glUniform1f(zoom_loc, zoom_level);
-
-      // glDrawElements(GL_TRIANGLES, faces_indices_length, GL_UNSIGNED_INT,
-      //                (void *)(faces_indices_offset * sizeof(unsigned int)));
-      glDrawElementsBaseVertex(
-          GL_TRIANGLES, faces_indices_length, GL_UNSIGNED_INT,
-          (void *)(faces_indices_offset * sizeof(unsigned int)),
-          attr_offset / total_number_attr);
-    };
+    Object(unsigned int total_length_attr)
+        : total_number_attr(total_length_attr){};
   };
 
   // unsigned int shader_program, compute_program;
@@ -70,9 +50,10 @@ class MeshRender {
   void resize_VAO();
   void resize_EBO();
   // void set_shader_program();
+  void draw(Object &obj);
 
 public:
-  unsigned int width{0}, height{0};
+  int width{0}, height{0};
 
   std::vector<double> vertices_attr{
       0}; // contains vertices pos and normals (vvvnnn)
@@ -90,8 +71,8 @@ public:
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
   // defining the zoom level
-  double zoom_level{1}; // zoom is separate from quaternion since we don't want
-                        // to break through the object.
+  double zoom_level{1}; // zoom is separate from quaternion since we don't
+                        // want to break through the object.
 
   void *userpointer = this; // for use in glfw callback
   GLFWwindow *window;
