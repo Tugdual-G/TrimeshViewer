@@ -1,5 +1,5 @@
 ## Viewer for triangular mesh .ply files
-<img src="example.png" alt="example" width="200"/>
+<img src="example.png" alt="example" width="400"/>
 
 __A small project to learn c++.__
 The program can parse .ply binary files triangular mesh,
