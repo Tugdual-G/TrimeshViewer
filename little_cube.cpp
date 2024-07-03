@@ -54,9 +54,7 @@ int main() {
   std::vector<double> colors(mesh.vertices.size());
   get_nearest_colors(k, colors, VIRIDIS);
 
-  MeshRender render0(500, 500, mesh.vertices, mesh.faces);
-
-  render0.add_vertex_colors(colors);
+  MeshRender render0(500, 500, mesh.vertices, mesh.faces, colors);
   render0.render_loop(NULL, NULL);
   render0.render_finalize();
 

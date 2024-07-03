@@ -1,5 +1,7 @@
 #include "quatern_transform.hpp"
+extern "C" {
 #include "math.h"
+}
 #include <algorithm>
 #include <iostream>
 #include <vector>
