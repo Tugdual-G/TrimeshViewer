@@ -34,7 +34,7 @@ mesh_operators.o: mesh_operators.cpp
 mesh_structure.o: mesh_structure.cpp
 	$(CCPP) $(CFLAGS) -c $<
 
-libtrimesh_render.so:  opengl/glad/glad.c opengl/trimesh_render.cpp opengl/compileShader.c opengl/quatern_transform.cpp axis_cross.o
+libtrimesh_render.so:  opengl/glad/glad.c opengl/trimesh_render.cpp opengl/compileShader.c opengl/quatern_transform.cpp opengl/axis_cross.cpp
 	$(CC) $(CFLAGS) -I opengl -shared -o $@ $^ -lGL -lglfw -fPIC
 
 quatern_transform.o:opengl/quatern_transform.cpp

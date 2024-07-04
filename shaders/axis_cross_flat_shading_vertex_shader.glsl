@@ -26,13 +26,13 @@ void main()
 
 
 
-    pos.yz *= 1/(pos.w + 1); // perspective
+    pos.yz *= -1/(pos.w - 1); // perspective
 
     pos.y *= viewport_size.y/viewport_size.x; // aspect ratio
     // translate to the Low left corner
-    pos.y -= 1 - 0.25 * viewport_size.y/viewport_size.x;
-    pos.z -= 0.75;
-    pos.w -= 0.75;
+    pos.y -= 1 - 0.28 * viewport_size.y/viewport_size.x;
+    pos.z -= 0.72;
+    pos.w += 0.72;
 
     gl_Position = vec4(pos.yzw, 1.0);
     color = in_color;

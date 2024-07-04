@@ -51,6 +51,7 @@ void MeshRender::init_window() {
     exit(1);
   }
   glEnable(GL_MULTISAMPLE); // anti-aliasing
+  glDepthRange(1, 0);       // Makes opengl right-handed
 }
 
 void MeshRender::Object::set_shader_program() {
@@ -333,8 +334,8 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
     // quaternionic transform
     double sin_dm = sin(norm_dm * MOUSE_SENSITIVITY) / norm_dm;
     // std::cout << " sin_dm :" << sin_dm << std::endl;
-    Quaternion q_new(cos(norm_dm * MOUSE_SENSITIVITY), dy * sin_dm, dx * sin_dm,
-                     0);
+    Quaternion q_new(cos(norm_dm * MOUSE_SENSITIVITY), -dy * sin_dm,
+                     -dx * sin_dm, 0);
 
     render->q = q_new * render->q;
     render->q_inv = render->q_inv * q_new.inv();
