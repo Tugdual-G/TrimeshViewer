@@ -26,7 +26,7 @@ void main()
 
 
 
-    pos.yz *= -1/(pos.w - 1); // perspective
+    pos.yz *= -0.8/(pos.w - 0.8); // perspective
 
     pos.y *= viewport_size.y/viewport_size.x; // aspect ratio
     // translate to the Low left corner

@@ -48,10 +48,25 @@ int main() {
     v += 0.3;
   }
 
+  PlyFile file3("meshes/deformHQ.ply");
+  auto [minv3, maxv3] =
+      std::minmax_element(file3.vertices.begin(), file3.vertices.end());
+  extent_vert = *maxv3 - *minv3;
+  extent_vert *= 1.7;
+
+  for (unsigned int i = 0; i < file3.n_vertices; ++i) {
+    file3.vertices.at(i * 3) /= extent_vert;
+    file3.vertices.at(i * 3) -= 0.5;
+    file3.vertices.at(i * 3 + 1) /= extent_vert;
+    file3.vertices.at(i * 3 + 1) += 0.4;
+    file3.vertices.at(i * 3 + 2) /= extent_vert;
+  }
+
   // MeshRender render(500, 500, mesh.vertices, mesh.faces, normals);
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
   // render.update_vertex_colors(colors, 1);
   render.add_object(file2.vertices, file2.faces, ShaderProgramType::FLAT_FACES);
+  render.add_object(file3.vertices, file3.faces, ShaderProgramType::FLAT_FACES);
   render.render_loop(NULL, NULL);
   render.render_finalize();
   return 0;
