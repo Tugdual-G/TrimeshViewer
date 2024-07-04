@@ -15,7 +15,7 @@ __Features:__
 - colormaps
 - zoom and rotate with the mouse
 - show the current orientation
-- orthographic projection
+- orthographic/perspective projection
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
 
 
