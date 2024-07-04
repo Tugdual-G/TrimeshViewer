@@ -16,7 +16,7 @@ void MeshRender::set_axis_cross() {
 
   unsigned int n_vertices = 3 * N + 2;
   unsigned int n_faces = 6 * N;
-  std::vector<double> axis_vertices(n_vertices * 9, 0.04);
+  std::vector<double> axis_vertices(n_vertices * 9, r_i);
   std::vector<Quaternion> vert_quat;
   vert_quat.resize(n_vertices);
   std::vector<unsigned int> axis_faces(n_faces * 9, 0);

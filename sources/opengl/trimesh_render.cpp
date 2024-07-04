@@ -31,6 +31,7 @@ void MeshRender::init_window() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_SAMPLES, 4); // anti-aliasing
 
   window = glfwCreateWindow(width, height, "MeshRender", NULL, NULL);
   if (window == NULL) {
@@ -49,6 +50,7 @@ void MeshRender::init_window() {
     printf("Failed to initialize GLAD\n");
     exit(1);
   }
+  glEnable(GL_MULTISAMPLE); // anti-aliasing
 }
 
 void MeshRender::Object::set_shader_program() {
@@ -154,7 +156,6 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
     for (auto &obj : objects) {
       draw(obj);
     }
-
     glfwSwapBuffers(window);
     glfwPollEvents();
   }

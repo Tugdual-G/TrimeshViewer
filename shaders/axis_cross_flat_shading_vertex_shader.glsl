@@ -23,8 +23,17 @@ void main()
     vec4 pos = mul_quatern(vec4(0.0, in_pos.xyz), q_inv);
     pos = mul_quatern(q, pos);
     position = pos.yzw;// for flat shading
+
+
+
+    pos.yz *= 1/(pos.w + 1); // perspective
+
     pos.y *= viewport_size.y/viewport_size.x; // aspect ratio
-    pos.yzw -= 0.72;
+    // translate to the Low left corner
+    pos.y -= 1 - 0.25 * viewport_size.y/viewport_size.x;
+    pos.z -= 0.75;
+    pos.w -= 0.75;
+
     gl_Position = vec4(pos.yzw, 1.0);
     color = in_color;
 
