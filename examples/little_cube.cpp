@@ -1,7 +1,7 @@
 /* Basic script to debug and test implementation */
-#include "sources/mesh.hpp"
-#include "sources/opengl/colormap.hpp"
-#include "sources/opengl/trimesh_render.hpp"
+#include "../src/mesh/mesh.hpp"
+#include "../src/render/colormap.hpp"
+#include "../src/render/trimesh_render.hpp"
 #include <iostream>
 // #include <sstream>
 // #include <string>

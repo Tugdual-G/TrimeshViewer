@@ -1,13 +1,13 @@
-#include "sources/mesh.hpp"
-#include "sources/opengl/colormap.hpp"
-#include "sources/opengl/trimesh_render.hpp"
-#include "sources/plyfile.hpp"
+#include "../src/mesh/mesh.hpp"
+#include "../src/ply/plyfile.hpp"
+#include "../src/render/colormap.hpp"
+#include "../src/render/trimesh_render.hpp"
 #include <iostream>
 #include <vector>
 
 int main() {
 
-  PlyFile file("meshes/deform.ply");
+  PlyFile file("../meshes/deform.ply");
 
   Mesh mesh(file.vertices, file.faces);
 
@@ -38,7 +38,7 @@ int main() {
     v -= 0.3;
   }
 
-  PlyFile file2("meshes/spinningtop.ply");
+  PlyFile file2("../meshes/spinningtop.ply");
   auto [minv2, maxv2] =
       std::minmax_element(file2.vertices.begin(), file2.vertices.end());
   extent_vert = *maxv2 - *minv2;
@@ -48,13 +48,13 @@ int main() {
     v += 0.3;
   }
 
-  PlyFile file3("meshes/deformHQ.ply");
+  PlyFile file3("../meshes/deformHQ.ply");
   auto [minv3, maxv3] =
       std::minmax_element(file3.vertices.begin(), file3.vertices.end());
   extent_vert = *maxv3 - *minv3;
   extent_vert *= 1.7;
 
-  for (unsigned int i = 0; i < file3.n_vertices; ++i) {
+  for (int i = 0; i < file3.n_vertices; ++i) {
     file3.vertices.at(i * 3) /= extent_vert;
     file3.vertices.at(i * 3) -= 0.5;
     file3.vertices.at(i * 3 + 1) /= extent_vert;

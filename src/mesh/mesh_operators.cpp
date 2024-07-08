@@ -4,20 +4,6 @@
 #include <stdlib.h>
 #include <vector>
 
-// static void disp_vect(double *v, int n) {
-//   for (int i = 0; i < n; ++i) {
-//     std::cout << v[i] << " ";
-//   }
-//   std::cout << std::endl;
-// }
-
-// static void normalize(double *w) {
-//   double norm = pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
-//   w[0] /= norm;
-//   w[1] /= norm;
-//   w[2] /= norm;
-// }
-
 static double norm(double *w) {
   return pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
 }

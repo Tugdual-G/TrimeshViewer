@@ -1,11 +1,8 @@
-#include "mesh.hpp"
-#include "opengl/colormap.hpp"
-#include "opengl/trimesh_render.hpp"
-#include "plyfile.hpp"
-// #include <fstream>
+#include "mesh/mesh.hpp"
+#include "ply/plyfile.hpp"
+#include "render/colormap.hpp"
+#include "render/trimesh_render.hpp"
 #include <iostream>
-// #include <sstream>
-// #include <string>
 #include <vector>
 
 int main(__attribute__((unused)) int argc, char *argv[]) {
