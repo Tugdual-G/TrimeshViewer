@@ -26,10 +26,12 @@ __Features:__
 
 
 ## Compilation
+The command line executable can be compiled with,
 
-        make -C sources
+        make -C src ../meshviewer
 
 ## Usage
+__CLI__
 
         ./meshviewer meshes/deform.ply
 
