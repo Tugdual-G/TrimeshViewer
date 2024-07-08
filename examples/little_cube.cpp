@@ -47,9 +47,11 @@ int main() {
 
   mesh.set_one_ring();
 
-  std::vector<double> k;
-  mesh.set_mean_curvature();
-  mesh.scalar_mean_curvature(k);
+  mesh.set_one_ring();
+  mesh.print_one_ring();
+
+  std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
+  std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
   std::vector<double> colors(mesh.vertices.size());
   get_nearest_colors(k, colors, VIRIDIS);

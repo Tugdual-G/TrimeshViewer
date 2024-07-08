@@ -13,10 +13,10 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
 
   mesh.set_one_ring();
 
-  std::vector<double> k;
-  mesh.set_mean_curvature();
-
-  mesh.scalar_mean_curvature(k);
+  // Takes one_ring as an argument to make explicit that the
+  // method depends on the one-ring.
+  std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
+  std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
   std::vector<double> colors;
   auto [minvk, maxvk] = std::minmax_element(k.begin(), k.end());

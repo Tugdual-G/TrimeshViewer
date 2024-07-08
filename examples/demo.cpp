@@ -18,11 +18,8 @@ int main() {
   // normals);
 
   mesh.set_one_ring();
-
-  std::vector<double> k;
-  mesh.set_mean_curvature();
-
-  mesh.scalar_mean_curvature(k);
+  std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
+  std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
   std::vector<double> colors;
   get_interpolated_colors(k, colors, INFERNO);

@@ -10,7 +10,7 @@ static void normalize(double *w);
 static void vector_prod(double *u, double *v, double *w);
 
 void Mesh::set_one_ring() {
-  if (vertex_adjacent_faces.size() < (long unsigned int)n_vertices) {
+  if (n_adja_faces_max == 0) {
     set_vertex_adjacent_faces();
   }
   int adja_array_idx{0};    // global position in the array
@@ -25,6 +25,8 @@ void Mesh::set_one_ring() {
     for (int j = 0; j < n_adja; ++j) {
       triangle_vert_idx = 0;
       face = vertex_adjacent_faces.at(adja_array_idx + j + 1);
+
+      // finding the vertex i in the face vertices
       while (faces.at(face * 3 + triangle_vert_idx) != i) {
         ++triangle_vert_idx;
       }

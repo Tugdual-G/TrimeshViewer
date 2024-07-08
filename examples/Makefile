@@ -15,12 +15,12 @@ demo: demo.cpp ../src/mesh_print.o ../src/plyfile_parse.o ../src/mesh_structure.
 	+$(MAKE) -C ../src
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-little_cube: little_cube.cpp ../src/plyfile_parse.o ../src/mesh_structure.o ../src/mesh_operators.o ../src/libtrimesh_render.so
+little_cube: little_cube.cpp ../src/plyfile_parse.o ../src/mesh_print.o ../src/mesh_structure.o ../src/mesh_operators.o ../src/libtrimesh_render.so
 	+$(MAKE) -C ../src
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 clean:
-	rm -f main *.o *.so
+	rm -f demo little_cube *.o *.so
 
 .PHONY: clean
 

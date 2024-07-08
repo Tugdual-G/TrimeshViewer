@@ -18,31 +18,41 @@ static double dot(double *u, double *v) {
   return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }
 
-void Mesh::scalar_mean_curvature(std::vector<double> &k) {
-  if (mean_curvature.size() < (long unsigned int)n_vertices) {
-    set_mean_curvature();
+std::vector<double>
+Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature) {
+  if (mean_curvature.size() != (long unsigned int)n_vertices * 3LU) {
+    std::cout << "Error, mean_curvature should be of size 3*n_vertices\n";
+    exit(1);
   }
-  if (vertex_normals.size() < (long unsigned int)n_vertices) {
+
+  if (vertex_normals.size() != (long unsigned int)n_vertices * 3LU) {
     set_vertex_normals();
   }
-  k.resize(n_vertices);
+  std::vector<double> k(n_vertices);
+
   for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
     k[i] =
         dot(mean_curvature.data() + (3 * i), vertex_normals.data() + (3 * i));
   }
+  return k;
 }
 
-void Mesh::set_mean_curvature() {
-  if (one_ring.size() < (unsigned int)n_vertices) {
-    set_one_ring();
+// Takes one_ring as an argument to make explicit that the
+// method depends on the one-ring.
+std::vector<double>
+Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring) {
+
+  if (vertices_one_ring.size() < 2) {
+    std::cout << "Error, vertices_one_ring should be initialized \n";
+    exit(1);
   }
 
-  mean_curvature.resize(n_vertices * 3, 0);
-  unsigned int one_ring_i0 = 0; // the first element for each vertex
-  unsigned int ring_nv = 0;     // number of vertex per ring
+  std::vector<double> mean_curvature(3 * n_vertices);
+  unsigned int one_ring_i0{0}; // the first element for each vertex
+  unsigned int ring_nv{0};     // number of vertex per ring
 
   std::vector<double> ring_vert( // ring vertices spacial coords
-      n_adja_faces_max * 3, -99999999);
+      n_adja_faces_max * 3, -999999);
 
   std::vector<double> edges_vect(n_adja_faces_max * 3);
 
@@ -53,12 +63,12 @@ void Mesh::set_mean_curvature() {
   double *e1, o1[3];
   double cos1, cos2, sin1, sin2, cot1, cot2;
   for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
-    ring_nv =
-        one_ring[one_ring_i0]; // retrieves the number of vertices in the ring
+    ring_nv = vertices_one_ring[one_ring_i0]; // retrieves the number of
+                                              // vertices in the ring
     if (ring_nv > 1) {
       // copy each ring vert coord into ring_vert.
       for (unsigned int r_i = 0; r_i < ring_nv; ++r_i) {
-        r_vert_idx = one_ring.at(one_ring_i0 + r_i + 1);
+        r_vert_idx = vertices_one_ring.at(one_ring_i0 + r_i + 1);
 
         std::copy(vertices.begin() + r_vert_idx * 3,
                   vertices.begin() + (r_vert_idx + 1) * 3,
@@ -120,4 +130,5 @@ void Mesh::set_mean_curvature() {
     // disp_vect(mean_curvature.data() + i * 3, 3);
     one_ring_i0 += ring_nv + 1;
   }
+  return mean_curvature;
 }
