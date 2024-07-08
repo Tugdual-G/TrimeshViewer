@@ -432,46 +432,52 @@ static void nearest_color(double *val, double &vmin, double &inv_delta,
   color[2] = cmap[i * 3 + 2];
 }
 
-void get_interpolated_colors(std::vector<double> &values,
-                             std::vector<double> &colors, double *cmap) {
+std::vector<double> get_interpolated_colors(std::vector<double> &values,
+                                            double *cmap) {
   auto [min, max] = std::minmax_element(values.begin(), values.end());
   double minv = *min, maxv = *max;
   double inv_delta = 1 / (maxv - minv);
-  colors.resize(values.size() * 3);
+  std::vector<double> colors(values.size() * 3);
   for (unsigned int i = 0; i < values.size(); ++i) {
     interpolated_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
+  return colors;
 }
 
-void get_interpolated_colors(std::vector<double> &values,
-                             std::vector<double> &colors, double *cmap,
-                             double minv, double maxv) {
-  colors.resize(values.size() * 3);
+std::vector<double> get_interpolated_colors(std::vector<double> &values,
+                                            double *cmap, double minv,
+                                            double maxv) {
+  std::vector<double> colors(values.size() * 3);
   double inv_delta = 1 / (maxv - minv);
   for (unsigned int i = 0; i < values.size(); ++i) {
     interpolated_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
+  return colors;
 }
 
-void get_nearest_colors(std::vector<double> &values,
-                        std::vector<double> &colors, double *cmap) {
+std::vector<double> get_nearest_colors(std::vector<double> &values,
+                                       double *cmap) {
+
   auto [min, max] = std::minmax_element(values.begin(), values.end());
   double minv = *min, maxv = *max;
   double inv_delta = 1 / (maxv - minv);
-  colors.resize(values.size() * 3);
+
+  std::vector<double> colors(values.size() * 3);
   for (unsigned int i = 0; i < values.size(); ++i) {
     nearest_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
+  return colors;
 }
 
-void get_nearest_colors(std::vector<double> &values,
-                        std::vector<double> &colors, double *cmap, double &minv,
-                        double &maxv) {
+std::vector<double> get_nearest_colors(std::vector<double> &values,
+                                       double *cmap, double &minv,
+                                       double &maxv) {
   double inv_delta = 1 / (maxv - minv);
-  colors.resize(values.size() * 3);
+  std::vector<double> colors(values.size() * 3);
   for (unsigned int i = 0; i < values.size(); ++i) {
     nearest_color(&values[i], minv, inv_delta, cmap, &colors[i * 3]);
   }
+  return colors;
 }
 
 #endif // CMAP_H_

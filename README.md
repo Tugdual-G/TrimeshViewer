@@ -36,7 +36,13 @@ __Features:__
 __Code API example:__
 
 ```cpp
-// Read a ply file and show the object and it's curvature
+// Reads a ply file and show the object and it's curvature
+#include "mesh/mesh.hpp"
+#include "ply/plyfile.hpp"
+#include "render/colormap.hpp"
+#include "render/trimesh_render.hpp"
+#include <vector>
+
 int main() {
 
   PlyFile file("meshes/deformHQ.ply");
@@ -45,22 +51,24 @@ int main() {
   std::vector<PropertyName> normal_property_names = {
       PropertyName::nx, PropertyName::ny, PropertyName::nz};
 
-  std::vector<double> normals; // The data will be converted to double automatically
+  std::vector<double> normals;
   file.get_subelement_data<double>("vertices", normal_property_names, normals);
 
 
 
   Mesh mesh(file.vertices, file.faces);
 
+
   // Computing the curvature to define the colors of the rendered object.
-  std::vector<double> k;
-  mesh.set_one_ring(); // the one ring is required to compute the curvature
-  mesh.set_mean_curvature();
 
-  mesh.scalar_mean_curvature(k);
+  // get_mean_curvature takes one_ring as an argument to make explicit that the
+  // method depends on the one-ring.
+  mesh.set_one_ring();
+  std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
+  std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
-  std::vector<double> colors;
-  get_interpolated_colors(k, colors, INFERNO);
+
+  std::vector<double> colors = get_interpolated_colors(k, INFERNO);
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
 

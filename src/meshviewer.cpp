@@ -18,10 +18,11 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
   std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
   std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
-  std::vector<double> colors;
   auto [minvk, maxvk] = std::minmax_element(k.begin(), k.end());
   double mink = *minvk, maxk = *maxvk;
-  get_interpolated_colors(k, colors, INFERNO, mink - 0.1, maxk);
+
+  std::vector<double> colors =
+      get_interpolated_colors(k, INFERNO, mink - 0.1, maxk);
 
   auto [minv, maxv] =
       std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
