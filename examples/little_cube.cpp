@@ -9,19 +9,19 @@
 
 int main() {
   // Define a list of points
-  double verticesdata[] = {
+  double vertices_data[] = {
       // points coord
-      -1, -1, -1, // Point 1
-      1,  -1, -1, // Point 2
-      1,  -1, 1,  // Point 3
-      -1, -1, 1,  // Point 4
+      -1, -1, -1, // 0
+      1,  -1, -1, // 1
+      1,  -1, 1,  // 2
+      -1, -1, 1,  // 3
       -1, 1,  -1, //
       1,  1,  -1, //
       1,  1,  1,  //
       -1, 1,  1,  //
   };
 
-  int squaredata[] = {
+  int faces_data[] = {
       0, 1, 2, // 0
       2, 3, 0, // 1
       1, 5, 6, // 2
@@ -36,12 +36,12 @@ int main() {
       1, 4, 5, // 11
   };
 
-  for (double *v = verticesdata; v != verticesdata + 24; ++v) {
+  for (double *v = vertices_data; v != vertices_data + 24; ++v) {
     *v /= 5.0;
   }
 
-  std::vector<double> vertices(verticesdata, verticesdata + 24);
-  std::vector<unsigned int> faces(squaredata, squaredata + 36);
+  std::vector<double> vertices(vertices_data, vertices_data + 24);
+  std::vector<unsigned int> faces(faces_data, faces_data + 36);
 
   Mesh mesh(vertices, faces);
 
