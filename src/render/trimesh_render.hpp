@@ -4,9 +4,6 @@
 #include "glad/include/glad/glad.h" // glad should be included before glfw3
 #include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
-#include <algorithm>
-#include <iostream>
-#include <numeric>
 #include <vector>
 
 enum class ShaderProgramType {
@@ -74,12 +71,12 @@ class MeshRender {
                         // want to break through the object.
 
   void *userpointer{this}; // for use in glfw callback
-  GLFWwindow *window;
+  GLFWwindow *window{};
 
-  unsigned int VAO, VBO, EBO;
+  unsigned int VAO{}, VBO{}, EBO{};
 
   // list of object to be rendered
-  std::vector<Object> objects{};
+  std::vector<Object> objects;
 
   void init_window();
   void init_render();
@@ -96,17 +93,17 @@ class MeshRender {
                                 int key, __attribute__((unused)) int scancode,
                                 int action, __attribute__((unused)) int mods);
 
-  int add_object(std::vector<double> &ivertices,
-                 std::vector<unsigned int> &ifaces,
-                 ShaderProgramType shader_type);
+  auto add_object(std::vector<double> &ivertices,
+                  std::vector<unsigned int> &ifaces,
+                  ShaderProgramType shader_type) -> int;
 
-  int add_object(std::vector<double> &ivertices,
-                 std::vector<unsigned int> &ifaces, std::vector<double> colors,
-                 ShaderProgramType shader_type);
+  auto add_object(std::vector<double> &ivertices,
+                  std::vector<unsigned int> &ifaces, std::vector<double> colors,
+                  ShaderProgramType shader_type) -> int;
 
 public:
-  int add_object(std::vector<double> &ivertices,
-                 std::vector<unsigned int> &ifaces);
+  auto add_object(std::vector<double> &ivertices,
+                  std::vector<unsigned int> &ifaces) -> int;
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
@@ -136,11 +133,16 @@ public:
     add_object(ivertices, ifaces, icolors, ShaderProgramType::FLAT_FACES);
   }
 
-  int render_finalize();
-  int render_loop(int (*data_update_function)(void *fargs), void *fargs);
+  auto render_finalize() -> int;
+  auto render_loop(int (*data_update_function)(void *fargs),
+                   void *fargs) -> int;
   void add_vertex_normals(std::vector<double> &normals);
   void update_vertex_colors(std::vector<double> &colors,
                             unsigned int object_idx);
 };
 
+void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
+                       int mods);
+void cursor_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 #endif // TRIMESH_RENDER_H_

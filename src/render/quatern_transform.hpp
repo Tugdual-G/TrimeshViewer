@@ -1,8 +1,6 @@
 #ifndef QUATERN_TRANSFORM_H_
 #define QUATERN_TRANSFORM_H_
-#include "math.h"
-#include <algorithm>
-#include <iostream>
+#include <cmath>
 #include <vector>
 
 // TODO templates
@@ -12,10 +10,10 @@ class Quaternion {
 public:
   std::vector<double> q;
 
-  double &operator[](unsigned int i) { return q[i]; }
-  double operator[](unsigned int i) const { return q[i]; }
-  double &at(unsigned int i) { return q.at(i); }
-  double at(unsigned int i) const { return q.at(i); }
+  auto operator[](unsigned int i) -> double & { return q[i]; }
+  auto operator[](unsigned int i) const -> double { return q[i]; }
+  auto at(unsigned int i) -> double & { return q.at(i); }
+  [[nodiscard]] auto at(unsigned int i) const -> double { return q.at(i); }
 
   Quaternion() : q(4, 0) {}
 
@@ -36,24 +34,24 @@ public:
 
   Quaternion(std::vector<double> &q) : q(q) {}
 
-  Quaternion c();
+  auto c() -> Quaternion;
 
-  double norm2();
+  auto norm2() -> double;
 
-  double norm();
+  auto norm() -> double;
 
-  Quaternion operator+(Quaternion v);
+  auto operator+(Quaternion v) -> Quaternion;
 
   void operator+=(Quaternion v);
 
-  Quaternion operator-(Quaternion v);
+  auto operator-(Quaternion v) -> Quaternion;
 
   void operator-=(Quaternion v);
 
-  Quaternion operator*(Quaternion v);
+  auto operator*(Quaternion v) -> Quaternion;
   // Quaternion operator*(Quaternion &v);
 
-  Quaternion operator*(double v);
+  auto operator*(double v) -> Quaternion;
   // Quaternion operator*(double &v);
 
   void operator*=(double v);
@@ -61,13 +59,13 @@ public:
 
   void operator/=(double v);
   // void operator/=(double &v);
-  Quaternion operator/(double v);
+  auto operator/(double v) -> Quaternion;
 
-  Quaternion operator/(double &v);
+  auto operator/(double &v) -> Quaternion;
 
-  Quaternion inv();
+  auto inv() -> Quaternion;
 
-  Quaternion operator/(Quaternion &v);
+  auto operator/(Quaternion &v) -> Quaternion;
 
   void set(double x, double y, double z, double w);
 

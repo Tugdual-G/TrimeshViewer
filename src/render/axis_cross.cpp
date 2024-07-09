@@ -1,23 +1,25 @@
 /* These methods are used to generate the mesh of the axis cross. */
 #include "quatern_transform.hpp"
 #include "trimesh_render.hpp"
-#include <math.h>
+#include <cmath>
 #include <vector>
 
 #define pi 3.14159265359
-#define N 8
+enum {
+N = 8
+};
 #define r_e 0.08
 #define r_i 0.04
 #define base_length 0.8
 #define sqrt2 1.4142
 
 void mesh_arrow(std::vector<double> &vertices, std::vector<unsigned int> &faces,
-                unsigned int n_angles) {
+                size_t n_angles) {
   /* Returns a mesh representing an arrow of coordinates direction (1, 0, 0),
    * with base at (0,0,0). */
 
-  unsigned int n_vertices = 3 * n_angles + 2;
-  unsigned int n_faces = 6 * n_angles;
+  size_t n_vertices = 3 * n_angles + 2;
+  size_t n_faces = 6 * n_angles;
 
   vertices.resize(n_vertices * 3, r_i);
 
@@ -102,19 +104,19 @@ void mesh_cube(std::vector<double> &vertices,
   faces.resize(36, 0);
 
   // thetrahedron
-  double vertices_data[] = {
+  std::vector<double> vertices_data = {
       // points coord
       -1, -1, -1, // 0
       1,  -1, -1, // 1
       1,  -1, 1,  // 2
       -1, -1, 1,  // 3
-      -1, 1,  -1, //
-      1,  1,  -1, //
-      1,  1,  1,  //
-      -1, 1,  1,  //
+      -1, 1,  -1, // 4
+      1,  1,  -1, // 5
+      1,  1,  1,  // 6
+      -1, 1,  1,  // 7
   };
 
-  int faces_data[] = {
+  std::vector<int> faces_data = {
       0, 1, 2, // 0
       2, 3, 0, // 1
       1, 5, 6, // 2
@@ -129,8 +131,8 @@ void mesh_cube(std::vector<double> &vertices,
       1, 4, 5, // 11
   };
 
-  std::copy(vertices_data, vertices_data + 24, vertices.begin());
-  std::copy(faces_data, faces_data + 36, faces.begin());
+  std::copy(vertices_data.begin(), vertices_data.end(), vertices.begin());
+  std::copy(faces_data.begin(), faces_data.end(), faces.begin());
 }
 
 void colored_cross(std::vector<double> &vertices,
@@ -139,8 +141,8 @@ void colored_cross(std::vector<double> &vertices,
 
   mesh_arrow(vertices, faces, N);
 
-  unsigned int n_vertices = vertices.size() / 3;
-  unsigned int n_faces = faces.size() / 3;
+  size_t n_vertices = vertices.size() / 3;
+  size_t n_faces = faces.size() / 3;
   vertices.resize(vertices.size() * 3);
   faces.resize(faces.size() * 3);
 
@@ -161,7 +163,7 @@ void colored_cross(std::vector<double> &vertices,
 
   std::vector<Quaternion> vert_quat(n_vertices);
 
-  for (unsigned int i = 0; i < n_vertices; ++i) {
+  for (size_t i = 0; i < n_vertices; ++i) {
     vert_quat.at(i)[0] = 0;
     vert_quat.at(i)[1] = vertices[3 * i];
     vert_quat.at(i)[2] = vertices[3 * i + 1];
@@ -169,7 +171,7 @@ void colored_cross(std::vector<double> &vertices,
   }
 
   // y arrow
-  for (unsigned int i = 0; i < n_vertices; ++i) {
+  for (size_t i = 0; i < n_vertices; ++i) {
     vert_tmp.multiply(qx_y, vert_quat.at(i));
     vert_tmp = vert_tmp * qx_y_inv;
     vertices.at((i + n_vertices) * 3) = vert_tmp[1];
@@ -178,7 +180,7 @@ void colored_cross(std::vector<double> &vertices,
   }
 
   // z arrow
-  for (unsigned int i = 0; i < n_vertices; ++i) {
+  for (size_t i = 0; i < n_vertices; ++i) {
     vert_tmp.multiply(qx_z, vert_quat.at(i));
     vert_tmp = vert_tmp * qx_z_inv;
     vertices.at((i + 2 * n_vertices) * 3) = vert_tmp[1];
@@ -187,14 +189,14 @@ void colored_cross(std::vector<double> &vertices,
   }
 
   // Add offset to the faces indices
-  for (unsigned int i = 0; i < n_faces * 3; ++i) {
+  for (size_t i = 0; i < n_faces * 3; ++i) {
     faces.at(i + n_faces * 3) = n_vertices + faces.at(i);
     faces.at(i + n_faces * 6) = 2 * n_vertices + faces.at(i);
   }
 
   colors.resize(vertices.size(), 0);
 
-  for (unsigned int i = 0; i < n_vertices; ++i) {
+  for (size_t i = 0; i < n_vertices; ++i) {
     colors.at(i * 3) = 1;                        // red
     colors.at((i + n_vertices) * 3 + 1) = 1;     // blue
     colors.at((i + 2 * n_vertices) * 3 + 2) = 1; // green
@@ -212,7 +214,7 @@ void MeshRender::set_axis_cross() {
 
   std::vector<double> axis_colors;
   colored_cross(axis_vertices, axis_faces, axis_colors);
-  unsigned int n_vertices = axis_vertices.size() / 3;
+  size_t n_vertices = axis_vertices.size() / 3;
 
   // Adding a cube at the origin
   std::vector<double> cube_vertices;

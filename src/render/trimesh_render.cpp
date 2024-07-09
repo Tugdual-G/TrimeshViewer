@@ -3,13 +3,14 @@ extern "C" {
 #include "compileShader.h"
 }
 #include "glad/include/glad/glad.h" // glad should be included before glfw3
-#include "math.h"
 #include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
 #include <numeric>
-#include <stdlib.h>
 
-GLenum glCheckError_(const char *file, int line);
+auto glCheckError_(const char *file, int line) -> GLenum;
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
 
 #define SHADER_PATH "shaders/"
@@ -19,11 +20,6 @@ GLenum glCheckError_(const char *file, int line);
 #define MOUSE_SENSITIVITY 0.005
 #define SCROLL_SENSITIVITY 0.05
 
-void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
-                       int mods);
-void cursor_callback(GLFWwindow *window, double xpos, double ypos);
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-
 void MeshRender::init_window() {
 
   glfwInit();
@@ -32,9 +28,9 @@ void MeshRender::init_window() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_SAMPLES, 4); // anti-aliasing
 
-  window = glfwCreateWindow(width, height, "MeshRender", NULL, NULL);
-  if (window == NULL) {
-    printf("Error, failed to create GLFW window\n");
+  window = glfwCreateWindow(width, height, "MeshRender", nullptr, nullptr);
+  if (window == nullptr) {
+    std::cout << "Error, failed to create GLFW window\n";
     glfwTerminate();
     exit(1);
   }
@@ -45,8 +41,8 @@ void MeshRender::init_window() {
   glfwSetCursorPosCallback(window, cursor_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    printf("Failed to initialize GLAD\n");
+  if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
+    std::cout << "Failed to initialize GLAD\n";
     exit(1);
   }
   glEnable(GL_MULTISAMPLE); // anti-aliasing
@@ -122,8 +118,8 @@ void MeshRender::resize_EBO() {
   glCheckError();
 }
 
-int MeshRender::render_loop(int (*data_update_function)(void *fargs),
-                            void *fargs) {
+auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
+                             void *fargs) -> int {
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   int flag = 1;
   glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -132,7 +128,7 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
   // Accept fragment if closer to the camera
   glDepthFunc(GL_LESS);
 
-  while (!glfwWindowShouldClose(window) && flag) {
+  while ((glfwWindowShouldClose(window) == 0) && (flag != 0)) {
     glfwGetWindowSize(window, &width, &height);
     glBindVertexArray(VAO);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -149,7 +145,7 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
   return 0;
 }
 
-int MeshRender::render_finalize() {
+auto MeshRender::render_finalize() -> int {
   // Cleanup
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
@@ -157,9 +153,9 @@ int MeshRender::render_finalize() {
   return 0;
 }
 
-int MeshRender::add_object(std::vector<double> &ivertices,
-                           std::vector<unsigned int> &ifaces,
-                           ShaderProgramType shader_type) {
+auto MeshRender::add_object(std::vector<double> &ivertices,
+                            std::vector<unsigned int> &ifaces,
+                            ShaderProgramType shader_type) -> int {
 
   Object new_mesh(
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
@@ -194,10 +190,10 @@ int MeshRender::add_object(std::vector<double> &ivertices,
   return objects.size() - 1;
 }
 
-int MeshRender::add_object(std::vector<double> &ivertices,
-                           std::vector<unsigned int> &ifaces,
-                           std::vector<double> colors,
-                           ShaderProgramType shader_type) {
+auto MeshRender::add_object(std::vector<double> &ivertices,
+                            std::vector<unsigned int> &ifaces,
+                            std::vector<double> colors,
+                            ShaderProgramType shader_type) -> int {
 
   Object new_mesh(
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
@@ -232,8 +228,8 @@ int MeshRender::add_object(std::vector<double> &ivertices,
   return objects.size() - 1;
 }
 
-int MeshRender::add_object(std::vector<double> &ivertices,
-                           std::vector<unsigned int> &ifaces) {
+auto MeshRender::add_object(std::vector<double> &ivertices,
+                            std::vector<unsigned int> &ifaces) -> int {
 
   Object new_mesh(
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
@@ -342,10 +338,12 @@ void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,
 }
 
 void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
-  static double x_old{0}, y_old{0};
+  static double x_old{0};
+  static double y_old{0};
   if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-    MeshRender *render = (MeshRender *)glfwGetWindowUserPointer(window);
-    double dx = xpos - x_old, dy = ypos - y_old;
+    auto *render = (MeshRender *)glfwGetWindowUserPointer(window);
+    double dx = xpos - x_old;
+    double dy = ypos - y_old;
     dx = dx > 15 ? 0.1 : dx;
     dy = dy > 15 ? 0.1 : dy;
     // std::cout << dx << " , " << dy << std::endl;
@@ -367,7 +365,7 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
 
 void scroll_callback(GLFWwindow *window, __attribute__((unused)) double xoffset,
                      double yoffset) {
-  MeshRender *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
+  auto *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
   rdr->zoom_level *= 1.0 + yoffset * SCROLL_SENSITIVITY;
 }
 
@@ -375,7 +373,7 @@ void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
                        __attribute__((unused)) int scancode, int action,
                        __attribute__((unused)) int mods) {
 
-  MeshRender *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
+  auto *rdr = (MeshRender *)glfwGetWindowUserPointer(window);
   if (action == GLFW_PRESS) {
     switch (key) {
     case GLFW_KEY_I:
@@ -395,37 +393,43 @@ void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
   }
 }
 
-GLenum glCheckError_(const char *file, int line) {
-  GLenum errorCode;
+auto glCheckError_(const char *file, int line) -> GLenum {
+  GLenum errorCode = 0;
   while ((errorCode = glGetError()) != GL_NO_ERROR) {
     switch (errorCode) {
     case GL_INVALID_ENUM: {
-      printf(" ERROR : INVALID_ENUM , file: %s  ,line: %i \n", file, line);
+      std::cout << " ERROR : INVALID_ENUM , file : " << file
+                << ", line : " << line;
       break;
     }
     case GL_INVALID_VALUE: {
-      printf(" ERROR : INVALID_VALUE , file: %s  ,line: %i \n", file, line);
+      std::cout << " ERROR : INVALID_VALUE , file : " << file
+                << ", line : " << line;
       break;
     }
     case GL_INVALID_OPERATION: {
-      printf(" ERROR : INVALID_OPERATION , file: %s  ,line: %i \n", file, line);
+      std::cout << " ERROR : INVALID_OPERATION , file : " << file
+                << ", line : " << line;
       break;
     }
     case GL_STACK_OVERFLOW: {
-      printf(" ERROR : STACK_OVERFLOW , file: %s  ,line: %i \n", file, line);
+      std::cout << " ERROR : STACK_OVERFLOW , file : " << file
+                << ", line : " << line;
       break;
     }
     case GL_STACK_UNDERFLOW: {
-      printf(" ERROR : STACK_UNDERFLOW , file: %s ,line: %i \n", file, line);
+      std::cout << " ERROR : STACK_UNDERFLOW , file : " << file
+                << ", line : " << line;
       break;
     }
     case GL_OUT_OF_MEMORY: {
-      printf(" ERROR : OUT_OF_MEMORY , file: %s ,line: %i \n", file, line);
+      std::cout << " ERROR : OUT_OF_MEMORY , file : " << file
+                << ", line : " << line;
       break;
     }
     case GL_INVALID_FRAMEBUFFER_OPERATION: {
-      printf(" ERROR : INVALID_FRAMEBUFFER_OPERATION , file: %s ,line: %i \n",
-             file, line);
+      std::cout << " ERROR : INVALID_FRAMEBUFFER_OPERATION , file : " << file
+                << ", line : " << line;
       break;
     }
     }

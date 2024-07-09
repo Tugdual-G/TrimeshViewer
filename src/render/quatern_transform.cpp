@@ -6,18 +6,18 @@ extern "C" {
 #include <iostream>
 #include <vector>
 
-Quaternion Quaternion::c() {
+auto Quaternion::c() -> Quaternion {
   Quaternion c(q[0], -q[1], -q[2], -q[3]);
   return c;
 }
 
-double Quaternion::norm2() {
+auto Quaternion::norm2() -> double {
   return pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2);
 }
 
-double Quaternion::norm() { return pow(norm2(), 0.5); };
+auto Quaternion::norm() -> double { return pow(norm2(), 0.5); };
 
-Quaternion Quaternion::operator+(Quaternion v) {
+auto Quaternion::operator+(Quaternion v) -> Quaternion {
   Quaternion quatern;
   quatern[0] = this->q[0] + v[0];
   quatern[1] = this->q[1] + v[1];
@@ -33,7 +33,7 @@ void Quaternion::operator+=(Quaternion v) {
   this->q[3] = this->q[3] + v[3];
 }
 
-Quaternion Quaternion::operator-(Quaternion v) {
+auto Quaternion::operator-(Quaternion v) -> Quaternion {
   Quaternion quatern;
   quatern[0] = this->q[0] - v[0];
   quatern[1] = this->q[1] - v[1];
@@ -49,7 +49,7 @@ void Quaternion::operator-=(Quaternion v) {
   this->q[3] = this->q[3] - v[3];
 }
 
-Quaternion Quaternion::operator*(Quaternion v) {
+auto Quaternion::operator*(Quaternion v) -> Quaternion {
   // std::vector<double> q(4);
   Quaternion quatern(-v[1] * q[1] - v[2] * q[2] - v[3] * q[3] + v[0] * q[0],
                      v[1] * q[0] + v[2] * q[3] - v[3] * q[2] + v[0] * q[1],
@@ -68,7 +68,7 @@ Quaternion Quaternion::operator*(Quaternion v) {
 //   return quatern;
 // }
 
-Quaternion Quaternion::operator*(double v) {
+auto Quaternion::operator*(double v) -> Quaternion {
   Quaternion quatern;
   quatern[0] = q[0] * v;
   quatern[1] = q[1] * v;
@@ -112,7 +112,7 @@ void Quaternion::operator/=(double v) {
 //   q[3] = q[3] / v;
 // }
 
-Quaternion Quaternion::operator/(double v) {
+auto Quaternion::operator/(double v) -> Quaternion {
   Quaternion quatern;
   quatern[0] = q[0] / v;
   quatern[1] = q[1] / v;
@@ -121,7 +121,7 @@ Quaternion Quaternion::operator/(double v) {
   return quatern;
 }
 
-Quaternion Quaternion::operator/(double &v) {
+auto Quaternion::operator/(double &v) -> Quaternion {
   Quaternion quatern;
   quatern[0] = q[0] / v;
   quatern[1] = q[1] / v;
@@ -129,9 +129,9 @@ Quaternion Quaternion::operator/(double &v) {
   quatern[3] = q[3] / v;
   return quatern;
 }
-Quaternion Quaternion::inv() { return c() / norm2(); }
+auto Quaternion::inv() -> Quaternion { return c() / norm2(); }
 
-Quaternion Quaternion::operator/(Quaternion &v) { return (*this * v.inv()); }
+auto Quaternion::operator/(Quaternion &v) -> Quaternion { return (*this * v.inv()); }
 
 void Quaternion::set(double x, double y, double z, double w) {
   q[0] = x;
@@ -152,7 +152,7 @@ void Quaternion::print() {
   std::cout << q[0] << " ";
   std::cout << q[1] << " ";
   std::cout << q[2] << " ";
-  std::cout << q[3] << std::endl;
+  std::cout << q[3] << '\n';
 }
 
 ////////////////////////////////////////////////////////////////
