@@ -58,11 +58,9 @@ int main() {
     file3.vertices.at(i * 3 + 2) /= extent_vert;
   }
 
-  // MeshRender render(500, 500, mesh.vertices, mesh.faces, normals);
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
-  // render.update_vertex_colors(colors, 1);
-  render.add_object(file2.vertices, file2.faces, ShaderProgramType::FLAT_FACES);
-  render.add_object(file3.vertices, file3.faces, ShaderProgramType::FLAT_FACES);
+  render.add_object(file2.vertices, file2.faces);
+  render.add_object(file3.vertices, file3.faces);
   render.render_loop(NULL, NULL);
   render.render_finalize();
   return 0;

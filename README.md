@@ -76,7 +76,7 @@ int main() {
 
   // adding another mesh to the display
   PlyFile file2("meshes/spinningtop.ply");
-  render.add_object(file2.vertices, file2.faces, ShaderProgramType::FLAT_FACES);
+  render.add_object(file2.vertices, file2.faces);
 
   render.render_loop(NULL, NULL);
   render.render_finalize();

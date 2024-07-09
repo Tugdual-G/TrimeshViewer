@@ -26,7 +26,7 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 void MeshRender::init_window() {
-  // Init Window
+
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -55,7 +55,6 @@ void MeshRender::init_window() {
 }
 
 void MeshRender::Object::set_shader_program() {
-  // Compile shaders
   unsigned int vertexShader{0};
   unsigned int fragmentShader{0};
   switch (program_type) {
@@ -103,6 +102,7 @@ void framebuffer_size_callback(__attribute__((unused)) GLFWwindow *window,
                                int width, int height) {
   glViewport(0, 0, width, height);
 }
+
 void MeshRender::init_render() {
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -128,25 +128,11 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   int flag = 1;
   glClearColor(0.0, 0.0, 0.0, 0.0);
-  // Enable depth test
+
   glEnable(GL_DEPTH_TEST);
-  // Accept fragment if it closer to the camera than the former one
+  // Accept fragment if closer to the camera
   glDepthFunc(GL_LESS);
 
-  // if (data_update_function != NULL) {
-  //   while (!glfwWindowShouldClose(window) && flag) {
-  //     //keep_aspect_ratio(window, width, height);
-  //     processInput(window);
-  //     glClear(GL_COLOR_BUFFER_BIT);
-  //     flag = data_update_function(fargs);
-  //     // render container
-  //     glBindVertexArray(VAO);
-  //     glDrawElements(GL_TRIANGLES, n_faces * 3, GL_INT, 0);
-  //     glfwSwapBuffers(window);
-  //     glfwPollEvents();
-  //   }
-
-  // } else {
   while (!glfwWindowShouldClose(window) && flag) {
     glfwGetWindowSize(window, &width, &height);
     glBindVertexArray(VAO);
@@ -160,7 +146,6 @@ int MeshRender::render_loop(int (*data_update_function)(void *fargs),
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
-  //}
   glCheckError();
   return 0;
 }
@@ -174,7 +159,7 @@ int MeshRender::render_finalize() {
 }
 
 int MeshRender::add_object(std::vector<double> &ivertices,
-                           std::vector<unsigned int> ifaces,
+                           std::vector<unsigned int> &ifaces,
                            ShaderProgramType shader_type) {
 
   Object new_mesh(
@@ -211,7 +196,7 @@ int MeshRender::add_object(std::vector<double> &ivertices,
 }
 
 int MeshRender::add_object(std::vector<double> &ivertices,
-                           std::vector<unsigned int> ifaces,
+                           std::vector<unsigned int> &ifaces,
                            std::vector<double> colors,
                            ShaderProgramType shader_type) {
 
@@ -239,6 +224,42 @@ int MeshRender::add_object(std::vector<double> &ivertices,
       vertices_attr.at((n_total_vertices + i) * 6 + 3 + j) =
           colors.at(i * 3 + j); // intial colors
     }
+  }
+  n_total_vertices += ivertices.size() / 3;
+  new_mesh.set_shader_program();
+  objects.push_back(new_mesh);
+  resize_VAO();
+  resize_EBO();
+  return objects.size() - 1;
+}
+
+int MeshRender::add_object(std::vector<double> &ivertices,
+                           std::vector<unsigned int> &ifaces) {
+
+  Object new_mesh(
+      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+
+  new_mesh.attr_offset = vertices_attr.size();
+  new_mesh.attr_length = ivertices.size() * 2;
+  new_mesh.faces_indices_offset = faces.size();
+  new_mesh.faces_indices_length = ifaces.size();
+  new_mesh.n_faces = ifaces.size() / 3;
+  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.program_type = ShaderProgramType::FLAT_FACES;
+
+  vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
+  faces.resize(faces.size() + ifaces.size());
+
+  std::copy(ifaces.begin(), ifaces.end(), faces.begin() + n_total_faces * 3);
+  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+
+  for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at((n_total_vertices + i) * 6 + j) =
+          ivertices.at(i * 3 + j);
+    }
+    vertices_attr.at((n_total_vertices + i) * 6 + 4) = 0.7; // intial colors
+    vertices_attr.at((n_total_vertices + i) * 6 + 5) = 0.8;
   }
   n_total_vertices += ivertices.size() / 3;
   new_mesh.set_shader_program();
@@ -369,16 +390,8 @@ void keyboard_callback(__attribute__((unused)) GLFWwindow *window, int key,
     case GLFW_KEY_ESCAPE:
       glfwSetWindowShouldClose(window, 1);
       break;
-      // case GLFW_KEY_RIGHT:
-      //   break;
-
-      // case GLFW_KEY_LEFT:
-      //   break;
-
-      // case GLFW_KEY_DOWN:
-      //   break;
-      // case GLFW_KEY_UP:
-      //   break;
+    default:
+      break;
     }
   }
 }
@@ -420,4 +433,3 @@ GLenum glCheckError_(const char *file, int line) {
   }
   return errorCode;
 }
-#define glCheckError() glCheckError_(__FILE__, __LINE__)
