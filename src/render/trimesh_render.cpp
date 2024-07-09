@@ -6,7 +6,6 @@ extern "C" {
 #include "math.h"
 #include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
-#include <iostream>
 #include <numeric>
 #include <stdlib.h>
 

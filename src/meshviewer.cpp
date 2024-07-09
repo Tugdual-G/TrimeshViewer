@@ -5,7 +5,7 @@
 #include <iostream>
 #include <vector>
 
-int main(__attribute__((unused)) int argc, char *argv[]) {
+auto main(__attribute__((unused)) int argc, char *argv[]) -> int {
 
   PlyFile file(argv[1]);
 
@@ -19,15 +19,17 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
   std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
   auto [minvk, maxvk] = std::minmax_element(k.begin(), k.end());
-  double mink = *minvk, maxk = *maxvk;
+  double mink = *minvk;
+  double maxk = *maxvk;
 
   std::vector<double> colors =
-      get_interpolated_colors(k, INFERNO, mink - 0.1, maxk);
+      Colormap::get_interpolated_colors(k, Colormap::INFERNO, mink - 0.1, maxk);
 
   auto [minv, maxv] =
       std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
 
-  double max{*maxv}, min{*minv};
+  double max{*maxv};
+  double min{*minv};
   std::cout << "max " << max << ", min " << min << "\n";
   double extent_vert = *maxv - *minv;
   extent_vert *= 1.2;
@@ -36,7 +38,8 @@ int main(__attribute__((unused)) int argc, char *argv[]) {
   }
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
-  render.render_loop(NULL, NULL);
+  render.render_loop(nullptr, nullptr);
   render.render_finalize();
+
   return 0;
 }

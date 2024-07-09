@@ -1,9 +1,7 @@
 /* These methods are used to generate the mesh of the axis cross. */
 #include "quatern_transform.hpp"
 #include "trimesh_render.hpp"
-#include <iostream>
 #include <math.h>
-#include <numeric>
 #include <vector>
 
 #define pi 3.14159265359

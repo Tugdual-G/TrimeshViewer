@@ -62,7 +62,7 @@ int main() {
 
   // Computing the curvature to define the colors of the rendered object.
 
-  // get_mean_curvature takes one_ring as an argument to make explicit that the
+  // get_mean_curvature takes one_ring as argument to make explicit that the
   // method depends on the one-ring.
   mesh.set_one_ring();
   std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
