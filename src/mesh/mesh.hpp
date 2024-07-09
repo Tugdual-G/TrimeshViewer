@@ -7,10 +7,10 @@
 #include <vector>
 
 class Mesh {
-  // int n_vertice_elements;
-  int n_adja_faces_max{0};
-  // std::vector<int> vertices_elements_sizes;
-  //  int element_faces_bin_size;
+  // maximum number of adjacent faces to a vertice
+  unsigned int n_adja_faces_max{0};
+
+  // set anti-clockwise order for faces-vertices adjacency vector
   void order_adjacent_faces();
 
 public:
@@ -21,40 +21,37 @@ public:
   std::vector<unsigned int> faces;
   int n_vertices{0};
   int n_faces{0};
-  // std::vector<double> normals;
   std::vector<double> face_normals;
   std::vector<double> vertex_normals;
   std::vector<unsigned int> edges;
-  std::vector<unsigned int> one_ring;
   std::vector<unsigned int> vertex_adjacent_faces;
-  std::vector<double> mean_curvature;
-  Mesh(){};
+  std::vector<unsigned int> one_ring;
+
+  Mesh() {};
 
   Mesh(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces)
       : vertices(ivertices), faces(ifaces), n_vertices(ivertices.size() / 3),
-        n_faces(ifaces.size() / 3) {
-    // set_face_normals();
-    // set_vertex_adjacent_faces();
-    // set_vertex_normals();
-  }
+        n_faces(ifaces.size() / 3) {}
 
   void init(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces) {
     vertices = ivertices;
     faces = ifaces;
     n_vertices = ivertices.size() / 3;
     n_faces = ifaces.size() / 3;
-    // set_face_normals();
-    // set_vertex_adjacent_faces();
-    // set_vertex_normals();
-    //  set_one_ring(); // Migth trow errors with open meshes
   }
 
   void set_one_ring();
   void set_vertex_adjacent_faces(); // ordered faces
   void set_face_normals();
   void set_vertex_normals();
-  void set_mean_curvature();
-  void scalar_mean_curvature(std::vector<double> &k);
+
+  // Takes one_ring as an argument to make explicit that the
+  // method depends on the one-ring.
+  std::vector<double> get_mean_curvature(std::vector<unsigned int> &one_ring);
+
+  std::vector<double>
+  get_scalar_mean_curvature(std::vector<double> &mean_curvature);
+
   void print();
   void print_faces();
   void print_vertices();

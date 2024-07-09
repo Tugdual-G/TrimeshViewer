@@ -24,12 +24,13 @@ __Features:__
 - opengl 4.6
 - glfw
 
-
 ## Compilation
+The command line executable can be compiled with,
 
-        make -C sources
+        make -C src ../meshviewer
 
 ## Usage
+__CLI__
 
         ./meshviewer meshes/deform.ply
 
@@ -74,7 +75,7 @@ int main() {
 
   // adding another mesh to the display
   PlyFile file2("meshes/spinningtop.ply");
-  render.add_object(file2.vertices, file2.faces, ShaderProgramType::FLAT_FACES);
+  render.add_object(file2.vertices, file2.faces);
 
   render.render_loop(NULL, NULL);
   render.render_finalize();

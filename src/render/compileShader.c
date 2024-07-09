@@ -34,6 +34,7 @@ unsigned int compileVertexShader(const char *sourcefname) {
   glShaderSource(v_shader, 1, &s, NULL);
   glCompileShader(v_shader);
   glGetShaderiv(v_shader, GL_COMPILE_STATUS, &success);
+
   if (!success) {
     glGetShaderInfoLog(v_shader, 512, NULL, infoLog);
     printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n");
@@ -46,7 +47,8 @@ unsigned int compileVertexShader(const char *sourcefname) {
 unsigned int compileFragmentShader(const char *sourcefname) {
   FILE *fp = fopen(sourcefname, "rb+");
   if (!fp) {
-    printf("error: cannot open fragment shader source file \n");
+    printf("error: cannot open fragment shader source file :  %s  \n",
+           sourcefname);
     exit(1);
   }
   fseek(fp, 0, SEEK_END);

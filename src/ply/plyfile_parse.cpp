@@ -185,6 +185,10 @@ int PlyFile::from_file(const char *fname) {
   // vertices_elements_sizes.resize(10, 0);
   std::ifstream file;
   file.open(fname, std::ios::binary | std::ios::in);
+  if (file.fail()) {
+    std::cout << "Error, can't open : " << fname << "\n";
+    exit(1);
+  }
   parse_header(&file);
 
   if (!load_data(&file)) {
