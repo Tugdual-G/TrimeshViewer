@@ -44,7 +44,7 @@ __Code API example:__
 #include "render/trimesh_render.hpp"
 #include <vector>
 
-int main() {
+auto main() -> int {
 
   PlyFile file("meshes/deformHQ.ply");
 
@@ -69,7 +69,7 @@ int main() {
   std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
 
-  std::vector<double> colors = get_interpolated_colors(k, INFERNO);
+  std::vector<double> colors = Colormap::get_interpolated_colors(k, Colormap::INFERNO);
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
 
@@ -77,7 +77,7 @@ int main() {
   PlyFile file2("meshes/spinningtop.ply");
   render.add_object(file2.vertices, file2.faces);
 
-  render.render_loop(NULL, NULL);
+  render.render_loop(nullptr, nullptr);
   render.render_finalize();
   return 0;
 }
