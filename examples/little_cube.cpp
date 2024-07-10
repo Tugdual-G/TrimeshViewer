@@ -1,11 +1,10 @@
-/* Basic script to debug and test implementation */
+/* Basic script showing a cube */
 #include "../src/mesh/mesh.hpp"
 #include "../src/render/colormap.hpp"
 #include "../src/render/trimesh_render.hpp"
 #include <vector>
 
 auto main() -> int {
-  // Define a list of points
 
   std::vector<double> vertices = {
       // points coord
@@ -34,26 +33,24 @@ auto main() -> int {
       1, 4, 5, // 11
   };
 
+  // Scaling the cube
   for (auto &v : vertices) {
     v *= 0.5;
   }
 
   Mesh mesh(vertices, faces);
 
+  // The one ring is required to get the mean curvature
   mesh.set_one_ring();
-
-  mesh.set_one_ring();
-  mesh.print_one_ring();
-
   std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
   std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
   std::vector<double> colors =
       Colormap::get_nearest_colors(k, Colormap::VIRIDIS);
 
-  MeshRender render0(500, 500, mesh.vertices, mesh.faces, colors);
-  render0.render_loop(nullptr, nullptr);
-  render0.render_finalize();
+  MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
+  render.render_loop(nullptr, nullptr);
+  render.render_finalize();
 
   return 0;
 }
