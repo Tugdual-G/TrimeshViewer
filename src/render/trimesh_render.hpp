@@ -58,9 +58,8 @@ class MeshRender {
   size_t n_total_vertices{0};
   size_t n_total_faces{0};
 
-  // size in bytes of x, n, c
-  // (xxxnnnccc)->[3*sizeof(double), 3*sizeof()...]
-  std::vector<unsigned int> vert_attr_sizes;
+  // Number of elements per vertices attrib group (position, normal, color)
+  std::vector<unsigned int> vert_attr_group_length;
 
   // number of x, n, c components (xxxnnnccc)->[3,3,3]
   std::vector<unsigned int> vert_attr_numbers;
@@ -110,7 +109,7 @@ public:
              std::vector<unsigned int> &ifaces)
       : width(w_width), height(w_height) {
 
-    vert_attr_sizes.resize(2, 3 * sizeof(double));
+    vert_attr_group_length.resize(2, 3);
     vert_attr_numbers.resize(2, 3);
     init_window();
     vertices_attr.resize(0);
@@ -124,7 +123,7 @@ public:
              std::vector<unsigned int> &ifaces, std::vector<double> &icolors)
       : width(w_width), height(w_height) {
 
-    vert_attr_sizes.resize(2, 3 * sizeof(double));
+    vert_attr_group_length.resize(2, 3);
     vert_attr_numbers.resize(2, 3);
     init_window();
     init_render();

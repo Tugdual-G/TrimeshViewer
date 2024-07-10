@@ -286,8 +286,9 @@ void MeshRender::draw(Object &obj) {
 void MeshRender::resize_VAO() {
   // Resize the VAO and update vertex attributes data
   size_t total_size_vertice_attr =
-      std::reduce(vert_attr_sizes.begin(), vert_attr_sizes.end());
-  size_t n_vertice_attr = vert_attr_sizes.size();
+      sizeof(double) *
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
+  size_t n_vertice_attr = vert_attr_group_length.size();
   size_t offset{0 * sizeof(double)};
 
   glBindVertexArray(VAO);
@@ -300,7 +301,7 @@ void MeshRender::resize_VAO() {
     glVertexAttribPointer(i, 3, GL_DOUBLE, GL_FALSE, total_size_vertice_attr,
                           (void *)(offset));
     glEnableVertexAttribArray(i);
-    offset += vert_attr_sizes[i];
+    offset += vert_attr_group_length[i] * sizeof(double);
   }
 }
 
@@ -319,7 +320,8 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors,
   }
 
   size_t total_size_vertice_attr =
-      std::reduce(vert_attr_sizes.begin(), vert_attr_sizes.end());
+      sizeof(double) *
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // TODO do not reload all data
