@@ -14,13 +14,17 @@ Checks: "-*,
         -cppcoreguidelines-avoid-magic-numbers,
         -bugprone-easily-swappable-parameters,
         -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
-        -bugprone-narrowing-conversions,
-        -cppcoreguidelines-narrowing-conversions,
         -readability-uppercase-literal-suffix,
         -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+        -cppcoreguidelines-non-private-member-variables-in-classes,
+        -bugprone-implicit-widening-*,
+        -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 FormatStyle:     none
 ...
 
+
+#-bugprone-narrowing-conversions,
+#-cppcoreguidelines-narrowing-conversions,

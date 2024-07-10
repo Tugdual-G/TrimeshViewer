@@ -6,30 +6,31 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 
-enum class ShaderProgramType {
-  FLAT_FACES,
-  SMOOTH_FACES,
-  AXIS_CROSS_FLAT, // Used to render the axis-cross
-  AXIS_CROSS_SMOOTH,
-};
-
 class MeshRender {
+
+  enum class ShaderProgramType {
+    FLAT_FACES,
+    SMOOTH_FACES,
+    AXIS_CROSS_FLAT, // Used to render the axis-cross
+    AXIS_CROSS_SMOOTH,
+  };
+
   class Object {
     // Represent a mesh to be rendered and its positions in the openGL buffers.
   public:
     // first element position in the Vertex Buffer Object/vertices_attr
-    unsigned int attr_offset{0}; // in elements, (not in bytes)
+    size_t attr_offset{0}; // in elements, (not in bytes)
     // number of elements in the Vertex Buffer Object
-    unsigned int attr_length{0};
+    size_t attr_length{0};
     // total number of attributes per vertex
-    unsigned int total_number_attr;
+    size_t total_number_attr;
 
-    unsigned int n_vertices{0};
-    unsigned int n_faces{0};
+    size_t n_vertices{0};
+    size_t n_faces{0};
 
     // Offset in the EBO/faces
-    unsigned int faces_indices_offset{0}; // elements (not bytes)
-    unsigned int faces_indices_length{0};
+    size_t faces_indices_offset{0}; // elements (not bytes)
+    size_t faces_indices_length{0};
 
     // each object has its own shader program for flexibility
     unsigned int shader_program{0};
@@ -54,8 +55,8 @@ class MeshRender {
   // list of vertices for each triangular face for all meshes
   std::vector<unsigned int> faces{0};
 
-  unsigned int n_total_vertices{0};
-  unsigned int n_total_faces{0};
+  size_t n_total_vertices{0};
+  size_t n_total_faces{0};
 
   // size in bytes of x, n, c
   // (xxxnnnccc)->[3*sizeof(double), 3*sizeof()...]

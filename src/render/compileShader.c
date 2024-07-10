@@ -26,9 +26,9 @@ unsigned int compileVertexShader(const char *sourcefname) {
   source[lengthOfFile] = '\0';
   const char *s = source;
 
-  int success;
+  int success = 0;
   char infoLog[512] = {'\0'};
-  unsigned int v_shader;
+  unsigned int v_shader = 0;
   // Compile shaders
   v_shader = glCreateShader(GL_VERTEX_SHADER);
   glShaderSource(v_shader, 1, &s, NULL);

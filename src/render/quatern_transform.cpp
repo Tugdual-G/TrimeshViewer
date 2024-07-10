@@ -2,16 +2,17 @@
 extern "C" {
 #include "math.h"
 }
-#include <algorithm>
 #include <iostream>
 #include <vector>
 
 auto Quaternion::c() -> Quaternion {
+  /* Conjugate */
   Quaternion c(q[0], -q[1], -q[2], -q[3]);
   return c;
 }
 
 auto Quaternion::norm2() -> double {
+  /* Square norm */
   return pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2);
 }
 
@@ -58,16 +59,6 @@ auto Quaternion::operator*(Quaternion v) -> Quaternion {
   return quatern;
 }
 
-// Quaternion Quaternion::operator*(Quaternion &v) {
-//   // std::vector<double> q(4);
-//   Quaternion quatern(-v[1] * q[1] - v[2] * q[2] - v[3] * q[3] + v[0] * q[0],
-//                      v[1] * q[0] + v[2] * q[3] - v[3] * q[2] + v[0] * q[1],
-//                      -v[1] * q[3] + v[2] * q[0] + v[3] * q[1] + v[0] * q[2],
-//                      v[1] * q[2] - v[2] * q[1] + v[3] * q[0] + v[0] * q[3]);
-
-//   return quatern;
-// }
-
 auto Quaternion::operator*(double v) -> Quaternion {
   Quaternion quatern;
   quatern[0] = q[0] * v;
@@ -77,27 +68,12 @@ auto Quaternion::operator*(double v) -> Quaternion {
   return quatern;
 }
 
-// Quaternion Quaternion::operator*(double &v) {
-//   Quaternion quatern;
-//   quatern[0] = q[0] * v;
-//   quatern[1] = q[1] * v;
-//   quatern[2] = q[2] * v;
-//   quatern[3] = q[3] * v;
-//   return quatern;
-// }
-
 void Quaternion::operator*=(double v) {
   q[0] = q[0] * v;
   q[1] = q[1] * v;
   q[2] = q[2] * v;
   q[3] = q[3] * v;
 }
-// void Quaternion::operator*=(double &v) {
-//   q[0] = q[0] * v;
-//   q[1] = q[1] * v;
-//   q[2] = q[2] * v;
-//   q[3] = q[3] * v;
-// }
 
 void Quaternion::operator/=(double v) {
   q[0] = q[0] / v;
@@ -105,12 +81,6 @@ void Quaternion::operator/=(double v) {
   q[2] = q[2] / v;
   q[3] = q[3] / v;
 }
-// void Quaternion::operator/=(double &v) {
-//   q[0] = q[0] / v;
-//   q[1] = q[1] / v;
-//   q[2] = q[2] / v;
-//   q[3] = q[3] / v;
-// }
 
 auto Quaternion::operator/(double v) -> Quaternion {
   Quaternion quatern;
@@ -131,7 +101,9 @@ auto Quaternion::operator/(double &v) -> Quaternion {
 }
 auto Quaternion::inv() -> Quaternion { return c() / norm2(); }
 
-auto Quaternion::operator/(Quaternion &v) -> Quaternion { return (*this * v.inv()); }
+auto Quaternion::operator/(Quaternion &v) -> Quaternion {
+  return (*this * v.inv());
+}
 
 void Quaternion::set(double x, double y, double z, double w) {
   q[0] = x;

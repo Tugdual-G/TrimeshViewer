@@ -4,14 +4,12 @@
 #include <cmath>
 #include <vector>
 
-#define pi 3.14159265359
-enum {
-N = 8
-};
-#define r_e 0.08
-#define r_i 0.04
-#define base_length 0.8
-#define sqrt2 1.4142
+constexpr double pi{3.14159265359};
+constexpr size_t N{8};
+constexpr double r_e{0.08};
+constexpr double r_i{0.04};
+constexpr double base_length{0.8};
+constexpr double sqrt2{1.4142};
 
 void mesh_arrow(std::vector<double> &vertices, std::vector<unsigned int> &faces,
                 size_t n_angles) {
@@ -28,7 +26,7 @@ void mesh_arrow(std::vector<double> &vertices, std::vector<unsigned int> &faces,
   std::vector<double> theta_ext(n_angles);
   std::vector<double> theta_int(n_angles);
 
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     theta_ext.at(i) = 2 * pi / n_angles * i + pi / n_angles;
     theta_int.at(i) = 2 * pi / n_angles * i;
   }
@@ -36,18 +34,18 @@ void mesh_arrow(std::vector<double> &vertices, std::vector<unsigned int> &faces,
   vertices[1] = 0;
   vertices[2] = 0;
   // shaft base
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     vertices[3 * (i + 1) + 1] = r_i * sin(theta_int.at(i));
     vertices[3 * (i + 1) + 2] = r_i * cos(theta_int.at(i));
   }
   // cone junction
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     vertices[3 * (i + n_angles + 1)] = base_length;
     vertices[3 * (i + n_angles + 1) + 1] = r_i * sin(theta_int.at(i));
     vertices[3 * (i + n_angles + 1) + 2] = r_i * cos(theta_int.at(i));
   }
   // cone base
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     vertices[3 * (i + 2 * n_angles + 1)] = base_length;
     vertices[3 * (i + 2 * n_angles + 1) + 1] = r_e * sin(theta_ext.at(i));
     vertices[3 * (i + 2 * n_angles + 1) + 2] = r_e * cos(theta_ext.at(i));
@@ -58,38 +56,38 @@ void mesh_arrow(std::vector<double> &vertices, std::vector<unsigned int> &faces,
   vertices.at(3 * (3 * n_angles + 1) + 2) = 0;
 
   // shaft base
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     faces.at(3 * i) = (i + 1) % n_angles + 1;
     faces.at(3 * i + 1) = i + 1;
     faces.at(3 * i + 2) = 0;
   }
 
   // shaft
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     faces[3 * (i + n_angles)] = i + 1;
     faces[3 * (i + n_angles) + 1] = (i + 1) % n_angles + 1;
     faces[3 * (i + n_angles) + 2] = n_angles + i + 1;
   }
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     faces[3 * (i + 2 * n_angles)] = (i + 1) % n_angles + 1;
     faces[3 * (i + 2 * n_angles) + 1] = n_angles + (i + 1) % n_angles + 1;
     faces[3 * (i + 2 * n_angles) + 2] = n_angles + i + 1;
   }
 
   // Cone base
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     faces[3 * (i + 3 * n_angles)] = n_angles + i % n_angles + 1;
     faces[3 * (i + 3 * n_angles) + 1] = n_angles + (i + 1) % n_angles + 1;
     faces[3 * (i + 3 * n_angles) + 2] = 2 * n_angles + i + 1;
   }
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     faces[3 * (i + 4 * n_angles)] = n_angles + (i + 1) % n_angles + 1;
     faces[3 * (i + 4 * n_angles) + 1] = 2 * n_angles + (i + 1) % n_angles + 1;
     faces[3 * (i + 4 * n_angles) + 2] = 2 * n_angles + i + 1;
   }
 
   // Cone tip
-  for (unsigned int i = 0; i < n_angles; ++i) {
+  for (size_t i = 0; i < n_angles; ++i) {
     faces.at(3 * (i + 5 * n_angles)) = 2 * n_angles + i + 1;
     faces.at(3 * (i + 5 * n_angles) + 1) =
         2 * n_angles + (i + 1) % n_angles + 1;

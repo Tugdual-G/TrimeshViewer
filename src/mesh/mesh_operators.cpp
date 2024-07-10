@@ -1,25 +1,25 @@
 #include "mesh.hpp"
 #include <iostream>
-#include <math.h>
-#include <stdlib.h>
+#include <cmath>
+#include <cstdlib>
 #include <vector>
 
-static double norm(double *w) {
+static auto norm(double *w) -> double {
   return pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
 }
 
-static void vector_prod(double *u, double *v, double *w) {
+static void vector_prod(const double *u, const double *v, double *w) {
   w[0] = u[1] * v[2] - u[2] * v[1];
   w[1] = u[2] * v[0] - u[0] * v[2];
   w[2] = u[0] * v[1] - u[1] * v[0];
 }
 
-static double dot(double *u, double *v) {
+static auto dot(const double *u, const double *v) -> double {
   return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }
 
-std::vector<double>
-Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature) {
+auto
+Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature) -> std::vector<double> {
   if (mean_curvature.size() != (long unsigned int)n_vertices * 3LU) {
     std::cout << "Error, mean_curvature should be of size 3*n_vertices\n";
     exit(1);
@@ -39,8 +39,8 @@ Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature) {
 
 // Takes one_ring as an argument to make explicit that the
 // method depends on the one-ring.
-std::vector<double>
-Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring) {
+auto
+Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring) -> std::vector<double> {
 
   if (vertices_one_ring.size() < 2) {
     std::cout << "Error, vertices_one_ring should be initialized \n";
@@ -56,12 +56,18 @@ Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring) {
 
   std::vector<double> edges_vect(n_adja_faces_max * 3);
 
-  unsigned int r_vert_idx; // points to the current vertice idx
+  unsigned int r_vert_idx = 0; // points to the current vertice idx
 
   double A_x2 = 0; // area
   double cross[3]; // to store temporary cross product
-  double *e1, o1[3];
-  double cos1, cos2, sin1, sin2, cot1, cot2;
+  double *e1;
+  double o1[3];
+  double cos1;
+  double cos2;
+  double sin1;
+  double sin2;
+  double cot1;
+  double cot2;
   for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
     ring_nv = vertices_one_ring[one_ring_i0]; // retrieves the number of
                                               // vertices in the ring

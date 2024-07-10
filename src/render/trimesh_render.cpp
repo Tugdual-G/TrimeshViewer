@@ -17,8 +17,9 @@ auto glCheckError_(const char *file, int line) -> GLenum;
 #define SMOOTH_SHADE_NAME "smooth_shading_"
 #define FLAT_SHADE_NAME "flat_shading_"
 #define AXIS_CROSS_NAME "axis_cross_"
-#define MOUSE_SENSITIVITY 0.005
-#define SCROLL_SENSITIVITY 0.05
+
+constexpr double MOUSE_SENSITIVITY{0.005};
+constexpr double SCROLL_SENSITIVITY{0.05};
 
 void MeshRender::init_window() {
 
@@ -284,17 +285,17 @@ void MeshRender::draw(Object &obj) {
 
 void MeshRender::resize_VAO() {
   // Resize the VAO and update vertex attributes data
-  unsigned int total_size_vertice_attr =
+  size_t total_size_vertice_attr =
       std::reduce(vert_attr_sizes.begin(), vert_attr_sizes.end());
-  unsigned int n_vertice_attr = vert_attr_sizes.size();
-  long unsigned int offset{0 * sizeof(double)};
+  size_t n_vertice_attr = vert_attr_sizes.size();
+  size_t offset{0 * sizeof(double)};
 
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, n_total_vertices * total_size_vertice_attr,
                vertices_attr.data(), GL_STATIC_DRAW);
 
-  for (unsigned int i = 0; i < n_vertice_attr; ++i) {
+  for (size_t i = 0; i < n_vertice_attr; ++i) {
     // TODO do not hardcode 3 !
     glVertexAttribPointer(i, 3, GL_DOUBLE, GL_FALSE, total_size_vertice_attr,
                           (void *)(offset));
@@ -306,18 +307,18 @@ void MeshRender::resize_VAO() {
 void MeshRender::update_vertex_colors(std::vector<double> &colors,
                                       unsigned int object_idx) {
   // TODO vertices attr numbers might vary
-  unsigned int n_vertice_attr =
+  size_t n_vertice_attr =
       std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end());
   Object &obj = objects.at(object_idx);
-  for (unsigned int i = 0; i < obj.n_vertices; ++i) {
-    for (unsigned int j = 0; j < 3; ++j) {
+  for (size_t i = 0; i < obj.n_vertices; ++i) {
+    for (size_t j = 0; j < 3; ++j) {
       // copies the precedent attributes
       vertices_attr.at(obj.attr_offset + i * n_vertice_attr + n_vertice_attr -
                        3 + j) = colors.at(i * 3 + j);
     }
   }
 
-  unsigned int total_size_vertice_attr =
+  size_t total_size_vertice_attr =
       std::reduce(vert_attr_sizes.begin(), vert_attr_sizes.end());
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);

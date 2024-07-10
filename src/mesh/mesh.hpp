@@ -1,21 +1,17 @@
 #ifndef MESH_H_
 #define MESH_H_
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <variant>
 #include <vector>
 
 class Mesh {
   // maximum number of adjacent faces to a vertice
   unsigned int n_adja_faces_max{0};
+  int n_dim{3};
+  int vertices_per_face{3};
 
   // set anti-clockwise order for faces-vertices adjacency vector
   void order_adjacent_faces();
 
 public:
-  int n_dim{3};
-  int vertices_per_face{3};
   int n_edges{0};
   std::vector<double> vertices;
   std::vector<unsigned int> faces;
@@ -27,7 +23,7 @@ public:
   std::vector<unsigned int> vertex_adjacent_faces;
   std::vector<unsigned int> one_ring;
 
-  Mesh() {};
+  Mesh() = default;
 
   Mesh(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces)
       : vertices(ivertices), faces(ifaces), n_vertices(ivertices.size() / 3),
@@ -47,10 +43,11 @@ public:
 
   // Takes one_ring as an argument to make explicit that the
   // method depends on the one-ring.
-  std::vector<double> get_mean_curvature(std::vector<unsigned int> &one_ring);
+  auto get_mean_curvature(std::vector<unsigned int> &one_ring)
+      -> std::vector<double>;
 
-  std::vector<double>
-  get_scalar_mean_curvature(std::vector<double> &mean_curvature);
+  auto get_scalar_mean_curvature(std::vector<double> &mean_curvature)
+      -> std::vector<double>;
 
   void print();
   void print_faces();

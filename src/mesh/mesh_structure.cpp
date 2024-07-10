@@ -1,13 +1,11 @@
 #include "mesh.hpp"
-// #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 #include <iostream>
-#include <math.h>
-#include <stdlib.h>
-// #include <string>
 #include <vector>
 
 static void normalize(double *w);
-static void vector_prod(double *u, double *v, double *w);
+static void vector_prod(const double *u, const double *v, double *w);
 
 void Mesh::set_one_ring() {
   if (n_adja_faces_max == 0) {
@@ -54,12 +52,14 @@ void Mesh::order_adjacent_faces() {
   // edges oposite to the current vertice [[vert0, vert1],...,[vert0, vert1]]
   std::vector<int> oposite_edge(n_adja_faces_max * 2, -1);
 
-  int adja_array_idx = 0; // global position in the array
-  int triangle_vert_idx;  // index of the vertices in the face [0, 1, 2]
-  int face;               // face index in faces
-  int n_adja;             // number of adjacent faces for the current vertice
-  int vert_0_fidx, vert_1_fidx; // oposite edges vertices index in faces array
-  int j_next, j_current;        // adjacent faces idx in unordered_faces
+  int adja_array_idx = 0;    // global position in the array
+  int triangle_vert_idx = 0; // index of the vertices in the face [0, 1, 2]
+  int face = 0;              // face index in faces
+  int n_adja = 0;            // number of adjacent faces for the current vertice
+  int vert_0_fidx;
+  int vert_1_fidx; // oposite edges vertices index in faces array
+  int j_next;
+  int j_current; // adjacent faces idx in unordered_faces
 
   for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
     n_adja = vertex_adjacent_faces.at(adja_array_idx);
@@ -120,7 +120,8 @@ void Mesh::order_adjacent_faces() {
 void Mesh::set_vertex_adjacent_faces() {
   // TODO do not harcode the max number of adjacent faces.
   vertex_adjacent_faces.resize(vertices.size() * 10, -1);
-  int n_adja = 1, n_adja_max = 0;
+  int n_adja = 1;
+  int n_adja_max = 0;
   long unsigned int total_size = 0;
   for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
     n_adja = 0;
@@ -143,7 +144,7 @@ void Mesh::set_vertex_adjacent_faces() {
     }
     vertex_adjacent_faces[total_size - n_adja - 1] = n_adja;
     n_adja_max = (n_adja > n_adja_max) ? n_adja : n_adja_max;
-    if (!n_adja) {
+    if (n_adja == 0) {
       std::cout << "Error, vertex without an adjacent face.\n";
     }
   }
@@ -156,17 +157,17 @@ void Mesh::set_vertex_adjacent_faces() {
 }
 
 void Mesh::set_vertex_normals() {
-  if (vertex_adjacent_faces.size() == 0) {
+  if (vertex_adjacent_faces.empty()) {
     set_vertex_adjacent_faces();
   }
-  if (face_normals.size() == 0) {
+  if (face_normals.empty()) {
     set_face_normals();
   }
 
   vertex_normals.resize(n_vertices * 3, 0);
   int n_adja = 0;
   int adja_array_idx = 0;
-  int face;
+  int face = 0;
   for (int i = 0; i < n_vertices; ++i) {
     n_adja = vertex_adjacent_faces.at(adja_array_idx);
     for (int j = 0; j < n_adja; ++j) {
@@ -186,8 +187,11 @@ void Mesh::set_vertex_normals() {
 
 void Mesh::set_face_normals() {
   face_normals.resize(faces.size(), 0);
-  unsigned int i, j, k;
-  double e0[3], e1[3];
+  unsigned int i{0};
+  unsigned int j{0};
+  unsigned int k{0};
+  double e0[3];
+  double e1[3];
   for (int face_idx = 0; face_idx < n_faces; ++face_idx) {
     i = faces.at(3 * face_idx);
     j = faces.at(3 * face_idx + 1);
@@ -212,7 +216,7 @@ void normalize(double *w) {
   w[2] /= norm;
 }
 
-void vector_prod(double *u, double *v, double *w) {
+void vector_prod(const double *u, const double *v, double *w) {
   w[0] = u[1] * v[2] - u[2] * v[1];
   w[1] = u[2] * v[0] - u[0] * v[2];
   w[2] = u[0] * v[1] - u[1] * v[0];
