@@ -118,25 +118,19 @@ void Mesh::order_adjacent_faces() {
 }
 
 void Mesh::set_vertex_adjacent_faces() {
-  // TODO do not harcode the max number of adjacent faces.
-  vertex_adjacent_faces.resize(vertices.size() * 10, -1);
+  vertex_adjacent_faces.reserve(vertices.size() * 10);
   int n_adja = 1;
   int n_adja_max = 0;
   long unsigned int total_size = 0;
   for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
     n_adja = 0;
+    vertex_adjacent_faces.push_back(-1);
     ++total_size; // since we store the number of adj at the begining.
                   // TODO maybe vector can handle this with reserve
-    if (total_size >= vertex_adjacent_faces.size()) {
-      vertex_adjacent_faces.resize(total_size + vertices.size());
-    }
     for (unsigned int j = 0; j < (unsigned int)n_faces; ++j) {
       for (unsigned int k = 0; k < 3; ++k) {
         if (faces[j * 3 + k] == i) {
-          if (total_size >= vertex_adjacent_faces.size()) {
-            vertex_adjacent_faces.resize(total_size + vertices.size());
-          }
-          vertex_adjacent_faces.at(total_size) = j;
+          vertex_adjacent_faces.push_back(j);
           ++n_adja;
           ++total_size;
         }
@@ -149,6 +143,7 @@ void Mesh::set_vertex_adjacent_faces() {
     }
   }
   vertex_adjacent_faces.resize(total_size);
+  vertex_adjacent_faces.shrink_to_fit();
   n_adja_faces_max = n_adja_max;
   if (n_adja_max > 500) {
     std::cout << "\n Warning, one vertice has more than 500 adjacent faces \n";
