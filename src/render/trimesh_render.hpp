@@ -102,6 +102,10 @@ public:
   auto add_object(std::vector<double> &ivertices,
                   std::vector<unsigned int> &ifaces) -> int;
 
+  auto add_object(std::vector<double> &ivertices,
+                  std::vector<unsigned int> &ifaces,
+                  std::vector<double> &colors) -> int;
+
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
       : width(w_width), height(w_height) {

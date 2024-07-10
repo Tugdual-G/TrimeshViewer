@@ -19,7 +19,7 @@ auto main() -> int {
   };
   // move and scale the pent
   for (auto &v : pent_vertices) {
-    v *= 0.1;
+    v *= 0.2;
     v -= 0.1;
   }
 
@@ -91,24 +91,24 @@ auto main() -> int {
   // A test value to generate colors
   std::vector<double> cube_scalar_vertex_value(cube_vertices.size() / 3);
   for (int i = 0; i < cube_scalar_vertex_value.size(); ++i) {
-    cube_scalar_vertex_value.at(i) = i + 1;
+    cube_scalar_vertex_value.at(i) = i;
   }
 
   // A test value to generate colors
-  std::vector<double> thet_scalar_vertex_value(thet_vertices.size() / 3);
-  for (int i = 0; i < thet_scalar_vertex_value.size(); ++i) {
-    thet_scalar_vertex_value.at(i) = i + 1;
+  std::vector<double> pent_scalar_vertex_value(pent_vertices.size() / 3);
+  for (int i = 0; i < pent_scalar_vertex_value.size(); ++i) {
+    pent_scalar_vertex_value.at(i) = i + 4;
   }
 
   std::vector<double> cube_colors =
       Colormap::get_nearest_colors(cube_scalar_vertex_value, Colormap::VIRIDIS);
 
-  std::vector<double> thet_colors = Colormap::get_interpolated_colors(
-      thet_scalar_vertex_value, Colormap::INFERNO);
+  std::vector<double> pent_colors = Colormap::get_interpolated_colors(
+      pent_scalar_vertex_value, Colormap::MAGMA, 0, 10);
 
   MeshRender render(500, 500, cube_vertices, cube_faces, cube_colors);
   render.add_object(thet_vertices, thet_faces);
-  render.add_object(pent_vertices, pent_faces);
+  render.add_object(pent_vertices, pent_faces, pent_colors);
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
 

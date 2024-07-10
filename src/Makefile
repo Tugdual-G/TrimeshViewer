@@ -6,11 +6,11 @@
 CCPP = g++
 CC = gcc
 CFLAGS = -Wall -Wextra -O2
-LDFLAGS='-Wl,-rpath,$$ORIGIN/src/'
+LDFLAGS='-Wl,-rpath,$$ORIGIN/src/render/' -Lrender -ltrimesh_render
 # Targets
 all: meshviewer.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
 
-../meshviewer: meshviewer.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o libtrimesh_render.so
+../meshviewer: meshviewer.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 plyfile_parse.o: ply/plyfile_parse.cpp
@@ -25,14 +25,8 @@ mesh_operators.o: mesh/mesh_operators.cpp
 mesh_structure.o: mesh/mesh_structure.cpp
 	$(CCPP) $(CFLAGS) -c $<
 
-libtrimesh_render.so:  render/glad/glad.c render/trimesh_render.cpp render/compileShader.c render/quatern_transform.cpp render/axis_cross.cpp
-	$(CC) $(CFLAGS) -I render -shared -o $@ $^ -lGL -lglfw -fPIC
-
-quatern_transform.o:render/quatern_transform.cpp
-	$(CCPP) $(CFLAGS) -c $<
-
-axis_cross.o:render/axis_cross.cpp
-	$(CCPP) $(CFLAGS) -c $<
+libtrimesh_render.so:
+	+$(MAKE) -C render/
 
 clean:
 	rm -f main *.o *.so

@@ -232,6 +232,44 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
 }
 
 auto MeshRender::add_object(std::vector<double> &ivertices,
+                            std::vector<unsigned int> &ifaces,
+                            std::vector<double> &colors) -> int {
+
+  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
+                              vert_attr_group_length.end()));
+
+  new_mesh.attr_offset = vertices_attr.size();
+  new_mesh.attr_length = ivertices.size() * 2;
+  new_mesh.faces_indices_offset = faces.size();
+  new_mesh.faces_indices_length = ifaces.size();
+  new_mesh.n_faces = ifaces.size() / 3;
+  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.program_type = ShaderProgramType::FLAT_FACES;
+
+  vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
+  faces.resize(faces.size() + ifaces.size());
+
+  std::copy(ifaces.begin(), ifaces.end(),
+            faces.begin() + (long)n_total_faces * 3);
+  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+
+  for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at((n_total_vertices + i) * 6 + j) =
+          (float)ivertices.at(i * 3 + j);
+      vertices_attr.at((n_total_vertices + i) * 6 + 3 + j) =
+          (float)colors.at(i * 3 + j);
+    }
+  }
+  n_total_vertices += ivertices.size() / 3;
+  new_mesh.set_shader_program();
+  objects.push_back(new_mesh);
+  resize_VAO();
+  resize_EBO();
+  return (int)objects.size() - 1;
+}
+
+auto MeshRender::add_object(std::vector<double> &ivertices,
                             std::vector<unsigned int> &ifaces) -> int {
 
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
