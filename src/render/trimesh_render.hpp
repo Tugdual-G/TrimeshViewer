@@ -33,11 +33,11 @@ class MeshRender {
     size_t faces_indices_length{0};
 
     // each object has its own shader program for flexibility
-    unsigned int shader_program{0};
+    int shader_program{0};
     // Transformation quaternions uniforms
-    unsigned int q_loc{0}, q_inv_loc{0};
-    unsigned int zoom_loc{0};          // zoom uniform
-    unsigned int viewport_size_loc{0}; // uniform to keep the aspect ratio
+    int q_loc{0}, q_inv_loc{0};
+    int zoom_loc{0};          // zoom uniform
+    int viewport_size_loc{0}; // uniform to keep the aspect ratio
     ShaderProgramType program_type{ShaderProgramType::FLAT_FACES};
 
     void set_shader_program();

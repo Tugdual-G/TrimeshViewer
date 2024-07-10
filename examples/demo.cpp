@@ -10,12 +10,6 @@ auto main() -> int {
 
   Mesh mesh(file.vertices, file.faces);
 
-  // std::vector<PropertyName> normal_property_names = {
-  //     PropertyName::nx, PropertyName::ny, PropertyName::nz};
-  // std::vector<double> normals;
-  // file.get_subelement_data<double>("vertices", normal_property_names,
-  // normals);
-
   mesh.set_one_ring();
   std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
   std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
@@ -49,7 +43,7 @@ auto main() -> int {
   extent_vert = *maxv3 - *minv3;
   extent_vert *= 1.7;
 
-  for (size_t i = 0; i < file3.n_vertices; ++i) {
+  for (int i = 0; i < file3.n_vertices; ++i) {
     file3.vertices.at(i * 3) /= extent_vert;
     file3.vertices.at(i * 3) -= 0.5;
     file3.vertices.at(i * 3 + 1) /= extent_vert;
