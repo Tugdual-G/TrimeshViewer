@@ -61,9 +61,6 @@ class MeshRender {
   // Number of elements per vertices attrib group (position, normal, color)
   std::vector<unsigned int> vert_attr_group_length;
 
-  // number of x, n, c components (xxxnnnccc)->[3,3,3]
-  std::vector<unsigned int> vert_attr_numbers;
-
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
   // defining the zoom level
@@ -110,7 +107,6 @@ public:
       : width(w_width), height(w_height) {
 
     vert_attr_group_length.resize(2, 3);
-    vert_attr_numbers.resize(2, 3);
     init_window();
     vertices_attr.resize(0);
     faces.resize(0);
@@ -124,7 +120,6 @@ public:
       : width(w_width), height(w_height) {
 
     vert_attr_group_length.resize(2, 3);
-    vert_attr_numbers.resize(2, 3);
     init_window();
     init_render();
     vertices_attr.resize(0);

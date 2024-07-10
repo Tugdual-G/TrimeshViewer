@@ -158,8 +158,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
                             std::vector<unsigned int> &ifaces,
                             ShaderProgramType shader_type) -> int {
 
-  Object new_mesh(
-      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
+                              vert_attr_group_length.end()));
 
   new_mesh.attr_offset = vertices_attr.size();
   new_mesh.attr_length = ivertices.size() * 2;
@@ -196,8 +196,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
                             std::vector<double> colors,
                             ShaderProgramType shader_type) -> int {
 
-  Object new_mesh(
-      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
+                              vert_attr_group_length.end()));
 
   new_mesh.attr_offset = vertices_attr.size();
   new_mesh.attr_length = ivertices.size() * 2;
@@ -232,8 +232,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
 auto MeshRender::add_object(std::vector<double> &ivertices,
                             std::vector<unsigned int> &ifaces) -> int {
 
-  Object new_mesh(
-      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end()));
+  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
+                              vert_attr_group_length.end()));
 
   new_mesh.attr_offset = vertices_attr.size();
   new_mesh.attr_length = ivertices.size() * 2;
@@ -309,7 +309,7 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors,
                                       unsigned int object_idx) {
   // TODO vertices attr numbers might vary
   size_t n_vertice_attr =
-      std::reduce(vert_attr_numbers.begin(), vert_attr_numbers.end());
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   Object &obj = objects.at(object_idx);
   for (size_t i = 0; i < obj.n_vertices; ++i) {
     for (size_t j = 0; j < 3; ++j) {
