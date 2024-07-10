@@ -12,28 +12,26 @@ class Mesh {
   void order_adjacent_faces();
 
 public:
-  int n_edges{0};
-  std::vector<double> vertices;
-  std::vector<unsigned int> faces;
   int n_vertices{0};
   int n_faces{0};
+  std::vector<double> vertices;
+  std::vector<unsigned int> faces;
   std::vector<double> face_normals;
   std::vector<double> vertex_normals;
-  std::vector<unsigned int> edges;
   std::vector<unsigned int> vertex_adjacent_faces;
   std::vector<unsigned int> one_ring;
 
   Mesh() = default;
 
   Mesh(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces)
-      : vertices(ivertices), faces(ifaces), n_vertices(ivertices.size() / 3),
-        n_faces(ifaces.size() / 3) {}
+      : n_vertices((int)ivertices.size() / 3), n_faces((int)ifaces.size() / 3),
+        vertices(ivertices), faces(ifaces) {}
 
   void init(std::vector<double> &ivertices, std::vector<unsigned int> &ifaces) {
+    n_vertices = (int)ivertices.size() / 3;
+    n_faces = (int)ifaces.size() / 3;
     vertices = ivertices;
     faces = ifaces;
-    n_vertices = ivertices.size() / 3;
-    n_faces = ifaces.size() / 3;
   }
 
   void set_one_ring();
