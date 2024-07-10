@@ -51,7 +51,7 @@ class MeshRender {
 
   // contains vertices coordinates , colors, normals... for all meshes
   // meshes
-  std::vector<double> vertices_attr{0};
+  std::vector<float> vertices_attr{0};
   // list of vertices for each triangular face for all meshes
   std::vector<unsigned int> faces{0};
 
