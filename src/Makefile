@@ -6,29 +6,20 @@
 CCPP = g++
 CC = gcc
 CFLAGS = -Wall -Wextra -O2
-LDFLAGS='-Wl,-rpath,$$ORIGIN/src/render/' -Lrender -ltrimesh_render
+LDFLAGS='-Wl,-rpath,$$ORIGIN/src/render/' -Lmesh -Lrender -ltrimesh_render -lmesh
 # Targets
-all: meshviewer.cpp mesh_primitives.o mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o mesh_primitives.o libtrimesh_render.so
+all: ../meshviewer plyfile_parse.o libmesh.a libtrimesh_render.so
 
-../meshviewer: meshviewer.cpp mesh_print.o plyfile_parse.o mesh_structure.o mesh_operators.o
+../meshviewer: meshviewer.cpp plyfile_parse.o libmesh.a
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 plyfile_parse.o: ply/plyfile_parse.cpp
 	$(CCPP) $(CFLAGS) -c $<
 
-mesh_print.o: mesh/mesh_print.cpp
-	$(CCPP) $(CFLAGS) -c $<
+libmesh.a: mesh/*.cpp mesh/*.hpp
+	+$(MAKE) -C mesh/
 
-mesh_primitives.o: mesh/mesh_primitives.cpp
-	$(CCPP) $(CFLAGS) -c $<
-
-mesh_operators.o: mesh/mesh_operators.cpp
-	$(CCPP) $(CFLAGS) -c $<
-
-mesh_structure.o: mesh/mesh_structure.cpp
-	$(CCPP) $(CFLAGS) -c $<
-
-libtrimesh_render.so:
+libtrimesh_render.so: render/*.cpp render/*.hpp
 	+$(MAKE) -C render/
 
 clean:
