@@ -8,6 +8,12 @@ static void normalize(double *w);
 static void vector_prod(const double *u, const double *v, double *w);
 
 void Mesh::set_one_ring() {
+  /* Sets the one-ring (adjacent vertices / link) for each vertice in the
+   * "vertices" vector.
+   * The one-ring is stored as a contiguous list of sublist.
+   * Each sublist starts with the number of elements in the ring,
+   * followed by the vertices indices.
+   * */
   if (n_adja_faces_max == 0) {
     set_vertex_adjacent_faces();
   }
@@ -47,6 +53,8 @@ void Mesh::set_one_ring() {
 }
 
 void Mesh::order_adjacent_faces() {
+  /* Orders the adjacent faces in counter clockwise order arround the central
+   * vertice. */
   std::vector<int> unordered_faces(n_adja_faces_max, -1);
 
   // edges oposite to the current vertice [[vert0, vert1],...,[vert0, vert1]]
@@ -118,6 +126,7 @@ void Mesh::order_adjacent_faces() {
 }
 
 void Mesh::set_vertex_adjacent_faces() {
+  /* Finds the adjacent faces of each vertices. */
   vertex_adjacent_faces.reserve(vertices.size() * 10);
   int n_adja = 1;
   int n_adja_max = 0;
@@ -181,6 +190,7 @@ void Mesh::set_vertex_normals() {
 }
 
 void Mesh::set_face_normals() {
+  /* Computes the normals for each triangular face .*/
   face_normals.resize(faces.size(), 0);
   unsigned int i{0};
   unsigned int j{0};
