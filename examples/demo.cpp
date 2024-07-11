@@ -47,6 +47,7 @@ auto main() -> int {
   for (int i = 0; i < ico.n_vertices; ++i) {
     ico_scalar_vertex_value.at(i) = i + 7;
   }
+
   std::vector<double> ico_colors = Colormap::get_interpolated_colors(
       ico_scalar_vertex_value, Colormap::MAGMA, 0, 20);
 

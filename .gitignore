@@ -12,3 +12,4 @@ prof*
 demo
 test
 *_private.cpp
+*.a

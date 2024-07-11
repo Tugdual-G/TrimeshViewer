@@ -16,6 +16,7 @@ public:
   int n_faces{0};
   std::vector<double> vertices;
   std::vector<unsigned int> faces;
+  std::vector<unsigned int> edges;
   std::vector<double> face_normals;
   std::vector<double> vertex_normals;
   std::vector<unsigned int> vertex_adjacent_faces;
@@ -38,6 +39,8 @@ public:
   void set_vertex_adjacent_faces(); // ordered faces
   void set_face_normals();
   void set_vertex_normals();
+  // void set_edges();
+  // void subdivide();
 
   // Takes one_ring as an argument to make explicit that the
   // method depends on the one-ring.
