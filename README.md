@@ -48,7 +48,7 @@ auto main() -> int {
 
   PlyFile file("meshes/deformHQ.ply");
 
-  // Retrieving the vertices's normals from the file.
+  // Retrieving the vertice normals from the file.
   std::vector<PropertyName> normal_property_names = {
       PropertyName::nx, PropertyName::ny, PropertyName::nz};
 
@@ -74,8 +74,8 @@ auto main() -> int {
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
 
   // adding another mesh to the display
-  PlyFile file2("meshes/spinningtop.ply");
-  render.add_object(file2.vertices, file2.faces);
+  Mesh isocahedron = Primitives::isocahedron();
+  render.add_object(isocahedron.vertices, isocahedron.faces);
 
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
