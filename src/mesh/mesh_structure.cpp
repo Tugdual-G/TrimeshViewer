@@ -24,11 +24,11 @@ void Mesh::set_one_ring() {
   int n_adja{0};            // number of adjacent faces for the current vertice
 
   one_ring.resize(n_vertices * (1 + n_adja_faces_max));
-  for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
-    n_adja = vertex_adjacent_faces.at(adja_array_idx);
+  for (int i = 0; i < n_vertices; ++i) {
+    n_adja = (int)vertex_adjacent_faces.at(adja_array_idx);
     for (int j = 0; j < n_adja; ++j) {
       triangle_vert_idx = 0;
-      face = vertex_adjacent_faces.at(adja_array_idx + j + 1);
+      face = (int)vertex_adjacent_faces.at(adja_array_idx + j + 1);
 
       // finding the vertex i in the face vertices
       while (faces.at(face * 3 + triangle_vert_idx) != i) {
@@ -60,22 +60,22 @@ void Mesh::order_adjacent_faces() {
   // edges oposite to the current vertice [[vert0, vert1],...,[vert0, vert1]]
   std::vector<int> oposite_edge(n_adja_faces_max * 2, -1);
 
-  int adja_array_idx = 0;    // global position in the array
-  int triangle_vert_idx = 0; // index of the vertices in the face [0, 1, 2]
-  int face = 0;              // face index in faces
-  int n_adja = 0;            // number of adjacent faces for the current vertice
-  int vert_0_fidx;
-  int vert_1_fidx; // oposite edges vertices index in faces array
-  int j_next;
-  int j_current; // adjacent faces idx in unordered_faces
+  int adja_array_idx{0};    // global position in the array
+  int triangle_vert_idx{0}; // index of the vertices in the face [0, 1, 2]
+  int face{-1};             // face index in faces
+  int n_adja{-1};           // number of adjacent faces for the current vertice
+  int vert_0_face_idx{-1};
+  int vert_1_face_idx{-1}; // oposite edges vertices index in faces array
+  int j_next{-1};
+  int j_current{-1}; // adjacent faces idx in unordered_faces
 
-  for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
-    n_adja = vertex_adjacent_faces.at(adja_array_idx);
+  for (int i = 0; i < n_vertices; ++i) {
+    n_adja = (int)vertex_adjacent_faces.at(adja_array_idx);
     // std::cout << "n adja" << n_adja << " \n";
     for (int j = 0; j < n_adja; ++j) {
       //++adja_array_idx;
       triangle_vert_idx = 0;
-      face = vertex_adjacent_faces.at(adja_array_idx + j + 1);
+      face = (int)vertex_adjacent_faces.at(adja_array_idx + j + 1);
       unordered_faces.at(j) = face;
 
       // std::cout << "face " << face << " \n";
@@ -91,17 +91,17 @@ void Mesh::order_adjacent_faces() {
        i+1 /______\ i+2
 
       */
-      vert_0_fidx = face * 3 + (triangle_vert_idx + 1) % 3;
-      vert_1_fidx = face * 3 + (triangle_vert_idx + 2) % 3;
+      vert_0_face_idx = face * 3 + (triangle_vert_idx + 1) % 3;
+      vert_1_face_idx = face * 3 + (triangle_vert_idx + 2) % 3;
 
       // std::cout << i << " triangle vert idx " << triangle_vert_idx <<
       // std::endl; std::cout << i << " triangle edge vert idx "
       //           << (triangle_vert_idx + 1) % 3 << " , "
       //           << (triangle_vert_idx + 2) % 3 << "\n";
-      oposite_edge.at(j * 2) = faces.at(vert_0_fidx);
-      oposite_edge.at(j * 2 + 1) = faces.at(vert_1_fidx);
-      // std::cout << i << " oposite " << faces.at(vert_0_fidx) << " , "
-      //           << faces.at(vert_1_fidx) << "\n";
+      oposite_edge.at(j * 2) = (int)faces.at(vert_0_face_idx);
+      oposite_edge.at(j * 2 + 1) = (int)faces.at(vert_1_face_idx);
+      // std::cout << i << " oposite " << faces.at(vert_0_face_idx) << " , "
+      //           << faces.at(vert_1_face_idx) << "\n";
     }
     triangle_vert_idx = 0;
     j_current = 0;
@@ -110,11 +110,8 @@ void Mesh::order_adjacent_faces() {
       while (oposite_edge.at(j_next * 2) !=
              oposite_edge.at(j_current * 2 + 1)) {
         ++j_next;
-        // j_next %= n_adja;
-        // std::cout << "ok4:" << j_current << " , " << j_next << " \n";
       }
 
-      // std::cout << "ok5:" << j_current << " , " << j_next << " \n";
       j_current = j_next;
       vertex_adjacent_faces.at(adja_array_idx + j + 2) =
           unordered_faces.at(j_next);
@@ -130,8 +127,8 @@ void Mesh::set_vertex_adjacent_faces() {
   vertex_adjacent_faces.reserve(vertices.size() * 10);
   int n_adja = 1;
   int n_adja_max = 0;
-  long unsigned int total_size = 0;
-  for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
+  long int total_size = 0;
+  for (int i = 0; i < n_vertices; ++i) {
     n_adja = 0;
     vertex_adjacent_faces.push_back(-1);
     ++total_size; // since we store the number of adj at the begining.
@@ -173,10 +170,10 @@ void Mesh::set_vertex_normals() {
   int adja_array_idx = 0;
   int face = 0;
   for (int i = 0; i < n_vertices; ++i) {
-    n_adja = vertex_adjacent_faces.at(adja_array_idx);
+    n_adja = (int)vertex_adjacent_faces.at(adja_array_idx);
     for (int j = 0; j < n_adja; ++j) {
       ++adja_array_idx;
-      face = vertex_adjacent_faces.at(adja_array_idx);
+      face = (int)vertex_adjacent_faces.at(adja_array_idx);
       for (int k = 0; k < 3; ++k) {
         vertex_normals.at(i * 3 + k) += face_normals.at(face * 3 + k);
       }
