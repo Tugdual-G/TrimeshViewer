@@ -5,9 +5,13 @@
 # @version 0.1
 CC = g++
 CFLAGS = -Wall -Wextra -O2
+LDFLAGS = -L. -lmesh
 
 # Targets
-all: libmesh.a
+all: libmesh.a test
+
+test: test.cpp libmesh.a
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 libmesh.a: mesh_print.o mesh_primitives.o mesh_operators.o mesh_structure.o
 	ar rvs $@ $^

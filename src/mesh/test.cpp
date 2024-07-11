@@ -1,58 +1,30 @@
 /* test render implementation */
-#include "colormap.hpp"
-#include "trimesh_render.hpp"
+#include "mesh.hpp"
+#include <iostream>
 #include <vector>
+
+auto test_edges() -> int {
+  Mesh cube = Primitives::cube();
+  cube.set_edges();
+  for (int i = 0; i < cube.edges.size() / 2; ++i) {
+    std::cout << cube.edges.at(i * 2) << " , " << cube.edges.at(i * 2 + 1)
+              << "\n";
+  }
+
+  std::cout << "\n+++++++++++++++\n\n";
+  Mesh tet = Primitives::tetrahedron();
+  tet.set_edges();
+  for (int i = 0; i < tet.edges.size() / 2; ++i) {
+    std::cout << tet.edges.at(i * 2) << " , " << tet.edges.at(i * 2 + 1)
+              << "\n";
+  }
+
+  return 1;
+}
 
 auto main() -> int {
   // Define a list of points
-
-  std::vector<double> vertices = {
-      // points coord
-      -1, -1, -1, // 0
-      1,  -1, -1, // 1
-      1,  -1, 1,  // 2
-      -1, -1, 1,  // 3
-      -1, 1,  -1, //
-      1,  1,  -1, //
-      1,  1,  1,  //
-      -1, 1,  1,  //
-  };
-
-  std::vector<unsigned int> faces = {
-      0, 1, 2, // 0
-      2, 3, 0, // 1
-      1, 5, 6, // 2
-      6, 2, 1, // 3
-      2, 6, 7, // 4
-      2, 7, 3, // 5
-      0, 3, 4, // 6
-      4, 3, 7, // 7
-      5, 4, 7, // 8
-      5, 7, 6, // 9
-      1, 0, 4, // 10
-      1, 4, 5, // 11
-  };
-
-  for (auto &v : vertices) {
-    v *= 0.5;
-  }
-
-  Mesh mesh(vertices, faces);
-
-  mesh.set_one_ring();
-
-  mesh.set_one_ring();
-  mesh.print_one_ring();
-
-  std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
-  std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
-
-  std::vector<double> colors =
-      Colormap::get_nearest_colors(k, Colormap::VIRIDIS);
-
-  MeshRender render0(500, 500, mesh.vertices, mesh.faces, colors);
-  render0.render_loop(nullptr, nullptr);
-  render0.render_finalize();
+  test_edges();
 
   return 0;
 }

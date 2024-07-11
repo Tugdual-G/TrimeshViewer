@@ -1,7 +1,9 @@
 #include "mesh.hpp"
+#include <bitset>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <set>
 #include <vector>
 
 static void normalize(double *w);
@@ -208,6 +210,59 @@ void Mesh::set_face_normals() {
     e1[2] = vertices[k * 3 + 2] - vertices[i * 3 + 2];
     vector_prod(e0, e1, face_normals.data() + face_idx * 3);
     normalize(face_normals.data() + face_idx * 3);
+  }
+}
+
+void Mesh::set_edges() {
+  /* Finds the lis of uniques edges of the mesh.
+   * The hashing function is :
+   *  min vertex idx | max vertex idx
+   * [     32 bits   |     32 bits   ]
+   * [      unsigned long long       ]
+   * */
+  std::set<unsigned long long int> edges_set;
+  unsigned int v[] = {0, 0, 0};
+  unsigned int v_min{0};
+  unsigned int v_max{0};
+  unsigned long long e{0};
+  unsigned long long mask{0};
+  mask = ~mask;
+  mask <<= 32;
+  mask = ~mask;
+
+  for (int i = 0; i < n_faces; ++i) {
+    v[0] = faces.at(i * 3);
+    v[1] = faces.at(i * 3 + 1);
+    v[2] = faces.at(i * 3 + 2);
+
+    v_min = v[0] > v[1] ? v[1] : v[0];
+    v_max = v[0] > v[1] ? v[0] : v[1];
+    e = v_min;
+    e <<= 32;
+    e += v_max;
+    edges_set.insert(e);
+
+    v_min = v[0] > v[2] ? v[2] : v[0];
+    v_max = v[0] > v[2] ? v[0] : v[2];
+    e = v_min;
+    e <<= 32;
+    e += v_max;
+    edges_set.insert(e);
+
+    v_min = v[2] > v[1] ? v[1] : v[2];
+    v_max = v[2] > v[1] ? v[2] : v[1];
+    e = v_min;
+    e <<= 32;
+    e += v_max;
+    edges_set.insert(e);
+  }
+  edges.resize(edges_set.size() * 2);
+  unsigned long long e_tmp{0};
+  unsigned int i{0};
+  for (const auto &e_set : edges_set) {
+    edges.at(i) = e_set >> 32;
+    edges.at(i + 1) = e_set & mask;
+    i += 2;
   }
 }
 
