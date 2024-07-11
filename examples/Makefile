@@ -12,7 +12,6 @@ LDFLAGS='-Wl,-rpath,$$ORIGIN/../src/render/' -L../src/render -ltrimesh_render
 all: demo
 
 demo: demo.cpp ../src/plyfile_parse.o ../src/mesh/libmesh.a ../src/render/libtrimesh_render.so
-	+$(MAKE) -C ../src
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 ../src/plyfile_parse.o: ../src/ply/*.cpp ../src/ply/*.hpp

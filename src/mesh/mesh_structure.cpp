@@ -133,8 +133,8 @@ void Mesh::set_vertex_adjacent_faces() {
     vertex_adjacent_faces.push_back(-1);
     ++total_size; // since we store the number of adj at the begining.
                   // TODO maybe vector can handle this with reserve
-    for (unsigned int j = 0; j < (unsigned int)n_faces; ++j) {
-      for (unsigned int k = 0; k < 3; ++k) {
+    for (int j = 0; j < n_faces; ++j) {
+      for (int k = 0; k < 3; ++k) {
         if (faces[j * 3 + k] == i) {
           vertex_adjacent_faces.push_back(j);
           ++n_adja;
