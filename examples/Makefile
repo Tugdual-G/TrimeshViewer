@@ -7,15 +7,11 @@
 CCPP = g++
 CC = gcc
 CFLAGS = -Wall -Wextra -O2
-LDFLAGS='-Wl,-rpath,$$ORIGIN/../src/'
+LDFLAGS='-Wl,-rpath,$$ORIGIN/../src/render/' -L../src/render -ltrimesh_render
 # Targets
-all: demo little_cube
+all: demo
 
-demo: demo.cpp ../src/mesh_print.o ../src/plyfile_parse.o ../src/mesh_structure.o ../src/mesh_operators.o ../src/libtrimesh_render.so
-	+$(MAKE) -C ../src
-	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
-
-little_cube: little_cube.cpp ../src/plyfile_parse.o ../src/mesh_print.o ../src/mesh_structure.o ../src/mesh_operators.o ../src/libtrimesh_render.so
+demo: demo.cpp ../src/mesh_primitives.o ../src/mesh_print.o ../src/plyfile_parse.o ../src/mesh_structure.o ../src/mesh_operators.o
 	+$(MAKE) -C ../src
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 

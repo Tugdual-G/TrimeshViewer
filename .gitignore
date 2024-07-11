@@ -11,3 +11,4 @@ prof*
 *.prof
 demo
 test
+*_private.cpp

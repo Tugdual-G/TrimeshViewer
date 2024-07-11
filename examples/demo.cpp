@@ -22,38 +22,37 @@ auto main() -> int {
   auto [minv, maxv] =
       std::minmax_element(mesh.vertices.begin(), mesh.vertices.end());
   double extent_vert = *maxv - *minv;
-  extent_vert *= 1.2;
+  extent_vert *= 1.3;
   for (auto &v : mesh.vertices) {
     v /= extent_vert;
-    v -= 0.3; // translates to low left corner
+    v += 0.1; // translates to low left corner
   }
 
-  PlyFile file2("../meshes/spinningtop.ply");
-  auto [minv2, maxv2] =
-      std::minmax_element(file2.vertices.begin(), file2.vertices.end());
-  extent_vert = *maxv2 - *minv2;
-  extent_vert *= 1.3;
-  for (auto &v : file2.vertices) {
-    v /= extent_vert;
-    v += 0.3;
+  Mesh tet = Primitives::tetrahedron();
+  // move and scale
+  for (auto &v : tet.vertices) {
+    v *= 0.25;
+    v -= 0.3;
   }
 
-  PlyFile file3("../meshes/deformHQ.ply");
-  auto [minv3, maxv3] =
-      std::minmax_element(file3.vertices.begin(), file3.vertices.end());
-  extent_vert = *maxv3 - *minv3;
-  extent_vert *= 1.7;
-  for (auto &v : file3.vertices) {
-    v /= extent_vert;
+  Mesh ico = Primitives::isocahedron();
+  for (auto &v : ico.vertices) {
+    v *= 0.25;
   }
-  for (int i = 0; i < file3.n_vertices; ++i) {
-    file3.vertices.at(i * 3) -= 0.5;
-    file3.vertices.at(i * 3 + 1) += 0.4;
+  for (int i = 0; i < ico.n_vertices; ++i) {
+    ico.vertices.at(i * 3 + 2) -= 0.5;
   }
+  // Generates colors
+  std::vector<double> ico_scalar_vertex_value(ico.n_vertices);
+  for (int i = 0; i < ico.n_vertices; ++i) {
+    ico_scalar_vertex_value.at(i) = i + 7;
+  }
+  std::vector<double> ico_colors = Colormap::get_interpolated_colors(
+      ico_scalar_vertex_value, Colormap::MAGMA, 0, 20);
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
-  render.add_object(file2.vertices, file2.faces);
-  render.add_object(file3.vertices, file3.faces);
+  render.add_object(ico.vertices, ico.faces, ico_colors);
+  render.add_object(tet.vertices, tet.faces);
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
   return 0;

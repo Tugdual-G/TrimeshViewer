@@ -56,4 +56,10 @@ public:
   void print_face_normals();
 };
 
+namespace Primitives {
+auto cube() -> Mesh;
+auto isocahedron() -> Mesh;
+auto tetrahedron() -> Mesh;
+} // namespace Primitives
+
 #endif // MESH_H_
