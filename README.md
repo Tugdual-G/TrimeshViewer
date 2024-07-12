@@ -19,6 +19,7 @@ __Features:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
 - fast edge splitting algorithm, preserving data locality
 
+<img src="icosahedron.gif" alt="edges plitting" width="400"/>
 
 ## Requirements
 - Linux

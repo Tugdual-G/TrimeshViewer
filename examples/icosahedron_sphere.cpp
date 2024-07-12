@@ -28,7 +28,7 @@ auto callback(void *fargs) -> int {
   double norm{0};
 
   ++i;
-  if (i % 10 == 0 && i < 80) {
+  if (i % 80 == 0 && i < 700) {
     mesh->subdivide();
     for (int i = 0; i < mesh->n_vertices; ++i) {
       norm = Linalg::norm(mesh->vertices.begin() + i * 3);
