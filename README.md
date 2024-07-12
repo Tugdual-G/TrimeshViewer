@@ -17,6 +17,7 @@ __Features:__
 - show the current orientation
 - orthographic projection
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
+- Edge splitting algorithm, preserving data locality
 
 
 ## Requirements
