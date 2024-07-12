@@ -37,7 +37,7 @@ void Mesh::set_one_ring() {
       face = (int)vertex_adjacent_faces.at(adja_array_idx + j + 1);
 
       // finding the vertex i in the face vertices
-      while (faces.at(face * 3 + triangle_vert_idx) != i) {
+      while (faces.at(face * 3 + triangle_vert_idx) != (unsigned int)i) {
         ++triangle_vert_idx;
       }
       one_ring.at(onering_array_idx + 1 + j) =
@@ -85,7 +85,7 @@ void Mesh::order_adjacent_faces() {
       unordered_faces.at(j) = face;
 
       // std::cout << "face " << face << " \n";
-      while (faces.at(face * 3 + triangle_vert_idx) != i) {
+      while (faces.at(face * 3 + triangle_vert_idx) != (unsigned int)i) {
         ++triangle_vert_idx;
       }
       /*  trigonometric orientation
@@ -141,7 +141,7 @@ void Mesh::set_vertex_adjacent_faces() {
                   // TODO maybe vector can handle this with reserve
     for (int j = 0; j < n_faces; ++j) {
       for (int k = 0; k < 3; ++k) {
-        if (faces[j * 3 + k] == i) {
+        if (faces[j * 3 + k] == (unsigned int)i) {
           vertex_adjacent_faces.push_back(j);
           ++n_adja;
           ++total_size;

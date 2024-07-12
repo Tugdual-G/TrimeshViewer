@@ -8,7 +8,7 @@ auto test_edges() -> int {
 
   Mesh cube = Primitives::cube();
   cube.set_edges();
-  for (int i = 0; i < cube.edges.size() / 2; ++i) {
+  for (int i = 0; i < (int)cube.edges.size() / 2; ++i) {
     std::cout << cube.edges.at(i * 2) << " , " << cube.edges.at(i * 2 + 1)
               << "\n";
   }
@@ -16,7 +16,7 @@ auto test_edges() -> int {
   std::cout << "\n+++++++++++++++\n\n";
   Mesh tet = Primitives::tetrahedron();
   tet.set_edges();
-  for (int i = 0; i < tet.edges.size() / 2; ++i) {
+  for (int i = 0; i < (int)tet.edges.size() / 2; ++i) {
     std::cout << tet.edges.at(i * 2) << " , " << tet.edges.at(i * 2 + 1)
               << "\n";
   }
@@ -28,13 +28,13 @@ auto test_subdivide() -> int {
   std::cout << "\n++++++++ Test subdivide +++++++\n\n";
   Mesh tet = Primitives::tetrahedron();
   tet.set_edges();
-  for (int i = 0; i < tet.edges.size() / 2; ++i) {
+  for (int i = 0; i < (int)tet.edges.size() / 2; ++i) {
     std::cout << tet.edges.at(i * 2) << " , " << tet.edges.at(i * 2 + 1)
               << "\n";
   }
   std::cout << "\n+++++++++++++++\n\n";
   tet.subdivide();
-  for (int i = 0; i < tet.edges.size() / 2; ++i) {
+  for (int i = 0; i < (int)tet.edges.size() / 2; ++i) {
     std::cout << tet.edges.at(i * 2) << " , " << tet.edges.at(i * 2 + 1)
               << "\n";
   }
