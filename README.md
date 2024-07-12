@@ -4,24 +4,25 @@ __A small project to learn c++__
 <img src="example.png" alt="example" width="400"/>
 
 This repository contains three modules: a .ply file parser,
-a mesh analyze toolset, and a simple render library.
+a mesh/graph operator toolset, and a simple render library.
 
 The goal was to implement a fast and simple meshviewer using shaders and c++.
 All transformations are matrix-free and rely on quaternions to keep things simple and efficient.
 
 __Features:__
 - display multiples meshes
-- flat shading/smooth shading
+- flat shading
 - colormaps
 - zoom and rotate with the mouse
 - show the current orientation
-- orthographic projection
+- perspective projection
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
-- Edge splitting algorithm, preserving data locality
+- fast edge splitting algorithm, preserving data locality
 
 
 ## Requirements
 - Linux
+- make
 - opengl 4.6
 - glfw
 
