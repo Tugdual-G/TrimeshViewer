@@ -19,18 +19,18 @@ class MeshRender {
     // Represent a mesh to be rendered and its positions in the openGL buffers.
   public:
     // first element position in the Vertex Buffer Object/vertices_attr
-    size_t attr_offset{0}; // in elements, (not in bytes)
+    long int attr_offset{0}; // in elements, (not in bytes)
     // number of elements in the Vertex Buffer Object
-    size_t attr_length{0};
+    long int attr_length{0};
     // total number of attributes per vertex
-    size_t total_number_attr;
+    long int total_number_attr;
 
-    size_t n_vertices{0};
-    size_t n_faces{0};
+    long int n_vertices{0};
+    long int n_faces{0};
 
     // Offset in the EBO/faces
-    size_t faces_indices_offset{0}; // elements (not bytes)
-    size_t faces_indices_length{0};
+    long int faces_indices_offset{0}; // elements (not bytes)
+    long int faces_indices_length{0};
 
     // each object has its own shader program for flexibility
     int shader_program{0};
@@ -55,8 +55,8 @@ class MeshRender {
   // list of vertices for each triangular face for all meshes
   std::vector<unsigned int> faces{0};
 
-  size_t n_total_vertices{0};
-  size_t n_total_faces{0};
+  long int n_total_vertices{0};
+  long int n_total_faces{0};
 
   // Number of elements per vertices attrib group (position, normal, color)
   std::vector<unsigned int> vert_attr_group_length;
@@ -107,6 +107,9 @@ public:
                   std::vector<double> &colors) -> int;
 
   void update_object(std::vector<double> &ivertices, int id);
+
+  void update_object(std::vector<double> &ivertices,
+                     std::vector<unsigned int> &ifaces, int id);
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)

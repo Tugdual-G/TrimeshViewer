@@ -16,7 +16,7 @@ auto callback(void *fargs) -> int {
   /* Animation callback. */
   auto *args = (Fargs *)fargs;
   for (auto &v : *args->vertices) {
-    v += 0.001;
+    v -= 0.001;
   }
   args->render->update_object(*args->vertices, args->obj_id);
   return 1;
@@ -142,8 +142,19 @@ auto main() -> int {
       Colormap::get_nearest_colors(cube_scalar_vertex_value, Colormap::VIRIDIS);
 
   MeshRender render(500, 500, cube_vertices, cube_faces, cube_colors);
+
+  render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
+
+  ///////////////////////////////////////////////////
+  // Replace an object by another
+  /////////////////////////////////////////////////
   int ico_id =
       render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
+  icosahedron_faces = cube_faces;
+  icosahedron_vertices = cube_vertices;
+  render.update_object(icosahedron_vertices, icosahedron_faces, ico_id);
+
+  // Arguments for the animation callback
   Fargs ico_args = {
       .vertices = &icosahedron_vertices, .render = &render, .obj_id = ico_id};
 

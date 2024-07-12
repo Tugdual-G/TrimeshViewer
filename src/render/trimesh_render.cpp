@@ -177,12 +177,10 @@ void MeshRender::update_object(std::vector<double> &ivertices, int id) {
   /* Update the vertices positions of an object. */
   Object &obj = objects.at(id);
 
-  if (ivertices.size() / 3 == obj.n_vertices) {
-    for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
-      for (unsigned int j = 0; j < 3; ++j) {
-        vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
-            (float)ivertices.at(i * 3 + j);
-      }
+  for (unsigned int i = 0; i < obj.n_vertices; ++i) {
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
+          (float)ivertices.at(i * 3 + j);
     }
   }
 
@@ -190,6 +188,59 @@ void MeshRender::update_object(std::vector<double> &ivertices, int id) {
   glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * obj.attr_offset,
                   sizeof(float) * obj.attr_length,
                   vertices_attr.data() + obj.attr_offset);
+}
+
+void MeshRender::update_object(std::vector<double> &ivertices,
+                               std::vector<unsigned int> &ifaces, int id) {
+  /* Update the vertices and faces of an object. */
+  Object &obj = objects.at(id);
+
+  // updates faces
+  std::vector<unsigned int> faces_tmp(faces);
+
+  faces.resize(faces.size() + (ifaces.size() - obj.faces_indices_length));
+
+  std::copy(ifaces.begin(), ifaces.end(),
+            faces.begin() + (long)obj.faces_indices_offset);
+
+  std::copy(faces_tmp.begin() +
+                (long)(obj.faces_indices_offset + obj.faces_indices_length),
+            faces_tmp.end(),
+            faces.begin() + (long)(obj.faces_indices_offset + ifaces.size()));
+
+  // update vertices
+  std::vector<float> attr_tmp(vertices_attr);
+  long int new_attr_length = obj.total_number_attr * (long)ivertices.size() / 3;
+  vertices_attr.resize(vertices_attr.size() +
+                       (new_attr_length - obj.attr_length));
+
+  for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
+          (float)ivertices.at(i * 3 + j);
+    }
+  }
+  std::copy(attr_tmp.begin() + (long)(obj.attr_offset + obj.attr_length),
+            attr_tmp.end(),
+            vertices_attr.begin() + (long)(obj.attr_offset + new_attr_length));
+
+  n_total_faces += (long)ifaces.size() / 3 - obj.n_faces;
+  n_total_vertices += (long)ivertices.size() / 3 - obj.n_vertices;
+  obj.attr_length = new_attr_length;
+  obj.faces_indices_length = (long)ifaces.size();
+  obj.n_faces = (long)ifaces.size() / 3;
+  obj.n_vertices = (long)ivertices.size() / 3;
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * vertices_attr.size(),
+                  vertices_attr.data());
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               sizeof(unsigned int) * n_total_faces * 3, faces.data(),
+               GL_STATIC_DRAW);
+
+  glCheckError();
 }
 
 auto MeshRender::add_object(std::vector<double> &ivertices,
@@ -390,11 +441,11 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors,
   size_t n_vertice_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   Object &obj = objects.at(object_idx);
-  for (size_t i = 0; i < obj.n_vertices; ++i) {
-    for (size_t j = 0; j < 3; ++j) {
+  for (long int i = 0; i < obj.n_vertices; ++i) {
+    for (long int j = 0; j < 3; ++j) {
       // copies the precedent attributes
       vertices_attr.at(obj.attr_offset + i * n_vertice_attr + n_vertice_attr -
-                       3 + j) = colors.at(i * 3 + j);
+                       3 + j) = (float)colors.at(i * 3 + j);
     }
   }
 
@@ -404,7 +455,8 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors,
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // TODO do not reload all data
-  glBufferData(GL_ARRAY_BUFFER, total_size_vertice_attr * n_total_vertices,
+  glBufferData(GL_ARRAY_BUFFER,
+               (long)total_size_vertice_attr * n_total_vertices,
                vertices_attr.data(), GL_STATIC_DRAW);
 }
 
