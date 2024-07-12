@@ -3,7 +3,7 @@
 
 constexpr double phi{1.6180339887498}; // golden ratio
 
-auto Primitives::isocahedron() -> Mesh {
+auto Primitives::icosahedron() -> Mesh {
   /* Returns a regular isocahedron centered at the origin,
    * with egdes of unit length.
    * Circumsphere radius ~= 0.95105651629515 ;

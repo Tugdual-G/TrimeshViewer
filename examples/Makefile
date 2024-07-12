@@ -8,10 +8,11 @@ CCPP = g++
 CC = gcc
 CFLAGS = -Wall -Wextra -O2
 LDFLAGS='-Wl,-rpath,$$ORIGIN/../src/render/' -L../src/render -ltrimesh_render
+EXAMPLES = demo icosahedron_sphere
 # Targets
-all: demo
+all: $(EXAMPLES)
 
-demo: demo.cpp ../src/plyfile_parse.o ../src/mesh/libmesh.a ../src/render/libtrimesh_render.so
+%: %.cpp ../src/plyfile_parse.o ../src/mesh/libmesh.a ../src/render/libtrimesh_render.so
 	$(CCPP) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 ../src/plyfile_parse.o: ../src/ply/*.cpp ../src/ply/*.hpp
@@ -24,7 +25,7 @@ demo: demo.cpp ../src/plyfile_parse.o ../src/mesh/libmesh.a ../src/render/libtri
 	+$(MAKE) -C ../src/render
 
 clean:
-	rm -f demo *.o *.so
+	rm -f $(EXAMPLES) *.o *.so
 
 .PHONY: clean
 

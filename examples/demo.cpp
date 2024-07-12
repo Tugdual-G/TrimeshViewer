@@ -45,11 +45,12 @@ auto main() -> int {
   }
 
   ///////////////////////////////////////////
-  //  Building a sphere from an isocahedron
+  //  Building a sphere from an icosahedron
   ///////////////////////////////////////////
-  Mesh sphere = Primitives::isocahedron();
+  Mesh sphere = Primitives::icosahedron();
   double radius = Geometry::norm(sphere.vertices.begin());
   double norm{0};
+  sphere.subdivide();
   sphere.subdivide();
   for (int i = 0; i < sphere.n_vertices; ++i) {
     norm = Geometry::norm(sphere.vertices.begin() + i * 3);
@@ -73,9 +74,9 @@ auto main() -> int {
       sphere_scalar_vertex_value, Colormap::MAGMA, -0.5, 0.5);
 
   /////////////////////////////////////////
-  //          Isocahedron
+  //          Icosahedron
   ////////////////////////////////////////
-  Mesh ico = Primitives::isocahedron();
+  Mesh ico = Primitives::icosahedron();
   for (auto &v : ico.vertices) {
     v *= 0.25;
   }

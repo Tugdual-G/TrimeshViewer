@@ -42,7 +42,7 @@ class MeshRender {
 
     void set_shader_program();
 
-    Object(unsigned int total_length_attr)
+    Object(long int total_length_attr)
         : total_number_attr(total_length_attr) {};
   };
 
@@ -59,7 +59,7 @@ class MeshRender {
   long int n_total_faces{0};
 
   // Number of elements per vertices attrib group (position, normal, color)
-  std::vector<unsigned int> vert_attr_group_length;
+  std::vector<long int> vert_attr_group_length;
 
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
@@ -111,17 +111,21 @@ public:
   void update_object(std::vector<double> &ivertices,
                      std::vector<unsigned int> &ifaces, int id);
 
+  void update_object(std::vector<double> &ivertices,
+                     std::vector<unsigned int> &ifaces,
+                     std::vector<double> &icolors, int id);
+
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
       : width(w_width), height(w_height) {
 
     vert_attr_group_length.resize(2, 3);
     init_window();
+    init_render();
     vertices_attr.resize(0);
     faces.resize(0);
     set_axis_cross();
     add_object(ivertices, ifaces, ShaderProgramType::FLAT_FACES);
-    init_render();
   }
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,

@@ -149,8 +149,6 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
       glBindVertexArray(VAO);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      flag = data_update_function(fargs);
-
       // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
       // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       for (auto &obj : objects) {
@@ -158,6 +156,8 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
       }
       glfwSwapBuffers(window);
       glfwPollEvents();
+
+      flag = data_update_function(fargs);
     }
   }
 
@@ -198,6 +198,64 @@ void MeshRender::update_object(std::vector<double> &ivertices,
   // updates faces
   std::vector<unsigned int> faces_tmp(faces);
 
+  faces.resize(faces.size() +
+               ((long int)ifaces.size() - obj.faces_indices_length));
+
+  std::copy(ifaces.begin(), ifaces.end(),
+            faces.begin() + (long)obj.faces_indices_offset);
+
+  std::copy(faces_tmp.begin() +
+                (long)(obj.faces_indices_offset + obj.faces_indices_length),
+            faces_tmp.end(),
+            faces.begin() + (long)(obj.faces_indices_offset + ifaces.size()));
+
+  // update vertices
+  std::vector<float> attr_tmp(vertices_attr);
+  long int new_attr_length = obj.total_number_attr * (long)ivertices.size() / 3;
+  vertices_attr.resize(vertices_attr.size() +
+                       (new_attr_length - obj.attr_length));
+
+  for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
+          (float)ivertices.at(i * 3 + j);
+    }
+    // default color
+    vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + 4) = 0.7;
+    vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + 5) = 0.8;
+  }
+  std::copy(attr_tmp.begin() + (long)(obj.attr_offset + obj.attr_length),
+            attr_tmp.end(),
+            vertices_attr.begin() + (long)(obj.attr_offset + new_attr_length));
+
+  n_total_faces += (long)ifaces.size() / 3 - obj.n_faces;
+  n_total_vertices += (long)ivertices.size() / 3 - obj.n_vertices;
+  obj.attr_length = new_attr_length;
+  obj.faces_indices_length = (long)ifaces.size();
+  obj.n_faces = (long)ifaces.size() / 3;
+  obj.n_vertices = (long)ivertices.size() / 3;
+
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, (long)(vertices_attr.size() * sizeof(float)),
+               vertices_attr.data(), GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+               (long)sizeof(unsigned int) * n_total_faces * 3, faces.data(),
+               GL_STATIC_DRAW);
+
+  glCheckError();
+}
+
+void MeshRender::update_object(std::vector<double> &ivertices,
+                               std::vector<unsigned int> &ifaces,
+                               std::vector<double> &icolors, int id) {
+  /* Update the vertices and faces of an object. */
+  Object &obj = objects.at(id);
+
+  // updates faces
+  std::vector<unsigned int> faces_tmp(faces);
+
   faces.resize(faces.size() + (ifaces.size() - obj.faces_indices_length));
 
   std::copy(ifaces.begin(), ifaces.end(),
@@ -219,6 +277,10 @@ void MeshRender::update_object(std::vector<double> &ivertices,
       vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
           (float)ivertices.at(i * 3 + j);
     }
+    for (unsigned int j = 0; j < 3; ++j) {
+      vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j + 3) =
+          (float)icolors.at(i * 3 + j);
+    }
   }
   std::copy(attr_tmp.begin() + (long)(obj.attr_offset + obj.attr_length),
             attr_tmp.end(),
@@ -230,14 +292,14 @@ void MeshRender::update_object(std::vector<double> &ivertices,
   obj.faces_indices_length = (long)ifaces.size();
   obj.n_faces = (long)ifaces.size() / 3;
   obj.n_vertices = (long)ivertices.size() / 3;
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * vertices_attr.size(),
-                  vertices_attr.data());
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, (long)(vertices_attr.size() * sizeof(float)),
+               vertices_attr.data(), GL_STATIC_DRAW);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               sizeof(unsigned int) * n_total_faces * 3, faces.data(),
+               (long)sizeof(unsigned int) * n_total_faces * 3, faces.data(),
                GL_STATIC_DRAW);
 
   glCheckError();
@@ -250,12 +312,12 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
                               vert_attr_group_length.end()));
 
-  new_mesh.attr_offset = vertices_attr.size();
-  new_mesh.attr_length = ivertices.size() * 2;
-  new_mesh.faces_indices_offset = faces.size();
-  new_mesh.faces_indices_length = ifaces.size();
-  new_mesh.n_faces = ifaces.size() / 3;
-  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.attr_offset = (long)vertices_attr.size();
+  new_mesh.attr_length = (long)ivertices.size() * 2;
+  new_mesh.faces_indices_offset = (long)faces.size();
+  new_mesh.faces_indices_length = (long)ifaces.size();
+  new_mesh.n_faces = (long)ifaces.size() / 3;
+  new_mesh.n_vertices = (long)ivertices.size() / 3;
   new_mesh.program_type = shader_type;
 
   vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
@@ -263,7 +325,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
 
   std::copy(ifaces.begin(), ifaces.end(),
             faces.begin() + (long)n_total_faces * 3);
-  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+  n_total_faces +=
+      (long)ifaces.size() / 3; // sturdier if different number of attr
 
   for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
     for (unsigned int j = 0; j < 3; ++j) {
@@ -273,7 +336,7 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
     vertices_attr.at((n_total_vertices + i) * 6 + 4) = 0.7; // intial colors
     vertices_attr.at((n_total_vertices + i) * 6 + 5) = 0.8;
   }
-  n_total_vertices += ivertices.size() / 3;
+  n_total_vertices += (long)ivertices.size() / 3;
   new_mesh.set_shader_program();
   objects.push_back(new_mesh);
   resize_VAO();
@@ -289,12 +352,12 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
                               vert_attr_group_length.end()));
 
-  new_mesh.attr_offset = vertices_attr.size();
-  new_mesh.attr_length = ivertices.size() * 2;
-  new_mesh.faces_indices_offset = faces.size();
-  new_mesh.faces_indices_length = ifaces.size();
-  new_mesh.n_faces = ifaces.size() / 3;
-  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.attr_offset = (long)vertices_attr.size();
+  new_mesh.attr_length = (long)ivertices.size() * 2;
+  new_mesh.faces_indices_offset = (long)faces.size();
+  new_mesh.faces_indices_length = (long)ifaces.size();
+  new_mesh.n_faces = (long)ifaces.size() / 3;
+  new_mesh.n_vertices = (long)ivertices.size() / 3;
   new_mesh.program_type = shader_type;
 
   vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
@@ -302,7 +365,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
 
   std::copy(ifaces.begin(), ifaces.end(),
             faces.begin() + (long)n_total_faces * 3);
-  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+  n_total_faces +=
+      (long)ifaces.size() / 3; // sturdier if different number of attr
 
   for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
     for (unsigned int j = 0; j < 3; ++j) {
@@ -312,7 +376,7 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
           (float)colors.at(i * 3 + j); // intial colors
     }
   }
-  n_total_vertices += ivertices.size() / 3;
+  n_total_vertices += (long)ivertices.size() / 3;
   new_mesh.set_shader_program();
   objects.push_back(new_mesh);
   resize_VAO();
@@ -327,12 +391,12 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
                               vert_attr_group_length.end()));
 
-  new_mesh.attr_offset = vertices_attr.size();
-  new_mesh.attr_length = ivertices.size() * 2;
-  new_mesh.faces_indices_offset = faces.size();
-  new_mesh.faces_indices_length = ifaces.size();
-  new_mesh.n_faces = ifaces.size() / 3;
-  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.attr_offset = (long)vertices_attr.size();
+  new_mesh.attr_length = (long)ivertices.size() * 2;
+  new_mesh.faces_indices_offset = (long)faces.size();
+  new_mesh.faces_indices_length = (long)ifaces.size();
+  new_mesh.n_faces = (long)ifaces.size() / 3;
+  new_mesh.n_vertices = (long)ivertices.size() / 3;
   new_mesh.program_type = ShaderProgramType::FLAT_FACES;
 
   vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
@@ -340,7 +404,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
 
   std::copy(ifaces.begin(), ifaces.end(),
             faces.begin() + (long)n_total_faces * 3);
-  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+  n_total_faces +=
+      (long)ifaces.size() / 3; // sturdier if different number of attr
 
   for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
     for (unsigned int j = 0; j < 3; ++j) {
@@ -350,7 +415,7 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
           (float)colors.at(i * 3 + j);
     }
   }
-  n_total_vertices += ivertices.size() / 3;
+  n_total_vertices += (long)ivertices.size() / 3;
   new_mesh.set_shader_program();
   objects.push_back(new_mesh);
   resize_VAO();
@@ -364,12 +429,12 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
                               vert_attr_group_length.end()));
 
-  new_mesh.attr_offset = vertices_attr.size();
-  new_mesh.attr_length = ivertices.size() * 2;
-  new_mesh.faces_indices_offset = faces.size();
-  new_mesh.faces_indices_length = ifaces.size();
-  new_mesh.n_faces = ifaces.size() / 3;
-  new_mesh.n_vertices = ivertices.size() / 3;
+  new_mesh.attr_offset = (long)vertices_attr.size();
+  new_mesh.attr_length = (long)ivertices.size() * 2;
+  new_mesh.faces_indices_offset = (long)faces.size();
+  new_mesh.faces_indices_length = (long)ifaces.size();
+  new_mesh.n_faces = (long)ifaces.size() / 3;
+  new_mesh.n_vertices = (long)ivertices.size() / 3;
   new_mesh.program_type = ShaderProgramType::FLAT_FACES;
 
   vertices_attr.resize(vertices_attr.size() + ivertices.size() * 2);
@@ -377,7 +442,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
 
   std::copy(ifaces.begin(), ifaces.end(),
             faces.begin() + (long)n_total_faces * 3);
-  n_total_faces += ifaces.size() / 3; // sturdier if different number of attr
+  n_total_faces +=
+      (long)ifaces.size() / 3; // sturdier if different number of attr
 
   for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
     for (unsigned int j = 0; j < 3; ++j) {
@@ -387,7 +453,7 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
     vertices_attr.at((n_total_vertices + i) * 6 + 4) = 0.7; // intial colors
     vertices_attr.at((n_total_vertices + i) * 6 + 5) = 0.8;
   }
-  n_total_vertices += ivertices.size() / 3;
+  n_total_vertices += (long)ivertices.size() / 3;
   new_mesh.set_shader_program();
   objects.push_back(new_mesh);
   resize_VAO();
@@ -402,7 +468,7 @@ void MeshRender::draw(Object &obj) {
   glUniform4f(obj.q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
               (float)q_inv[3]);
   // Zoom
-  glUniform1f(obj.zoom_loc, zoom_level);
+  glUniform1f(obj.zoom_loc, (float)zoom_level);
 
   glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
   // glDrawElements(GL_TRIANGLES, faces_indices_length, GL_UNSIGNED_INT,

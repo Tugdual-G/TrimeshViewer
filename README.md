@@ -76,7 +76,7 @@ auto main() -> int {
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
 
   // adding another mesh to the display
-  Mesh isocahedron = Primitives::isocahedron();
+  Mesh isocahedron = Primitives::icosahedron();
   render.add_object(isocahedron.vertices, isocahedron.faces);
 
   render.render_loop(nullptr, nullptr);

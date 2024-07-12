@@ -6,6 +6,7 @@
 !example.png
 !Makefile
 !demo.cpp
+!icosahedron_sphere.cpp
 !shaders
 !deform.ply
 !axis_cross_flat_shading_vertex_shader.glsl

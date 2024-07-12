@@ -152,7 +152,10 @@ auto main() -> int {
       render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
   icosahedron_faces = cube_faces;
   icosahedron_vertices = cube_vertices;
-  render.update_object(icosahedron_vertices, icosahedron_faces, ico_id);
+  cube_colors =
+      Colormap::get_nearest_colors(cube_scalar_vertex_value, Colormap::MAGMA);
+  render.update_object(icosahedron_vertices, icosahedron_faces, cube_colors,
+                       ico_id);
 
   // Arguments for the animation callback
   Fargs ico_args = {

@@ -63,7 +63,7 @@ public:
 
 namespace Primitives {
 auto cube() -> Mesh;
-auto isocahedron() -> Mesh;
+auto icosahedron() -> Mesh;
 auto tetrahedron() -> Mesh;
 } // namespace Primitives
 
