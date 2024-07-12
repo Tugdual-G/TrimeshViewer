@@ -3,7 +3,14 @@
 #include "../src/ply/plyfile.hpp"
 #include "../src/render/colormap.hpp"
 #include "../src/render/trimesh_render.hpp"
+#include <cmath>
 #include <vector>
+
+namespace Geometry {
+auto norm(std::vector<double>::iterator vect) -> double {
+  return pow(vect[0] * vect[0] + vect[1] * vect[1] + vect[2] * vect[2], 0.5);
+}
+} // namespace Geometry
 
 auto main() -> int {
 
@@ -28,13 +35,46 @@ auto main() -> int {
     v += 0.1; // translates to low left corner
   }
 
+  ///////////////////////////////////////////
+  //          Tetrahedron
+  ///////////////////////////////////////////
   Mesh tet = Primitives::tetrahedron();
-  // move and scale
   for (auto &v : tet.vertices) {
     v *= 0.25;
     v -= 0.3;
   }
 
+  ///////////////////////////////////////////
+  //  Building a sphere from an isocahedron
+  ///////////////////////////////////////////
+  Mesh sphere = Primitives::isocahedron();
+  double radius = Geometry::norm(sphere.vertices.begin());
+  double norm{0};
+  sphere.subdivide();
+  for (int i = 0; i < sphere.n_vertices; ++i) {
+    norm = Geometry::norm(sphere.vertices.begin() + i * 3);
+    for (int j = 0; j < 3; ++j) {
+      sphere.vertices.at(i * 3 + j) =
+          radius * sphere.vertices.at(i * 3 + j) / norm;
+    }
+  }
+  for (auto &v : sphere.vertices) {
+    v *= 0.2;
+  }
+  for (int i = 0; i < sphere.n_vertices; ++i) {
+    sphere.vertices.at(i * 3 + 1) -= 0.5;
+    sphere.vertices.at(i * 3 + 2) += 0.2;
+  }
+  std::vector<double> sphere_scalar_vertex_value(sphere.n_vertices);
+  for (int i = 0; i < sphere.n_vertices; ++i) {
+    sphere_scalar_vertex_value.at(i) = sphere.vertices.at(i * 3);
+  }
+  std::vector<double> sphere_colors = Colormap::get_interpolated_colors(
+      sphere_scalar_vertex_value, Colormap::MAGMA, -0.5, 0.5);
+
+  /////////////////////////////////////////
+  //          Isocahedron
+  ////////////////////////////////////////
   Mesh ico = Primitives::isocahedron();
   for (auto &v : ico.vertices) {
     v *= 0.25;
@@ -53,6 +93,7 @@ auto main() -> int {
 
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
   render.add_object(ico.vertices, ico.faces, ico_colors);
+  render.add_object(sphere.vertices, sphere.faces, sphere_colors);
   render.add_object(tet.vertices, tet.faces);
   render.render_loop(nullptr, nullptr);
   render.render_finalize();

@@ -1,7 +1,7 @@
 #include "mesh.hpp"
-#include <iostream>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #include <vector>
 
 static auto norm(double *w) -> double {
@@ -18,8 +18,8 @@ static auto dot(const double *u, const double *v) -> double {
   return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }
 
-auto
-Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature) -> std::vector<double> {
+auto Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature)
+    -> std::vector<double> {
   if (mean_curvature.size() != (long unsigned int)n_vertices * 3LU) {
     std::cout << "Error, mean_curvature should be of size 3*n_vertices\n";
     exit(1);
@@ -39,8 +39,8 @@ Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature) -> std::vec
 
 // Takes one_ring as an argument to make explicit that the
 // method depends on the one-ring.
-auto
-Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring) -> std::vector<double> {
+auto Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring)
+    -> std::vector<double> {
 
   if (vertices_one_ring.size() < 2) {
     std::cout << "Error, vertices_one_ring should be initialized \n";

@@ -1,10 +1,14 @@
 #include "mesh.hpp"
-#include <bitset>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <map>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
+
+constexpr unsigned int maxuint{~(0U)};
 
 static void normalize(double *w);
 static void vector_prod(const double *u, const double *v, double *w);
@@ -257,13 +261,157 @@ void Mesh::set_edges() {
     edges_set.insert(e);
   }
   edges.resize(edges_set.size() * 2);
-  unsigned long long e_tmp{0};
   unsigned int i{0};
   for (const auto &e_set : edges_set) {
     edges.at(i) = e_set >> 32;
     edges.at(i + 1) = e_set & mask;
     i += 2;
   }
+}
+
+struct SplitVertice {
+  // Represent old vertices
+  // and vertices obtained by splitting.
+  // old vertices have attribute i equals their current
+  // index and element j equal max unsigned int;
+  // Vertices obtained by splitting are represented as edges.
+  unsigned int i{0};
+  unsigned int j{0};
+  auto operator==(const SplitVertice &other) const -> bool {
+    return (i == other.i && j == other.j);
+  }
+};
+
+struct Hash {
+  auto operator()(const SplitVertice sv) const -> size_t {
+    size_t h = sv.j;
+    h <<= 32;
+    h += sv.i;
+    return h;
+  }
+};
+
+auto splitvertice_map_insert(
+    std::unordered_map<SplitVertice, unsigned int, Hash> &sv_map,
+    SplitVertice &new_key) -> unsigned int {
+  /* Insert a new vertice key in the split vertices map.
+   * If this vertices is already in the map the key is not inserted
+   * and its value unchanged.
+   * Return the corresponding value in the map, this value is an index.
+   * */
+  auto key_iter = sv_map.find(new_key);
+  if (key_iter == sv_map.end()) {
+    key_iter = sv_map.insert(std::make_pair(new_key, sv_map.size())).first;
+  }
+  return key_iter->second;
+}
+
+void split_triangle(
+    const unsigned int face[3],
+    std::unordered_map<SplitVertice, unsigned int, Hash> &sv_map,
+    unsigned int new_face_vertices[6]) {
+  /* Split a triangle face and returns an ordered set of vertices indices along
+   * its edges.
+   * The split vertices map is updated with uniques vertices.
+   * */
+
+  SplitVertice sv{.i = 0, .j = 0};
+  sv.i = face[0];
+  sv.j = maxuint;
+  new_face_vertices[0] = splitvertice_map_insert(sv_map, sv);
+
+  // Vertices indices are sorted to make the SplitVertice ID unique
+  sv.i = face[0] > face[1] ? face[1] : face[0];
+  sv.j = face[0] > face[1] ? face[0] : face[1];
+  new_face_vertices[1] = splitvertice_map_insert(sv_map, sv);
+
+  sv.i = face[1];
+  sv.j = maxuint;
+  new_face_vertices[2] = splitvertice_map_insert(sv_map, sv);
+
+  sv.i = face[1] > face[2] ? face[2] : face[1];
+  sv.j = face[1] > face[2] ? face[1] : face[2];
+  new_face_vertices[3] = splitvertice_map_insert(sv_map, sv);
+
+  sv.i = face[2];
+  sv.j = maxuint;
+  new_face_vertices[4] = splitvertice_map_insert(sv_map, sv);
+
+  sv.i = face[0] > face[2] ? face[2] : face[0];
+  sv.j = face[0] > face[2] ? face[0] : face[2];
+  new_face_vertices[5] = splitvertice_map_insert(sv_map, sv);
+  // faces.push_back(i);
+}
+
+void splitvertice_to_vertice(const std::vector<double> &vertices,
+                             const SplitVertice &sv,
+                             std::vector<double>::iterator out_vertice) {
+  /* Convert a SplitVertice vertice identifier to coordinates. */
+  if (sv.j == maxuint) {
+    out_vertice[0] = vertices.at(sv.i * 3);
+    out_vertice[1] = vertices.at(sv.i * 3 + 1);
+    out_vertice[2] = vertices.at(sv.i * 3 + 2);
+  } else {
+    out_vertice[0] = 0.5 * (vertices.at(sv.j * 3) + vertices.at(sv.i * 3));
+    out_vertice[1] =
+        0.5 * (vertices.at(sv.j * 3 + 1) + vertices.at(sv.i * 3 + 1));
+    out_vertice[2] =
+        0.5 * (vertices.at(sv.j * 3 + 2) + vertices.at(sv.i * 3 + 2));
+  }
+}
+
+void Mesh::subdivide() {
+  /* Split each edge in half.
+   * In result, each triangle is split into 4 triangles.
+   * This method try to preseve data locality as much as possible.
+   * */
+
+  if (edges.size() < 3) {
+    set_edges();
+  }
+
+  std::vector<unsigned int> faces_tmp(faces);
+  faces.resize(faces.size() * 4);
+  std::vector<double> vertices_tmp(vertices);
+  vertices.resize(vertices.size() + 3 * edges.size() / 2);
+
+  // Defines vertices by their old index or by the edge they split
+  // Uses a hash map to register uniques edges
+  std::unordered_map<SplitVertice, unsigned int, Hash> uniques_vertices;
+  unsigned int face[] = {0, 0, 0};
+  unsigned int split_face_vertices[] = {0, 0, 0, 0, 0, 0};
+  for (int i = 0, new_i = 0; i < n_faces * 3; i += 3, new_i += 3) {
+    face[0] = faces_tmp.at(i);
+    face[1] = faces_tmp.at(i + 1);
+    face[2] = faces_tmp.at(i + 2);
+    split_triangle(face, uniques_vertices, split_face_vertices);
+
+    faces.at(new_i) = split_face_vertices[0];
+    faces.at(new_i + 1) = split_face_vertices[1];
+    faces.at(new_i + 2) = split_face_vertices[5];
+
+    new_i += 3;
+    faces.at(new_i) = split_face_vertices[1];
+    faces.at(new_i + 1) = split_face_vertices[3];
+    faces.at(new_i + 2) = split_face_vertices[5];
+
+    new_i += 3;
+    faces.at(new_i) = split_face_vertices[1];
+    faces.at(new_i + 1) = split_face_vertices[2];
+    faces.at(new_i + 2) = split_face_vertices[3];
+
+    new_i += 3;
+    faces.at(new_i) = split_face_vertices[3];
+    faces.at(new_i + 1) = split_face_vertices[4];
+    faces.at(new_i + 2) = split_face_vertices[5];
+  }
+
+  for (const auto &[key, value] : uniques_vertices) {
+    splitvertice_to_vertice(vertices_tmp, key, vertices.begin() + value * 3);
+  }
+  n_faces = n_faces * 4;
+  n_vertices = (int)vertices.size() / 3;
+  set_edges();
 }
 
 void normalize(double *w) {
