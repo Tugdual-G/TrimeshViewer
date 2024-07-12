@@ -129,19 +129,38 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
   // Accept fragment if closer to the camera
   glDepthFunc(GL_LESS);
 
-  while ((glfwWindowShouldClose(window) == 0) && (flag != 0)) {
-    glfwGetWindowSize(window, &width, &height);
-    glBindVertexArray(VAO);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (data_update_function == nullptr) {
+    while ((glfwWindowShouldClose(window) == 0)) {
+      glfwGetWindowSize(window, &width, &height);
+      glBindVertexArray(VAO);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    for (auto &obj : objects) {
-      draw(obj);
+      // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      for (auto &obj : objects) {
+        draw(obj);
+      }
+      glfwSwapBuffers(window);
+      glfwPollEvents();
     }
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+  } else {
+    while ((glfwWindowShouldClose(window) == 0) && (flag != 0)) {
+      glfwGetWindowSize(window, &width, &height);
+      glBindVertexArray(VAO);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      flag = data_update_function(fargs);
+
+      // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+      // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+      for (auto &obj : objects) {
+        draw(obj);
+      }
+      glfwSwapBuffers(window);
+      glfwPollEvents();
+    }
   }
+
   glCheckError();
   return 0;
 }
@@ -152,6 +171,25 @@ auto MeshRender::render_finalize() -> int {
   glDeleteBuffers(1, &VBO);
   glfwTerminate();
   return 0;
+}
+
+void MeshRender::update_object(std::vector<double> &ivertices, int id) {
+  /* Update the vertices positions of an object. */
+  Object &obj = objects.at(id);
+
+  if (ivertices.size() / 3 == obj.n_vertices) {
+    for (unsigned int i = 0; i < ivertices.size() / 3; ++i) {
+      for (unsigned int j = 0; j < 3; ++j) {
+        vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
+            (float)ivertices.at(i * 3 + j);
+      }
+    }
+  }
+
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * obj.attr_offset,
+                  sizeof(float) * obj.attr_length,
+                  vertices_attr.data() + obj.attr_offset);
 }
 
 auto MeshRender::add_object(std::vector<double> &ivertices,

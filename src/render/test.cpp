@@ -5,6 +5,23 @@
 
 constexpr double phi{1.6180339887498};
 
+struct Fargs {
+  /* For the animaion callback. */
+  std::vector<double> *vertices{nullptr};
+  MeshRender *render{nullptr};
+  int obj_id{0};
+};
+
+auto callback(void *fargs) -> int {
+  /* Animation callback. */
+  auto *args = (Fargs *)fargs;
+  for (auto &v : *args->vertices) {
+    v += 0.001;
+  }
+  args->render->update_object(*args->vertices, args->obj_id);
+  return 1;
+}
+
 auto main() -> int {
   // Define a list of points
   //
@@ -28,7 +45,7 @@ auto main() -> int {
   for (auto &v : icosahedron_vertices) {
     v *= 0.1;
   }
-  for (int i = 0; i < icosahedron_vertices.size() / 3; ++i) {
+  for (int i = 0; i < (int)icosahedron_vertices.size() / 3; ++i) {
     icosahedron_vertices.at(i * 3 + 2) -= 0.5;
   }
 
@@ -109,13 +126,13 @@ auto main() -> int {
 
   // A test value to generate colors
   std::vector<double> cube_scalar_vertex_value(cube_vertices.size() / 3);
-  for (int i = 0; i < cube_scalar_vertex_value.size(); ++i) {
+  for (int i = 0; i < (int)cube_scalar_vertex_value.size(); ++i) {
     cube_scalar_vertex_value.at(i) = i;
   }
 
   // A test value to generate colors
   std::vector<double> ico_scalar_vertex_value(icosahedron_vertices.size() / 3);
-  for (int i = 0; i < ico_scalar_vertex_value.size(); ++i) {
+  for (int i = 0; i < (int)ico_scalar_vertex_value.size(); ++i) {
     ico_scalar_vertex_value.at(i) = i + 6;
   }
   std::vector<double> ico_colors = Colormap::get_interpolated_colors(
@@ -125,9 +142,13 @@ auto main() -> int {
       Colormap::get_nearest_colors(cube_scalar_vertex_value, Colormap::VIRIDIS);
 
   MeshRender render(500, 500, cube_vertices, cube_faces, cube_colors);
-  render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
+  int ico_id =
+      render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
+  Fargs ico_args = {
+      .vertices = &icosahedron_vertices, .render = &render, .obj_id = ico_id};
+
   render.add_object(tet_vertices, tet_faces);
-  render.render_loop(nullptr, nullptr);
+  render.render_loop(callback, &ico_args);
   render.render_finalize();
 
   return 0;

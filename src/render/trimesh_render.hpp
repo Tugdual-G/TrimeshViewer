@@ -106,6 +106,8 @@ public:
                   std::vector<unsigned int> &ifaces,
                   std::vector<double> &colors) -> int;
 
+  void update_object(std::vector<double> &ivertices, int id);
+
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
       : width(w_width), height(w_height) {
