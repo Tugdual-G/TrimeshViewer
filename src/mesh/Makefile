@@ -8,10 +8,7 @@ CFLAGS = -Wall -Wextra -O2
 LDFLAGS = -L. -lmesh
 
 # Targets
-all: libmesh.a test
-
-test: test.cpp libmesh.a
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
+all: libmesh.a
 
 libmesh.a: mesh_print.o mesh_primitives.o mesh_operators.o mesh_structure.o
 	ar rvs $@ $^
@@ -27,6 +24,10 @@ mesh_operators.o: mesh_operators.cpp
 
 mesh_structure.o: mesh_structure.cpp
 	$(CC) $(CFLAGS) -c $<
+
+test:
+	$(MAKE) -C tests/ clean
+	$(MAKE) -C tests/
 
 clean:
 	rm -f *.a *.o *.so
