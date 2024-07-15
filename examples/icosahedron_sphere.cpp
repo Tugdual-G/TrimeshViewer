@@ -22,13 +22,13 @@ struct Fargs {
 
 auto callback(void *fargs) -> int {
   /* Animation callback. */
-  static unsigned int i{0};
+  static unsigned int i{1};
+  constexpr unsigned int step{80};
   auto *args = (Fargs *)fargs;
   Mesh *mesh = args->mesh;
   double norm{0};
 
-  ++i;
-  if (i % 80 == 0 && i < 700) {
+  if (i % step == 0 && i < step * 10) {
     mesh->subdivide();
     for (int i = 0; i < mesh->n_vertices; ++i) {
       norm = Linalg::norm(mesh->vertices.begin() + i * 3);
@@ -48,7 +48,8 @@ auto callback(void *fargs) -> int {
     args->render->update_object(mesh->vertices, mesh->faces, ico_colors, 1);
   }
 
-  usleep(1e4);
+  ++i;
+  // usleep(1e4);
   return 1;
 }
 

@@ -53,7 +53,7 @@ enum class ElementType {
   FACE,
 };
 
-typedef struct Element {
+struct Element {
   ElementType type{ElementType::NONE};
   unsigned int n_elem{0}, stride{0};
   std::vector<PropertyName> property_names;
@@ -61,12 +61,7 @@ typedef struct Element {
   std::vector<std::vector<PropertyType>> lists{0};
   std::vector<char> data;
   int file_begin_pos{-1};
-} Element;
-
-// typedef struct SubElement {
-//   std::vector<PropertyName> property_names;
-//   Element *parent;
-// } SubElement;
+};
 
 class PlyFile {
   int file_data_offset{0};
@@ -135,17 +130,17 @@ class PlyFile {
       {"face", ElementType::FACE}};      //
   std::unordered_map<ElementType, std::string> elem_type_rmap;
 
-  int parse_header(std::ifstream *file);
-  int load_data(std::ifstream *file);
-  int from_file(const char *fname);
-  int parse_vertices_properties(std::string &line, std::ifstream *file,
-                                unsigned int n_elem);
-  int parse_faces_properties(std::string &line, std::ifstream *file,
-                             unsigned int n_elem);
+  auto parse_header(std::ifstream *file) -> int;
+  auto load_data(std::ifstream *file) -> int;
+  auto from_file(const char *fname) -> int;
+  auto parse_vertices_properties(std::string &line, std::ifstream *file,
+                                 unsigned int n_elem) -> int;
+  auto parse_faces_properties(std::string &line, std::ifstream *file,
+                              unsigned int n_elem) -> int;
 
   void build_inverse_maps();
-  unsigned int get_element_stride(Element &elem);
-  int get_property_offset(PropertyName name, Element &elem);
+  auto get_element_stride(Element &elem) -> unsigned int;
+  auto get_property_offset(PropertyName name, Element &elem) -> int;
 
   void set_elements_file_begin_position();
 
@@ -161,7 +156,7 @@ public:
   std::vector<double> vertex_normals;
 
   template <class OUT_TYPE>
-  void get_subelement_data(std::string const element_type,
+  void get_subelement_data(std::string element_type,
                            std::vector<PropertyName> &property_names,
                            std::vector<OUT_TYPE> &out_data);
 
@@ -169,7 +164,7 @@ public:
   void get_face_data(std::vector<unsigned int> &out_data);
 
   // Mesh mesh;
-  PlyFile() {}
+  PlyFile() = default;
   PlyFile(const char *fname) {
     from_file(fname);
     // mesh.init(vertices, faces);

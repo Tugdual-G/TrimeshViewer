@@ -2,18 +2,18 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <sstream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #define error() error_(const char msg[], __FILE__, __LINE__)
 
-static int check_same_type(Element &elem,
+static auto check_same_type(Element &elem,
                            const std::vector<PropertyName> &names,
-                           PropertyType &type);
+                           PropertyType &type) -> int;
 /* Checks if a list of property names share the same type.
  * return :
  *  0 if two or more properties differ in datatype ;
@@ -21,7 +21,7 @@ static int check_same_type(Element &elem,
  *  1 if all the recognised properties share the same type
  *  */
 
-static unsigned int get_property_index(PropertyName name, Element &elem);
+static auto get_property_index(PropertyName name, Element &elem) -> unsigned int;
 /* Return the indice of the property in the element vectors. */
 
 template <class T> void print_vect(std::vector<T> v, int m, int n);
@@ -61,7 +61,7 @@ void PlyFile::get_subelement_data(std::string const element_type,
   }
   // finding the element in the parsed data.
   ElementType elem_type_enum = elem_type_map.find(element_type)->second;
-  std::vector<Element>::iterator elem = elements.begin();
+  auto elem = elements.begin();
   while (elem->type != elem_type_enum) {
     ++elem;
   }
@@ -84,7 +84,7 @@ void PlyFile::get_subelement_data(std::string const element_type,
 
   elem_data_offsets.reserve(property_names.size());
 
-  int offset;
+  int offset = 0;
   for (auto &prop : property_names) {
     // hopefully the layout in the file is in the right order.
     if ((offset = get_property_offset(prop, element)) != -1) {
@@ -147,14 +147,15 @@ void PlyFile::get_subelement_data(std::string const element_type,
 template <class IN_TYPE>
 void PlyFile::get_face_data(std::vector<unsigned int> &out_data) {
 
-  std::vector<Element>::iterator elem = elements.begin();
+  auto elem = elements.begin();
   while (elem->type != ElementType::FACE) {
     ++elem;
   }
   Element &face_element = *elem;
   out_data.resize(face_element.n_elem * 3);
 
-  unsigned int offset, size;
+  unsigned int offset;
+  unsigned int size;
   offset = get_property_offset(PropertyName::vertex_indices, face_element);
   // TODO is it the right list ? not always
   offset += type_size_map.at(face_element.lists.at(0).at(0));
@@ -181,7 +182,7 @@ void PlyFile::get_face_data(std::vector<unsigned int> &out_data) {
   }
 };
 
-int PlyFile::from_file(const char *fname) {
+auto PlyFile::from_file(const char *fname) -> int {
   // vertices_elements_sizes.resize(10, 0);
   std::ifstream file;
   file.open(fname, std::ios::binary | std::ios::in);
@@ -191,7 +192,7 @@ int PlyFile::from_file(const char *fname) {
   }
   parse_header(&file);
 
-  if (!load_data(&file)) {
+  if (load_data(&file) == 0) {
     std::cout << "Error parsing data in : " << fname << "\n";
     exit(1);
   }
@@ -209,8 +210,8 @@ int PlyFile::from_file(const char *fname) {
   return 1;
 }
 
-int check_same_type(Element &elem, const std::vector<PropertyName> &names,
-                    PropertyType &type) {
+auto check_same_type(Element &elem, const std::vector<PropertyName> &names,
+                    PropertyType &type) -> int {
   /*
    * Checks if a list of property names share the same type.
    * return :
@@ -249,7 +250,7 @@ int check_same_type(Element &elem, const std::vector<PropertyName> &names,
   return 1;
 }
 
-int PlyFile::load_data(std::ifstream *file) {
+auto PlyFile::load_data(std::ifstream *file) -> int {
 
   set_elements_file_begin_position(); // where each_element data starts in the
                                       // file
@@ -268,7 +269,7 @@ int PlyFile::load_data(std::ifstream *file) {
 
   for (auto &elem : elements) {
     stride = elem.stride;
-    if (!stride) {
+    if (stride == 0u) {
       std::cout << "Error, undefined stride at line " << __LINE__ << ", file "
                 << __FILE__ << " \n";
       std::cout << "elemtype " << (int)elem.type << "\n";
@@ -283,19 +284,19 @@ int PlyFile::load_data(std::ifstream *file) {
 
     switch (elem.type) {
     case ElementType::VERTEX: {
-      if (!check_same_type(elem, vertex_pos, type)) {
+      if (check_same_type(elem, vertex_pos, type) == 0) {
         std::cout << "Error, vertex position must use the same type of float\n";
         file->close();
         exit(1);
       }
-      if (!check_same_type(elem, normal_pos, type)) {
+      if (check_same_type(elem, normal_pos, type) == 0) {
         std::cout
             << "Error, normal coordinates must use the same type of float\n";
         file->close();
         exit(1);
       }
 
-      if (!check_same_type(elem, colors, type)) {
+      if (check_same_type(elem, colors, type) == 0) {
         std::cout
             << "Error, colors coordinates must use the same data type. \n";
         file->close();
@@ -308,7 +309,7 @@ int PlyFile::load_data(std::ifstream *file) {
     }
     case ElementType::FACE: {
       // TODO take the file offset !!!!
-      if (!check_same_type(elem, colors, type)) {
+      if (check_same_type(elem, colors, type) == 0) {
         std::cout
             << "Error, colors coordinates must use the same data type. \n";
         file->close();
@@ -329,9 +330,10 @@ int PlyFile::load_data(std::ifstream *file) {
   return 1;
 }
 
-int PlyFile::parse_header(std::ifstream *file) {
+auto PlyFile::parse_header(std::ifstream *file) -> int {
   PlyFile::data_layout.reserve(7);
-  std::string line, word;
+  std::string line;
+  std::string word;
   int i = 0;
   if (std::getline(*file, line)) {
     // std::stringstream iss(line, std::istringstream::in);
@@ -339,7 +341,7 @@ int PlyFile::parse_header(std::ifstream *file) {
     if (line != "ply") {
       std::cout
           << "Error, this file doesn't look like a ply file. line read :\n"
-          << line << std::endl;
+          << line << '\n';
       file->close();
       exit(1);
     }
@@ -358,9 +360,9 @@ int PlyFile::parse_header(std::ifstream *file) {
         switch (elem_type_map.at(word)) {
         case ElementType::VERTEX:
           iss >> n_vertices;
-          if (!n_vertices) {
+          if (n_vertices == 0) {
             std::cout << "Error, number of vertices = 0 , last line read :\n"
-                      << line << std::endl;
+                      << line << '\n';
             file->close();
             exit(1);
           }
@@ -368,9 +370,9 @@ int PlyFile::parse_header(std::ifstream *file) {
           break;
         case ElementType::FACE:
           iss >> n_faces;
-          if (!n_faces) {
+          if (n_faces == 0) {
             std::cout << "Error, number of faces = 0, last line read : \n"
-                      << line << std::endl;
+                      << line << '\n';
             file->close();
             exit(1);
           }
@@ -394,19 +396,19 @@ int PlyFile::parse_header(std::ifstream *file) {
         break;
       }
     } else {
-      std::cout << "Warning, cannot read : " << line << std::endl;
+      std::cout << "Warning, cannot read : " << line << '\n';
       file->close();
       exit(1);
     }
   }
   std::cout << "Warning, end of header not found, last line read :\n"
-            << line << std::endl;
+            << line << '\n';
   file->close();
   exit(1);
 }
 
-int PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
-                                       unsigned int n_elem) {
+auto PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
+                                       unsigned int n_elem) -> int {
   Element vertex_element;
   vertex_element.n_elem = n_elem;
   vertex_element.type = ElementType::VERTEX;
@@ -444,7 +446,7 @@ int PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
     ++i;
   }
   std::cout << "Warning, max number of vertex properties reached : " << i
-            << std::endl;
+            << '\n';
 
   vertex_element.stride = get_element_stride(vertex_element);
   elements.push_back(vertex_element);
@@ -452,8 +454,8 @@ int PlyFile::parse_vertices_properties(std::string &line, std::ifstream *file,
   return 0;
 };
 
-int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
-                                    unsigned int n_elem) {
+auto PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
+                                    unsigned int n_elem) -> int {
   Element face_element;
   face_element.n_elem = n_elem;
   face_element.type = ElementType::FACE;
@@ -522,18 +524,18 @@ int PlyFile::parse_faces_properties(std::string &line, std::ifstream *file,
   elements.push_back(face_element);
   file->seekg(last_offset);
   std::cout << "Warning, max number of face properties reached : " << i
-            << std::endl;
-  std::cout << line << std::endl;
+            << '\n';
+  std::cout << line << '\n';
 
   return 0;
 };
 
-int PlyFile::get_property_offset(PropertyName name, Element &elem) {
+auto PlyFile::get_property_offset(PropertyName name, Element &elem) -> int {
   /* Return the property (x, ny, blue) position in the element data. */
   unsigned int offset{0};  // offset in bytes
   unsigned int n_list = 0; // number of list read
   PropertyType list_type;
-  std::vector<PropertyName>::iterator n_current_name =
+  auto n_current_name =
       elem.property_names.begin();
   for (auto &type : elem.property_types) {
     if (*n_current_name == name) {
@@ -554,9 +556,9 @@ int PlyFile::get_property_offset(PropertyName name, Element &elem) {
   return -1;
 };
 
-unsigned int get_property_index(PropertyName name, Element &elem) {
+auto get_property_index(PropertyName name, Element &elem) -> unsigned int {
   unsigned int i = 0;
-  std::vector<PropertyName>::iterator n = elem.property_names.begin();
+  auto n = elem.property_names.begin();
   while (n != elem.property_names.end()) {
     if (*n == name) {
       return i;
@@ -567,7 +569,7 @@ unsigned int get_property_index(PropertyName name, Element &elem) {
   return -1; // Returns -1 if not found
 };
 
-unsigned int PlyFile::get_element_stride(Element &elem) {
+auto PlyFile::get_element_stride(Element &elem) -> unsigned int {
   unsigned int stride{0};  // stride in bytes
   unsigned int n_list = 0; // number of list read
   PropertyType list_type;
@@ -587,7 +589,7 @@ unsigned int PlyFile::get_element_stride(Element &elem) {
 }
 
 void PlyFile::set_elements_file_begin_position() {
-  if (!file_data_offset) {
+  if (file_data_offset == 0) {
     std::cout << "Set file_data_offset before file_begin_pos \n";
     exit(1);
   }
