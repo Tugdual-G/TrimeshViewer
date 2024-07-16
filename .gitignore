@@ -10,3 +10,7 @@ prof.sh
 demo_private.cpp
 edges
 subdivide
+curvature
+face_areas
+face_normals
+vertex_normals
