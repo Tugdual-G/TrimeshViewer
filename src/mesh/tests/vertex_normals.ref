@@ -1,0 +1,26 @@
+
+++++++++ Test vertex normals +++++++
+
+
+++++++ cube ++++
+
+
+ vect 
+vertice coord : -0.5, -0.5, -0.5, normal coord : -0.408248, -0.816497, -0.408248, 
+vertice coord : 0.5, -0.5, -0.5, normal coord : 0.666667, -0.333333, -0.666667, 
+vertice coord : 0.5, -0.5, 0.5, normal coord : 0.333333, -0.666667, 0.666667, 
+vertice coord : -0.5, -0.5, 0.5, normal coord : -0.816497, -0.408248, 0.408248, 
+vertice coord : -0.5, 0.5, -0.5, normal coord : -0.666667, 0.333333, -0.666667, 
+vertice coord : 0.5, 0.5, -0.5, normal coord : 0.408248, 0.816497, -0.408248, 
+vertice coord : 0.5, 0.5, 0.5, normal coord : 0.816497, 0.408248, 0.408248, 
+vertice coord : -0.5, 0.5, 0.5, normal coord : -0.333333, 0.666667, 0.666667, 
+
+ vect norm 
+1
+1
+1
+1
+1
+1
+1
+1
