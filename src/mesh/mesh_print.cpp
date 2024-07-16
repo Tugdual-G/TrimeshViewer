@@ -5,7 +5,7 @@
 void Mesh::print_vertices() {
   for (int i = 0; i < n_vertices; ++i) {
     for (int j = 0; j < 3; ++j) {
-      std::cout << vertices.at(i * 3 + j) << " ";
+      std::cout << vertices.at(i * 3 + j) << " , ";
     }
     std::cout << "\n";
   }
@@ -15,7 +15,7 @@ void Mesh::print_faces() {
   for (int i = 0; i < n_faces; ++i) {
     std::cout << "face " << i << " : ";
     for (int j = 0; j < 3; ++j) {
-      std::cout << faces.at(i * 3 + j) << " ";
+      std::cout << faces.at(i * 3 + j) << " , ";
     }
     std::cout << "\n";
   }
