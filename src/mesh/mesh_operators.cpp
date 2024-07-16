@@ -8,7 +8,7 @@ static auto norm(double *w) -> double {
   return pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
 }
 
-static void vector_prod(const double *u, const double *v, double *w) {
+static void cross(const double *u, const double *v, double *w) {
   w[0] = u[1] * v[2] - u[2] * v[1];
   w[1] = u[2] * v[0] - u[0] * v[2];
   w[2] = u[0] * v[1] - u[1] * v[0];
@@ -17,6 +17,11 @@ static void vector_prod(const double *u, const double *v, double *w) {
 static auto dot(const double *u, const double *v) -> double {
   return u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
 }
+
+void get_ring_vertices(int ring_nv,
+                       std::vector<unsigned int>::iterator one_ring_iter,
+                       std::vector<double> &vertices,
+                       std::vector<double> &ring_vertices);
 
 auto Mesh::get_scalar_mean_curvature(std::vector<double> &mean_curvature)
     -> std::vector<double> {
@@ -48,93 +53,121 @@ auto Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring)
   }
 
   std::vector<double> mean_curvature(3 * n_vertices);
-  unsigned int one_ring_i0{0}; // the first element for each vertex
-  unsigned int ring_nv{0};     // number of vertex per ring
+  int one_ring_i0{0}; // the first element for each vertex
+  int ring_nv{0};     // number of vertex per ring
 
-  std::vector<double> ring_vert( // ring vertices spacial coords
+  std::vector<double> ring_vertices( // ring vertices spacial coords
       n_adja_faces_max * 3, -999999);
 
   std::vector<double> edges_vect(n_adja_faces_max * 3);
 
-  unsigned int r_vert_idx = 0; // points to the current vertice idx
+  double area_x2{0};                   // area
+  std::vector<double> cross_tmp(3, 0); // to store temporary cross_tmp product
+  double norm_tmp{0};
+  double *e1{nullptr};
+  std::vector<double> o1(3, 0); // opposite edge
+  double cot1{0};               // cotangent
+  double cot2{0};
 
-  double A_x2 = 0; // area
-  double cross[3]; // to store temporary cross product
-  double *e1;
-  double o1[3];
-  double cos1;
-  double cos2;
-  double sin1;
-  double sin2;
-  double cot1;
-  double cot2;
-  for (unsigned int i = 0; i < (unsigned int)n_vertices; ++i) {
-    ring_nv = vertices_one_ring[one_ring_i0]; // retrieves the number of
-                                              // vertices in the ring
-    if (ring_nv > 1) {
-      // copy each ring vert coord into ring_vert.
-      for (unsigned int r_i = 0; r_i < ring_nv; ++r_i) {
-        r_vert_idx = vertices_one_ring.at(one_ring_i0 + r_i + 1);
+  for (int i = 0; i < n_vertices; ++i) {
+    ring_nv = (int)vertices_one_ring[one_ring_i0]; // retrieves the number of
+                                                   // vertices in the ring
+    if (ring_nv > 2) {
+      // copy each ring vert coord into ring_vertices.
+      get_ring_vertices(ring_nv, vertices_one_ring.begin() + (one_ring_i0 + 1),
+                        vertices, ring_vertices);
 
-        std::copy(vertices.begin() + r_vert_idx * 3,
-                  vertices.begin() + (r_vert_idx + 1) * 3,
-                  ring_vert.begin() + r_i * 3);
-      }
-
-      // edges connecting the point to itś neighbours
-      for (unsigned int r_i = 0; r_i < ring_nv; ++r_i) {
-        for (unsigned int k = 0; k < 3; ++k) {
-          edges_vect.at(r_i * 3 + k) =
-              ring_vert.at(r_i * 3 + k) - vertices.at(i * 3 + k);
+      // edges connecting the point to its neighbours
+      for (int j = 0; j < ring_nv; ++j) {
+        for (int k = 0; k < 3; ++k) {
+          edges_vect.at(j * 3 + k) =
+              ring_vertices.at(j * 3 + k) - vertices.at(i * 3 + k);
         }
       }
 
-      A_x2 = 0;
-      for (unsigned k = 0; k < ring_nv - 1; ++k) {
-        vector_prod(edges_vect.data() + k * 3, edges_vect.data() + (k + 1) * 3,
-                    cross);
-        A_x2 += norm(cross);
-      }
-      A_x2 = 1 / (2 * A_x2);
+      area_x2 = 0;
+      for (int j = 0; j < ring_nv; ++j) {
+        e1 = &edges_vect[((ring_nv + j - 1) % ring_nv) * 3];
 
-      for (unsigned int j = 0; j < ring_nv; ++j) {
-        e1 = edges_vect.data() + ((ring_nv + j - 1) % ring_nv) * 3;
-        // this is horrendous
-        for (unsigned int k = 0; k < 3; ++k) {
-          o1[k] = ring_vert.at(j * 3 + k) -
-                  ring_vert.at(((ring_nv + j - 1) % ring_nv) * 3 + k);
+        // std::cout << i << "-" << vertices_one_ring.at(one_ring_i0 + 1 + j)
+        //           << " : ";
+        // for (auto *v = e1; v < e1 + 3; ++v) {
+        //   std::cout << *v << " , ";
+        // }
+        // std::cout << "\n";
+
+        for (int k = 0; k < 3; ++k) {
+          o1[k] = ring_vertices.at(j * 3 + k) -
+                  ring_vertices.at(((ring_nv + j - 1) % ring_nv) * 3 + k);
         }
-        cos1 = dot(e1, o1);
-        vector_prod(o1, e1, cross);
-        sin1 = norm(cross);
-        cot1 = cos1 / sin1;
 
-        e1 = edges_vect.data() + ((ring_nv + j + 1) % ring_nv) * 3;
-        // this is horrendous
-        for (unsigned int k = 0; k < 3; ++k) {
-          o1[k] = ring_vert.at(j * 3 + k) -
-                  ring_vert.at(((j + 1) % ring_nv) * 3 + k);
+        cross(o1.data(), e1, cross_tmp.data());
+        norm_tmp = norm(cross_tmp.data());
+        cot1 = dot(e1, o1.data()) / norm_tmp;
+        // std::cout << norm_tmp << "\n";
+        area_x2 += norm_tmp;
+
+        e1 = &edges_vect[((ring_nv + j + 1) % ring_nv) * 3];
+
+        for (int k = 0; k < 3; ++k) {
+          o1[k] = ring_vertices.at(j * 3 + k) -
+                  ring_vertices.at(((j + 1) % ring_nv) * 3 + k);
         }
-        // help !
-        cos2 = dot(e1, o1);
-        vector_prod(e1, o1, cross);
 
-        sin2 = norm(cross);
-        cot2 = cos2 / sin2;
-        // std::cout << "sin1, sin2 : " << sin1 << " , " << sin2 << std::endl;
+        cross(e1, o1.data(), cross_tmp.data());
+        norm_tmp = norm(cross_tmp.data());
+        cot2 = dot(e1, o1.data()) / norm_tmp;
 
-        for (unsigned int k = 0; k < 3; ++k) {
+        for (int k = 0; k < 3; ++k) {
           mean_curvature.at(i * 3 + k) -=
               edges_vect.at(j * 3 + k) * (cot2 + cot1);
         }
       }
 
-      for (unsigned int k = 0; k < 3; ++k) {
-        mean_curvature.at(i * 3 + k) *= A_x2;
+      area_x2 = 1 / (2 * area_x2);
+      for (int k = 0; k < 3; ++k) {
+        mean_curvature.at(i * 3 + k) *= area_x2;
       }
     }
     // disp_vect(mean_curvature.data() + i * 3, 3);
     one_ring_i0 += ring_nv + 1;
   }
   return mean_curvature;
+}
+
+void get_ring_vertices(int ring_nv,
+                       std::vector<unsigned int>::iterator one_ring_iter,
+                       std::vector<double> &vertices,
+                       std::vector<double> &ring_vertices) {
+  /* Get the ring vertices coordinates. */
+  int vert_idx{0};
+  for (int j = 0; j < ring_nv; ++j, ++one_ring_iter) {
+    vert_idx = (int)*one_ring_iter;
+    std::copy(vertices.begin() + (vert_idx * 3),
+              vertices.begin() + ((vert_idx + 1) * 3),
+              ring_vertices.begin() + (j * 3));
+  }
+}
+
+auto Mesh::get_face_areas() -> std::vector<double> {
+  std::vector<double> area(n_faces, 0.0);
+
+  double cross_tmp[3]; // to store temporary cross_tmp product
+  double e0[] = {0, 0, 0};
+  double e1[] = {0, 0, 0};
+
+  for (int i = 0; i < n_faces; ++i) {
+    for (int j = 0; j < 3; ++j) {
+      e0[j] = vertices.at(3 * faces.at(i * 3 + 1) + j) -
+              vertices.at(3 * faces.at(i * 3) + j);
+
+      e1[j] = vertices.at(3 * faces.at(i * 3 + 2) + j) -
+              vertices.at(3 * faces.at(i * 3) + j);
+    }
+    cross(e0, e1, cross_tmp);
+    area.at(i) = norm(cross_tmp);
+    area.at(i) *= 0.5;
+  }
+
+  return area;
 }
