@@ -4,18 +4,15 @@
 # @file
 # @version 0.1
 CC = g++
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -Wall -Wextra -O2 -g
 LDFLAGS = -L../ -lmesh
-TESTS = edges subdivide face_normals vertex_normals face_areas
+TESTS = edges subdivide face_normals vertex_normals face_areas curvature
 # Targets
 all: ../libmesh.a $(TESTS)
 
 %: test_%.cpp ../libmesh.a %.ref
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 	./$@ | diff --color $@.ref -
-
-curvature: test_curvature.cpp ../libmesh.a
-	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 ../libmesh.a: ../mesh*.cpp ../mesh*.hpp
 	+$(MAKE) -C ../

@@ -38,8 +38,8 @@ auto main() -> int {
   sphere.set_one_ring();
   auto curvature = sphere.get_mean_curvature(sphere.one_ring);
   for (auto k_iter = curvature.begin(), n_iter = sphere.vertex_normals.begin();
-       k_iter < curvature.end(); k_iter += 3, n_iter += 3) {
-    // std::cout << Linalg::dot(k_iter, n_iter) << " , ";
+       k_iter < curvature.begin() + 30; k_iter += 3, n_iter += 3) {
+    std::cout << Linalg::dot(k_iter, n_iter) << " , ";
   }
   std::cout << "\n\n ++++++++++ norm ++++++\n";
   for (auto k_iter = curvature.begin(); k_iter < curvature.begin() + 30;
