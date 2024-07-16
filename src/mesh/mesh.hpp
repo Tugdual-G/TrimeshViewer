@@ -44,6 +44,8 @@ public:
   // void set_face_edges();
   void subdivide();
 
+  auto get_face_areas() -> std::vector<double>;
+
   // Takes one_ring as an argument to make explicit that the
   // method depends on the one-ring.
   auto get_mean_curvature(std::vector<unsigned int> &one_ring)

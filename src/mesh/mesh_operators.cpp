@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <span>
 #include <vector>
 
 static auto norm(double *w) -> double {
@@ -61,8 +62,8 @@ auto Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring)
 
   std::vector<double> edges_vect(n_adja_faces_max * 3);
 
-  double area_x2{0};                   // area
-  std::vector<double> cross_tmp(3, 0); // to store temporary cross_tmp product
+  double area_x2{0};                   // area of the dual mesh
+  std::vector<double> cross_tmp(3, 0); // to store temporary cross product
   double norm_tmp{0};
   double *e1{nullptr};
   std::vector<double> o1(3, 0); // opposite edge
@@ -88,13 +89,6 @@ auto Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring)
       area_x2 = 0;
       for (int j = 0; j < ring_nv; ++j) {
         e1 = &edges_vect[((ring_nv + j - 1) % ring_nv) * 3];
-
-        // std::cout << i << "-" << vertices_one_ring.at(one_ring_i0 + 1 + j)
-        //           << " : ";
-        // for (auto *v = e1; v < e1 + 3; ++v) {
-        //   std::cout << *v << " , ";
-        // }
-        // std::cout << "\n";
 
         for (int k = 0; k < 3; ++k) {
           o1[k] = ring_vertices.at(j * 3 + k) -
@@ -124,7 +118,7 @@ auto Mesh::get_mean_curvature(std::vector<unsigned int> &vertices_one_ring)
         }
       }
 
-      area_x2 = 1 / (2 * area_x2);
+      area_x2 = 3 / (2 * area_x2);
       for (int k = 0; k < 3; ++k) {
         mean_curvature.at(i * 3 + k) *= area_x2;
       }
