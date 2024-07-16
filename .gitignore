@@ -15,3 +15,5 @@ curvature
 face_areas
 face_normals
 vertex_normals
+one_ring
+vertex_adjacent_faces

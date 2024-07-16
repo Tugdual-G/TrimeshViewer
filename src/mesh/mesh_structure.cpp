@@ -10,7 +10,6 @@ constexpr unsigned int maxuint{~(0U)};
 
 static void normalize(double *w);
 static void vector_prod(const double *u, const double *v, double *w);
-static auto norm(double *w) -> double;
 
 void Mesh::set_one_ring() {
   /* Sets the one-ring (adjacent vertices / link) for each vertice in the
@@ -49,7 +48,6 @@ void Mesh::set_one_ring() {
         faces.at(face * 3 + (triangle_vert_idx + 2) % 3)) {
       one_ring.at(onering_array_idx) = 0;
       onering_array_idx += 1;
-      std::cout << "\n Warning, the shape is open at vertice  " << i << ".\n";
     } else {
       one_ring.at(onering_array_idx) = n_adja;
       onering_array_idx += n_adja + 1; // next vertice
@@ -59,31 +57,37 @@ void Mesh::set_one_ring() {
   one_ring.resize(onering_array_idx);
 }
 
+struct Edge {
+  int face{-1};
+  int next_vertice{-1};
+  Edge() = default;
+  Edge(int face, int next) : face(face), next_vertice(next) {};
+};
+
 void Mesh::order_adjacent_faces() {
   /* Orders the adjacent faces in counter clockwise order arround the central
    * vertice. */
-  std::vector<int> unordered_faces(n_adja_faces_max, -1);
 
   // edges oposite to the current vertice [[vert0, vert1],...,[vert0, vert1]]
-  std::vector<int> oposite_edge(n_adja_faces_max * 2, -1);
+  // std::vector<int> oposite_edge(n_adja_faces_max * 2, -1);
+  std::unordered_map<int, Edge> ring_edge_map;
+  std::unordered_map<int, int> ring_edge_inv_map;
+  int next_vertice{-1}; // Used to iterate in edges map
 
-  int adja_array_idx{0};    // global position in the array
-  int triangle_vert_idx{0}; // index of the vertices in the face [0, 1, 2]
-  int face{-1};             // face index in faces
-  int n_adja{-1};           // number of adjacent faces for the current vertice
-  int vert_0_face_idx{-1};
-  int vert_1_face_idx{-1}; // oposite edges vertices index in faces array
-  int j_next{-1};
-  int j_current{-1}; // adjacent faces idx in unordered_faces
+  int adja_array_first_idx{0}; // firts sublist element idx
+  int triangle_vert_idx{0};    // index of the vertices in the face [0, 1, 2]
+  int face{-1};                // face index in faces
+  int n_adja{-1}; // number of adjacent faces for the current vertice
+  int vert_1_face_idx{-1};
+  int vert_2_face_idx{-1}; // oposite edges vertices index in faces array
 
   for (int i = 0; i < n_vertices; ++i) {
-    n_adja = (int)vertex_adjacent_faces.at(adja_array_idx);
+    n_adja = (int)vertex_adjacent_faces.at(adja_array_first_idx);
     // std::cout << "n adja" << n_adja << " \n";
     for (int j = 0; j < n_adja; ++j) {
-      //++adja_array_idx;
+      //++adja_array_first_idx;
       triangle_vert_idx = 0;
-      face = (int)vertex_adjacent_faces.at(adja_array_idx + j + 1);
-      unordered_faces.at(j) = face;
+      face = (int)vertex_adjacent_faces.at(adja_array_first_idx + j + 1);
 
       // std::cout << "face " << face << " \n";
       while (faces.at(face * 3 + triangle_vert_idx) != (unsigned int)i) {
@@ -98,34 +102,34 @@ void Mesh::order_adjacent_faces() {
        i+1 /______\ i+2
 
       */
-      vert_0_face_idx = face * 3 + (triangle_vert_idx + 1) % 3;
-      vert_1_face_idx = face * 3 + (triangle_vert_idx + 2) % 3;
+      vert_1_face_idx = face * 3 + (triangle_vert_idx + 1) % 3;
+      vert_2_face_idx = face * 3 + (triangle_vert_idx + 2) % 3;
 
-      // std::cout << i << " triangle vert idx " << triangle_vert_idx <<
-      // std::endl; std::cout << i << " triangle edge vert idx "
-      //           << (triangle_vert_idx + 1) % 3 << " , "
-      //           << (triangle_vert_idx + 2) % 3 << "\n";
-      oposite_edge.at(j * 2) = (int)faces.at(vert_0_face_idx);
-      oposite_edge.at(j * 2 + 1) = (int)faces.at(vert_1_face_idx);
-      // std::cout << i << " oposite " << faces.at(vert_0_face_idx) << " , "
-      //           << faces.at(vert_1_face_idx) << "\n";
+      ring_edge_map[(int)faces.at(vert_1_face_idx)] =
+          Edge(face, (int)faces.at(vert_2_face_idx));
+
+      ring_edge_inv_map[(int)faces.at(vert_2_face_idx)] =
+          (int)faces.at(vert_1_face_idx);
     }
-    triangle_vert_idx = 0;
-    j_current = 0;
-    for (int j = 0; j < n_adja - 1; ++j) {
-      j_next = 0;
-      while (oposite_edge.at(j_next * 2) !=
-             oposite_edge.at(j_current * 2 + 1)) {
-        ++j_next;
+    next_vertice = ring_edge_inv_map.begin()->first;
+    for (int k = 0; k < n_adja; ++k) {
+      next_vertice = ring_edge_inv_map.at(next_vertice);
+      if (ring_edge_inv_map.find(next_vertice) == ring_edge_inv_map.end()) {
+        break;
       }
-
-      j_current = j_next;
-      vertex_adjacent_faces.at(adja_array_idx + j + 2) =
-          unordered_faces.at(j_next);
     }
 
-    // std::cout << "ok6 \n";
-    adja_array_idx += n_adja + 1; // next vertice
+    vertex_adjacent_faces.at(adja_array_first_idx + 1) =
+        ring_edge_map.at(next_vertice).face;
+    for (int k = 1; k < n_adja; ++k) {
+      next_vertice = ring_edge_map.at(next_vertice).next_vertice;
+      vertex_adjacent_faces.at(adja_array_first_idx + k + 1) =
+          ring_edge_map.at(next_vertice).face;
+    }
+    ring_edge_inv_map.clear();
+    ring_edge_map.clear();
+
+    adja_array_first_idx += n_adja + 1; // next vertice
   }
 }
 
@@ -412,10 +416,6 @@ void Mesh::subdivide() {
   n_faces = n_faces * 4;
   n_vertices = (int)vertices.size() / 3;
   set_edges();
-}
-
-auto norm(double *w) -> double {
-  return pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
 }
 
 void normalize(double *w) {

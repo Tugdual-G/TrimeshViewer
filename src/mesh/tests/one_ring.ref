@@ -1,0 +1,25 @@
+
+
+ ++++++++++ Test one-ring ++++++
+
+
+ ++++++++++ cube  ++++++
+vert  0 : 1 2 3 4 
+vert  1 : 5 6 2 0 4 
+vert  2 : 3 0 1 6 7 
+vert  3 : 4 0 2 7 
+vert  4 : 1 0 3 7 5 
+vert  5 : 4 7 6 1 
+vert  6 : 7 2 1 5 
+vert  7 : 5 4 3 2 6 
+
+
+ ++++++++++ open cube  ++++++
+vert  0 : 
+vert  1 : 
+vert  2 : 3 0 1 6 7 
+vert  3 : 4 0 2 7 
+vert  4 : 
+vert  5 : 
+vert  6 : 7 2 1 5 
+vert  7 : 5 4 3 2 6 
