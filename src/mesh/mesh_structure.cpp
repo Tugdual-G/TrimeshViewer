@@ -2,16 +2,15 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <map>
 #include <set>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 constexpr unsigned int maxuint{~(0U)};
 
 static void normalize(double *w);
 static void vector_prod(const double *u, const double *v, double *w);
+static auto norm(double *w) -> double;
 
 void Mesh::set_one_ring() {
   /* Sets the one-ring (adjacent vertices / link) for each vertice in the
@@ -44,6 +43,8 @@ void Mesh::set_one_ring() {
           faces.at(face * 3 + (triangle_vert_idx + 1) % 3);
     }
 
+    // Check is the first vertices in the ring is also the second of
+    // the last face.
     if (one_ring.at(onering_array_idx + 1) !=
         faces.at(face * 3 + (triangle_vert_idx + 2) % 3)) {
       one_ring.at(onering_array_idx) = 0;
@@ -172,8 +173,8 @@ void Mesh::set_vertex_normals() {
   }
 
   vertex_normals.resize(n_vertices * 3, 0);
-  int n_adja = 0;
-  int adja_array_idx = 0;
+  int n_adja{0};
+  int adja_array_idx{0};
   int face = 0;
   for (int i = 0; i < n_vertices; ++i) {
     n_adja = (int)vertex_adjacent_faces.at(adja_array_idx);
@@ -184,9 +185,8 @@ void Mesh::set_vertex_normals() {
         vertex_normals.at(i * 3 + k) += face_normals.at(face * 3 + k);
       }
     }
-    vertex_normals.at(i * 3) /= n_adja;
-    vertex_normals.at(i * 3 + 1) /= n_adja;
-    vertex_normals.at(i * 3 + 2) /= n_adja;
+
+    normalize(&vertex_normals[i * 3]);
 
     ++adja_array_idx;
   }
@@ -414,11 +414,16 @@ void Mesh::subdivide() {
   set_edges();
 }
 
+auto norm(double *w) -> double {
+  return pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
+}
+
 void normalize(double *w) {
-  double norm = pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
-  w[0] /= norm;
-  w[1] /= norm;
-  w[2] /= norm;
+  double inv_norm =
+      1.0 / pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
+  w[0] *= inv_norm;
+  w[1] *= inv_norm;
+  w[2] *= inv_norm;
 }
 
 void vector_prod(const double *u, const double *v, double *w) {
