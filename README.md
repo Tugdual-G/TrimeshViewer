@@ -12,7 +12,7 @@ All transformations are matrix-free and rely on quaternions to keep things simpl
 ## Features:
 __Render:__
 - display multiples meshes
-- flat shading
+- flat shading + specular highlight
 - colormaps
 - zoom and rotate with the mouse
 - show the current orientation
