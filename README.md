@@ -17,6 +17,7 @@ __Render:__
 - zoom and rotate with the mouse
 - show the current orientation
 - perspective projection
+- Animation using a callback funtion
 
 __Mesh:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
