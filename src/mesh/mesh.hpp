@@ -67,6 +67,7 @@ namespace Primitives {
 auto cube() -> Mesh;
 auto icosahedron() -> Mesh;
 auto tetrahedron() -> Mesh;
+auto torus(double R, double r, int n) -> Mesh;
 } // namespace Primitives
 
 #endif // MESH_H_

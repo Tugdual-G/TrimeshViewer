@@ -38,10 +38,10 @@ auto main() -> int {
   ///////////////////////////////////////////
   //          Tetrahedron
   ///////////////////////////////////////////
-  Mesh tet = Primitives::tetrahedron();
-  for (auto &v : tet.vertices) {
-    v *= 0.25;
-    v -= 0.3;
+  Mesh torus = Primitives::torus(0.2, 0.08, 16);
+  for (int i = 0; i < torus.n_vertices; ++i) {
+    torus.vertices.at(i * 3) -= 0.4;
+    torus.vertices.at(i * 3 + 1) -= 0.4;
   }
 
   ///////////////////////////////////////////
@@ -95,7 +95,7 @@ auto main() -> int {
   MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
   render.add_object(ico.vertices, ico.faces, ico_colors);
   render.add_object(sphere.vertices, sphere.faces, sphere_colors);
-  render.add_object(tet.vertices, tet.faces);
+  render.add_object(torus.vertices, torus.faces);
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
   return 0;

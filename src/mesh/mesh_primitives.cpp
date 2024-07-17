@@ -1,7 +1,9 @@
 #include "mesh.hpp"
+#include <cmath>
 #include <vector>
 
 constexpr double phi{1.6180339887498}; // golden ratio
+constexpr double pi{3.1415926535898};
 
 auto Primitives::icosahedron() -> Mesh {
   /* Returns a regular isocahedron centered at the origin,
@@ -125,5 +127,82 @@ auto Primitives::cube() -> Mesh {
 
   mesh.n_vertices = (int)mesh.vertices.size() / 3;
   mesh.n_faces = (int)mesh.faces.size() / 3;
+  return mesh;
+}
+
+template <class T>
+auto vect_add(std::vector<T> u, std::vector<T> v) -> std::vector<T> {
+  if (u.size() != v.size()) {
+    throw "\n add_vect error \n";
+  }
+  std::vector<T> w(u.size());
+  for (long unsigned int i = 0; i < u.size(); ++i) {
+    w[i] = u[i] + v[i];
+  }
+  return w;
+}
+
+template <class T>
+auto vect_scal_mult(std::vector<T> u, T alpha) -> std::vector<T> {
+  std::vector<T> w(u.size());
+  for (long unsigned int i = 0; i < u.size(); ++i) {
+    w[i] = u[i] * alpha;
+  }
+  return w;
+}
+
+auto Primitives::torus(double R, double r, int n) -> Mesh {
+  Mesh mesh;
+
+  int N = (int)n * R / r; // number of discrete sections
+  N = 2 * (N / 2);        // N should be pair;
+
+  // Great radius unit vector
+  std::vector<double> e_r(3);
+
+  // Great radius vector angle
+  double phi{0};
+
+  // Small radius vector angle
+  double theta{0};
+
+  mesh.vertices.resize(n * N * 3);
+  std::vector<double> vertice;
+  for (int i = 0; i < N; ++i) {
+    phi = i * 2 * pi / N;
+    e_r.at(0) = std::cos(phi);
+    e_r.at(1) = std::sin(phi);
+    for (int j = 0; j < n; ++j) {
+      theta = j * 2 * pi / n;
+      theta += (i % 2) * pi / n;
+
+      vertice = vect_add(vect_scal_mult(e_r, R),
+                         vect_scal_mult(e_r, r * std::cos(theta)));
+
+      vertice.at(2) = r * std::sin(theta);
+
+      std::copy(vertice.begin(), vertice.end(),
+                mesh.vertices.begin() + (i * n + j) * 3);
+    }
+  }
+
+  int offset{0};
+  int face{0};
+  mesh.faces.resize(n * N * 2 * 3);
+  for (int i = 0; i < N; ++i) {
+    offset = i % 2;
+    for (int j = 0; j < n; ++j) {
+      face = (i * n + j) * 2;
+      mesh.faces.at(face * 3) = i * n + j;
+      mesh.faces.at(face * 3 + 1) = ((i + 1) % N) * n + (j + offset) % n;
+      mesh.faces.at(face * 3 + 2) = i * n + ((j + 1) % n);
+      ++face;
+      mesh.faces.at(face * 3) = i * n + ((j + 1) % n);
+      mesh.faces.at(face * 3 + 1) = ((i + 1) % N) * n + (j + offset) % n;
+      mesh.faces.at(face * 3 + 2) = ((i + 1) % N) * n + ((j + 1 + offset) % n);
+    }
+  }
+  mesh.n_faces = (int)mesh.faces.size() / 3;
+  mesh.n_vertices = (int)mesh.vertices.size() / 3;
   return mesh;
 }
