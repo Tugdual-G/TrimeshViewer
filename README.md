@@ -1,4 +1,4 @@
-## Viewer for triangular mesh .ply files
+## Mesh library
 __A small project to learn c++__
 
 <img src="example.png" alt="example" width="400"/>
@@ -17,13 +17,18 @@ __Render:__
 - zoom and rotate with the mouse
 - show the current orientation
 - perspective projection
+- Animation using a callback function
 
 __Mesh:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
 - fast edge splitting algorithm, preserving data locality
 - Primitives: torus, icosahedron, tetrahedron, cube
+<figure>
+    <img src="icosahedron.gif" alt="edges plitting" width="400"/>
+    <figcaption> Creation of a sphere from an icosahedron. </figcaption>
+</figure>
 
-<img src="icosahedron.gif" alt="edges plitting" width="400"/>
+
 
 ## Requirements
 - Linux
