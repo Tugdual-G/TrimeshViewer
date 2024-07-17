@@ -155,7 +155,7 @@ auto Primitives::torus(double R, double r, int n) -> Mesh {
   Mesh mesh;
 
   int N = (int)n * R / r; // number of discrete sections
-  N = 2 * (N / 2);        // N should be pair;
+  N = (N >> 1) << 1;      // N should be pair;
 
   // Great radius unit vector
   std::vector<double> e_r(3);
