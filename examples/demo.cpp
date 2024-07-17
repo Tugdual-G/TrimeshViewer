@@ -36,7 +36,7 @@ auto main() -> int {
   }
 
   ///////////////////////////////////////////
-  //          Tetrahedron
+  //          Torus
   ///////////////////////////////////////////
   Mesh torus = Primitives::torus(0.2, 0.08, 16);
   for (int i = 0; i < torus.n_vertices; ++i) {
