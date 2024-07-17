@@ -9,15 +9,19 @@ a mesh/graph operator toolset, and a simple render library.
 The goal was to implement a fast and simple meshviewer using shaders and c++.
 All transformations are matrix-free and rely on quaternions to keep things simple and efficient.
 
-__Features:__
+## Features:
+__Render:__
 - display multiples meshes
 - flat shading
 - colormaps
 - zoom and rotate with the mouse
 - show the current orientation
 - perspective projection
+
+__Mesh:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
 - fast edge splitting algorithm, preserving data locality
+- Primitives: torus, icosahedron, tetrahedron, cube
 
 <img src="icosahedron.gif" alt="edges plitting" width="400"/>
 
@@ -31,6 +35,10 @@ __Features:__
 The command line executable can be compiled with,
 
         make -C src ../meshviewer
+
+## Tests
+The Mesh module has a specific test directory for unit testing.
+The tests are run with make using Linux diff command and reference files.
 
 ## Usage
 __CLI__
