@@ -1,4 +1,4 @@
-## Viewer for triangular mesh .ply files
+## Mesh library
 __A small project to learn c++__
 
 <img src="example.png" alt="example" width="400"/>
