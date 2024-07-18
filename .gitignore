@@ -1,6 +1,11 @@
 *.o
 *.so
 *.a
+*.png
+*.gif
+!example.png
+!vortex_ring.png
+!icosahedron.gif
 demo
 icosahedron_sphere
 meshviewer
