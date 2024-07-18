@@ -478,8 +478,8 @@ auto get_nearest_colors(std::vector<double> &values,
 }
 
 auto get_nearest_colors(std::vector<double> &values,
-                        const std::vector<double> &cmap, double &minv,
-                        double &maxv) -> std::vector<double> {
+                        const std::vector<double> &cmap, double minv,
+                        double maxv) -> std::vector<double> {
   double inv_delta = 1 / (maxv - minv);
   std::vector<double> colors(values.size() * 3);
   for (size_t i = 0; i < values.size(); ++i) {
