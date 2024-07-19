@@ -19,6 +19,7 @@ __Render:__
 - show the current orientation
 - perspective projection
 - Animation using a callback function
+- Plot 3d vector fields
 
 __Mesh:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation

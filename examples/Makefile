@@ -8,7 +8,7 @@ CCPP = g++
 CC = gcc
 CFLAGS = -Wall -Wextra -O2
 LDFLAGS='-Wl,-rpath,$$ORIGIN/../src/render/' -L../src/render -ltrimesh_render
-EXAMPLES = demo icosahedron_sphere
+EXAMPLES = demo icosahedron_sphere vector_field
 # Targets
 all: $(EXAMPLES)
 

@@ -74,8 +74,6 @@ auto torus(double R, double r, int n) -> Mesh;
 auto vector(std::vector<double> &base_coord,
             std::vector<double> &direction) -> Mesh;
 
-auto vectors(std::vector<double> &base_coord,
-             std::vector<double> &direction) -> Mesh;
 } // namespace Primitives
 
 #endif // MESH_H_

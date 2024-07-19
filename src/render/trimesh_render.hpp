@@ -13,6 +13,7 @@ class MeshRender {
     SMOOTH_FACES,
     AXIS_CROSS_FLAT, // Used to render the axis-cross
     AXIS_CROSS_SMOOTH,
+    VECTOR_INSTANCE,
   };
 
   class Object {
@@ -39,6 +40,7 @@ class MeshRender {
     int zoom_loc{0};          // zoom uniform
     int viewport_size_loc{0}; // uniform to keep the aspect ratio
     ShaderProgramType program_type{ShaderProgramType::FLAT_FACES};
+    int n_instances{0};
 
     void set_shader_program();
 
@@ -90,30 +92,39 @@ class MeshRender {
                                 int key, __attribute__((unused)) int scancode,
                                 int action, __attribute__((unused)) int mods);
 
-  auto add_object(std::vector<double> &ivertices,
-                  std::vector<unsigned int> &ifaces,
+  auto add_object(const std::vector<double> &ivertices,
+                  const std::vector<unsigned int> &ifaces,
                   ShaderProgramType shader_type) -> int;
 
-  auto add_object(std::vector<double> &ivertices,
-                  std::vector<unsigned int> &ifaces, std::vector<double> colors,
+  auto add_object(const std::vector<double> &ivertices,
+                  const std::vector<unsigned int> &ifaces,
+                  const std::vector<double> &colors,
                   ShaderProgramType shader_type) -> int;
 
 public:
-  auto add_object(std::vector<double> &ivertices,
-                  std::vector<unsigned int> &ifaces) -> int;
+  auto add_object(const std::vector<double> &ivertices,
+                  const std::vector<unsigned int> &ifaces) -> int;
 
-  auto add_object(std::vector<double> &ivertices,
-                  std::vector<unsigned int> &ifaces,
-                  std::vector<double> &colors) -> int;
+  auto add_object(const std::vector<double> &ivertices,
+                  const std::vector<unsigned int> &ifaces,
+                  const std::vector<double> &colors) -> int;
 
-  void update_object(std::vector<double> &ivertices, int id);
+  void update_object(const std::vector<double> &ivertices, int id);
 
-  void update_object(std::vector<double> &ivertices,
-                     std::vector<unsigned int> &ifaces, int id);
+  void update_object(const std::vector<double> &ivertices,
+                     const std::vector<unsigned int> &ifaces, int id);
 
-  void update_object(std::vector<double> &ivertices,
-                     std::vector<unsigned int> &ifaces,
-                     std::vector<double> &icolors, int id);
+  void update_object(const std::vector<double> &ivertices,
+                     const std::vector<unsigned int> &ifaces,
+                     const std::vector<double> &icolors, int id);
+
+  // Draws a set of vector or a single vectors
+  auto add_vectors(const std::vector<double> &coords,
+                   const std::vector<double> &directions) -> int;
+
+  auto add_vectors(const std::vector<double> &coords,
+                   const std::vector<double> &directions,
+                   const std::vector<double> &colors) -> int;
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)

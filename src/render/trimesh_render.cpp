@@ -1,4 +1,5 @@
 #include "trimesh_render.hpp"
+#include "vector_instance.hpp"
 extern "C" {
 #include "compileShader.h"
 }
@@ -17,6 +18,7 @@ auto glCheckError_(const char *file, int line) -> GLenum;
 #define SMOOTH_SHADE_NAME "smooth_shading_"
 #define FLAT_SHADE_NAME "flat_shading_"
 #define AXIS_CROSS_NAME "axis_cross_"
+#define VECTOR_INSTANCE_NAME "vector_instance_"
 
 constexpr double MOUSE_SENSITIVITY{0.005};
 constexpr double SCROLL_SENSITIVITY{0.05};
@@ -77,6 +79,13 @@ void MeshRender::Object::set_shader_program() {
     vertexShader = compileVertexShader(
         SHADER_PATH AXIS_CROSS_NAME SMOOTH_SHADE_NAME "vertex_shader.glsl");
     fragmentShader = compileFragmentShader(SHADER_PATH SMOOTH_SHADE_NAME
+                                           "fragment_shader.glsl");
+    break;
+
+  case ShaderProgramType::VECTOR_INSTANCE:
+    vertexShader = compileVertexShader(
+        SHADER_PATH VECTOR_INSTANCE_NAME FLAT_SHADE_NAME "vertex_shader.glsl");
+    fragmentShader = compileFragmentShader(SHADER_PATH FLAT_SHADE_NAME
                                            "fragment_shader.glsl");
     break;
   }
@@ -173,7 +182,7 @@ auto MeshRender::render_finalize() -> int {
   return 0;
 }
 
-void MeshRender::update_object(std::vector<double> &ivertices, int id) {
+void MeshRender::update_object(const std::vector<double> &ivertices, int id) {
   /* Update the vertices positions of an object. */
   Object &obj = objects.at(id);
 
@@ -190,8 +199,9 @@ void MeshRender::update_object(std::vector<double> &ivertices, int id) {
                   vertices_attr.data() + obj.attr_offset);
 }
 
-void MeshRender::update_object(std::vector<double> &ivertices,
-                               std::vector<unsigned int> &ifaces, int id) {
+void MeshRender::update_object(const std::vector<double> &ivertices,
+                               const std::vector<unsigned int> &ifaces,
+                               int id) {
   /* Update the vertices and faces of an object. */
   Object &obj = objects.at(id);
 
@@ -247,9 +257,9 @@ void MeshRender::update_object(std::vector<double> &ivertices,
   glCheckError();
 }
 
-void MeshRender::update_object(std::vector<double> &ivertices,
-                               std::vector<unsigned int> &ifaces,
-                               std::vector<double> &icolors, int id) {
+void MeshRender::update_object(const std::vector<double> &ivertices,
+                               const std::vector<unsigned int> &ifaces,
+                               const std::vector<double> &icolors, int id) {
   /* Update the vertices and faces of an object. */
   Object &obj = objects.at(id);
 
@@ -305,8 +315,8 @@ void MeshRender::update_object(std::vector<double> &ivertices,
   glCheckError();
 }
 
-auto MeshRender::add_object(std::vector<double> &ivertices,
-                            std::vector<unsigned int> &ifaces,
+auto MeshRender::add_object(const std::vector<double> &ivertices,
+                            const std::vector<unsigned int> &ifaces,
                             ShaderProgramType shader_type) -> int {
 
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
@@ -344,9 +354,9 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   return (int)objects.size() - 1;
 }
 
-auto MeshRender::add_object(std::vector<double> &ivertices,
-                            std::vector<unsigned int> &ifaces,
-                            std::vector<double> colors,
+auto MeshRender::add_object(const std::vector<double> &ivertices,
+                            const std::vector<unsigned int> &ifaces,
+                            const std::vector<double> &colors,
                             ShaderProgramType shader_type) -> int {
 
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
@@ -384,9 +394,9 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   return (int)objects.size() - 1;
 }
 
-auto MeshRender::add_object(std::vector<double> &ivertices,
-                            std::vector<unsigned int> &ifaces,
-                            std::vector<double> &colors) -> int {
+auto MeshRender::add_object(const std::vector<double> &ivertices,
+                            const std::vector<unsigned int> &ifaces,
+                            const std::vector<double> &colors) -> int {
 
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
                               vert_attr_group_length.end()));
@@ -423,8 +433,8 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   return (int)objects.size() - 1;
 }
 
-auto MeshRender::add_object(std::vector<double> &ivertices,
-                            std::vector<unsigned int> &ifaces) -> int {
+auto MeshRender::add_object(const std::vector<double> &ivertices,
+                            const std::vector<unsigned int> &ifaces) -> int {
 
   Object new_mesh(std::reduce(vert_attr_group_length.begin(),
                               vert_attr_group_length.end()));
@@ -461,6 +471,111 @@ auto MeshRender::add_object(std::vector<double> &ivertices,
   return (int)objects.size() - 1;
 }
 
+auto MeshRender::add_vectors(const std::vector<double> &coords,
+                             const std::vector<double> &directions,
+                             const std::vector<double> &colors) -> int {
+  // Draws a set of vector or a single vectors
+  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
+                              vert_attr_group_length.end()));
+
+  int obj_id = add_object(VectorInstance::vector_instance_vertices,
+                          VectorInstance::vector_instance_faces,
+                          ShaderProgramType::VECTOR_INSTANCE);
+
+  Object &obj = objects.at(obj_id);
+  obj.n_instances = (int)coords.size() / 3;
+
+  std::vector<float> instances_attr(coords.size() * 3);
+  for (int i = 0; i < (int)coords.size(); i += 3) {
+    instances_attr.at(i * 3) = (float)coords.at(i);
+    instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
+    instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
+    instances_attr.at(i * 3 + 3) = (float)directions.at(i);
+    instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
+    instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
+
+    instances_attr.at(i * 3 + 6) = (float)colors.at(i);
+    instances_attr.at(i * 3 + 7) = (float)colors.at(i + 1);
+    instances_attr.at(i * 3 + 8) = (float)colors.at(i + 2);
+  }
+
+  unsigned int vector_VBO{0};
+  glGenBuffers(1, &vector_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
+               instances_attr.data(), GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(3);
+
+  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(4);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glVertexAttribDivisor(2, 1);
+  glVertexAttribDivisor(3, 1);
+  glVertexAttribDivisor(4, 1);
+
+  return obj_id;
+}
+
+auto MeshRender::add_vectors(const std::vector<double> &coords,
+                             const std::vector<double> &directions) -> int {
+  // Draws a set of vector or a single vectors
+
+  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
+                              vert_attr_group_length.end()));
+
+  int obj_id = add_object(VectorInstance::vector_instance_vertices,
+                          VectorInstance::vector_instance_faces,
+                          ShaderProgramType::VECTOR_INSTANCE);
+
+  Object &obj = objects.at(obj_id);
+  obj.n_instances = (int)coords.size() / 3;
+
+  std::vector<float> instances_attr(coords.size() * 3);
+  for (int i = 0; i < (int)coords.size(); i += 3) {
+    instances_attr.at(i * 3) = (float)coords.at(i);
+    instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
+    instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
+    instances_attr.at(i * 3 + 3) = (float)directions.at(i);
+    instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
+    instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
+
+    instances_attr.at(i * 3 + 7) = 0.8;
+    instances_attr.at(i * 3 + 8) = 0.7;
+  }
+
+  unsigned int vector_VBO{0};
+  glGenBuffers(1, &vector_VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
+               instances_attr.data(), GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(3);
+
+  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(4);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glVertexAttribDivisor(2, 1);
+  glVertexAttribDivisor(3, 1);
+  glVertexAttribDivisor(4, 1);
+
+  return obj_id;
+}
+
 void MeshRender::draw(Object &obj) {
   glUseProgram(obj.shader_program);
   // Mouse rotation
@@ -473,10 +588,17 @@ void MeshRender::draw(Object &obj) {
   glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
   // glDrawElements(GL_TRIANGLES, faces_indices_length, GL_UNSIGNED_INT,
   //                (void *)(faces_indices_offset * sizeof(unsigned int)));
-  glDrawElementsBaseVertex(
-      GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
-      (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
-      obj.attr_offset / obj.total_number_attr);
+  if (obj.n_instances == 0) {
+    glDrawElementsBaseVertex(
+        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+        obj.attr_offset / obj.total_number_attr);
+  } else {
+    glDrawElementsInstancedBaseVertex(
+        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+        obj.n_instances, obj.attr_offset / obj.total_number_attr);
+  }
 };
 
 void MeshRender::resize_VAO() {
