@@ -1,8 +1,8 @@
 ## Mesh library
 __A small project to learn c++__
 
-<img src="example.png" alt="example" width="30%"/>
-<img src="vortex_ring.png" alt="example" width="30%"/>
+<img src="example.png" alt="example" width="30%"/></img>
+<img src="vortex_ring.png" alt="example" width="30%"/></img>
 
 This repository contains three modules: a .ply file parser,
 a mesh/graph operator toolset, and a simple render library.
