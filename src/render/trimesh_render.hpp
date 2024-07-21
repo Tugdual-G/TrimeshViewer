@@ -14,6 +14,7 @@ class MeshRender {
     AXIS_CROSS_FLAT, // Used to render the axis-cross
     AXIS_CROSS_SMOOTH,
     VECTOR_INSTANCE,
+    CURVE,
   };
 
   class Object {
@@ -125,6 +126,9 @@ public:
   auto add_vectors(const std::vector<double> &coords,
                    const std::vector<double> &directions,
                    const std::vector<double> &colors) -> int;
+
+  auto add_curve(const std::vector<double> &coords,
+                 const std::vector<double> &directions) -> int;
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)

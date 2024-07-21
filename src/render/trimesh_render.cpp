@@ -1,10 +1,8 @@
 #include "trimesh_render.hpp"
-#include "vector_instance.hpp"
-extern "C" {
-#include "compileShader.h"
-}
+#include "compile_shader.hpp"
 #include "glad/include/glad/glad.h" // glad should be included before glfw3
 #include "quatern_transform.hpp"
+#include "vector_instance.hpp"
 #include <GLFW/glfw3.h>
 #include <cmath>
 #include <cstdlib>
@@ -19,6 +17,7 @@ auto glCheckError_(const char *file, int line) -> GLenum;
 #define FLAT_SHADE_NAME "flat_shading_"
 #define AXIS_CROSS_NAME "axis_cross_"
 #define VECTOR_INSTANCE_NAME "vector_instance_"
+#define CURVE_NAME "curve_"
 
 constexpr double MOUSE_SENSITIVITY{0.005};
 constexpr double SCROLL_SENSITIVITY{0.05};
@@ -53,46 +52,52 @@ void MeshRender::init_window() {
 }
 
 void MeshRender::Object::set_shader_program() {
-  unsigned int vertexShader{0};
-  unsigned int fragmentShader{0};
+  std::vector<int> shader_id;
   switch (program_type) {
   case ShaderProgramType::FLAT_FACES:
-    vertexShader =
-        compileVertexShader(SHADER_PATH FLAT_SHADE_NAME "vertex_shader.glsl");
-    fragmentShader = compileFragmentShader(SHADER_PATH FLAT_SHADE_NAME
-                                           "fragment_shader.glsl");
-    break;
-  case ShaderProgramType::SMOOTH_FACES:
-    vertexShader =
-        compileVertexShader(SHADER_PATH SMOOTH_SHADE_NAME "vertex_shader.glsl");
-    fragmentShader = compileFragmentShader(SHADER_PATH SMOOTH_SHADE_NAME
-                                           "fragment_shader.glsl");
-    break;
-  case ShaderProgramType::AXIS_CROSS_FLAT:
-    vertexShader = compileVertexShader(
-        SHADER_PATH AXIS_CROSS_NAME FLAT_SHADE_NAME "vertex_shader.glsl");
-    fragmentShader = compileFragmentShader(SHADER_PATH FLAT_SHADE_NAME
-                                           "fragment_shader.glsl");
+    shader_id.push_back(compile_shader(
+        SHADER_PATH FLAT_SHADE_NAME "vertex_shader.glsl", GL_VERTEX_SHADER));
+
+    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
+                                       "fragment_shader.glsl",
+                                       GL_FRAGMENT_SHADER));
     break;
 
-  case ShaderProgramType::AXIS_CROSS_SMOOTH:
-    vertexShader = compileVertexShader(
-        SHADER_PATH AXIS_CROSS_NAME SMOOTH_SHADE_NAME "vertex_shader.glsl");
-    fragmentShader = compileFragmentShader(SHADER_PATH SMOOTH_SHADE_NAME
-                                           "fragment_shader.glsl");
+  case ShaderProgramType::AXIS_CROSS_FLAT:
+
+    shader_id.push_back(compile_shader(
+        SHADER_PATH AXIS_CROSS_NAME FLAT_SHADE_NAME "vertex_shader.glsl",
+        GL_VERTEX_SHADER));
+
+    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
+                                       "fragment_shader.glsl",
+                                       GL_FRAGMENT_SHADER));
     break;
 
   case ShaderProgramType::VECTOR_INSTANCE:
-    vertexShader = compileVertexShader(
-        SHADER_PATH VECTOR_INSTANCE_NAME FLAT_SHADE_NAME "vertex_shader.glsl");
-    fragmentShader = compileFragmentShader(SHADER_PATH FLAT_SHADE_NAME
-                                           "fragment_shader.glsl");
+    shader_id.push_back(compile_shader(
+        SHADER_PATH VECTOR_INSTANCE_NAME FLAT_SHADE_NAME "vertex_shader.glsl",
+        GL_VERTEX_SHADER));
+    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
+                                       "fragment_shader.glsl",
+                                       GL_FRAGMENT_SHADER));
+    break;
+
+  case ShaderProgramType::CURVE:
+
+    shader_id.push_back(compile_shader(SHADER_PATH CURVE_NAME FLAT_SHADE_NAME
+                                       "vertex_shader.glsl",
+                                       GL_VERTEX_SHADER));
+    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
+                                       "fragment_shader.glsl",
+                                       GL_FRAGMENT_SHADER));
+
+    break;
+  default:
     break;
   }
 
-  shader_program = linkShaders(vertexShader, fragmentShader);
-  glDeleteShader(vertexShader);
-  glDeleteShader(fragmentShader);
+  shader_program = link_shaders(shader_id);
 
   glUseProgram(shader_program);
 
@@ -505,7 +510,6 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
                instances_attr.data(), GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
@@ -557,7 +561,58 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
                instances_attr.data(), GL_STATIC_DRAW);
 
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(3);
+
+  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(4);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glVertexAttribDivisor(2, 1);
+  glVertexAttribDivisor(3, 1);
+  glVertexAttribDivisor(4, 1);
+
+  return obj_id;
+}
+
+auto MeshRender::add_curve(const std::vector<double> &coords,
+                           const std::vector<double> &directions) -> int {
+  // Draws a set of vector or a single vectors
+
+  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
+                              vert_attr_group_length.end()));
+
+  int obj_id = add_object(VectorInstance::vector_instance_vertices,
+                          VectorInstance::vector_instance_faces,
+                          ShaderProgramType::CURVE);
+
+  Object &obj = objects.at(obj_id);
+  obj.n_instances = (int)coords.size() / 3;
+
+  std::vector<float> instances_attr(coords.size() * 3);
+  for (int i = 0; i < (int)coords.size(); i += 3) {
+    instances_attr.at(i * 3) = (float)coords.at(i);
+    instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
+    instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
+    instances_attr.at(i * 3 + 3) = (float)directions.at(i);
+    instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
+    instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
+
+    instances_attr.at(i * 3 + 7) = 0.8;
+    instances_attr.at(i * 3 + 8) = 0.7;
+  }
+
+  unsigned int vector_VBO{0};
+  glGenBuffers(1, &vector_VBO);
   glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
+               instances_attr.data(), GL_STATIC_DRAW);
+
+  // glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
@@ -586,8 +641,7 @@ void MeshRender::draw(Object &obj) {
   glUniform1f(obj.zoom_loc, (float)zoom_level);
 
   glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
-  // glDrawElements(GL_TRIANGLES, faces_indices_length, GL_UNSIGNED_INT,
-  //                (void *)(faces_indices_offset * sizeof(unsigned int)));
+
   if (obj.n_instances == 0) {
     glDrawElementsBaseVertex(
         GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
