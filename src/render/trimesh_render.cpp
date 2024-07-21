@@ -88,6 +88,7 @@ void MeshRender::Object::set_shader_program() {
     shader_id.push_back(compile_shader(SHADER_PATH CURVE_NAME FLAT_SHADE_NAME
                                        "vertex_shader.glsl",
                                        GL_VERTEX_SHADER));
+
     shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
                                        "fragment_shader.glsl",
                                        GL_FRAGMENT_SHADER));
@@ -127,7 +128,7 @@ void MeshRender::resize_EBO() {
   // Square EBO
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               sizeof(unsigned int) * n_total_faces * 3, faces.data(),
+               (long)sizeof(unsigned int) * n_total_faces * 3, faces.data(),
                GL_STATIC_DRAW);
 
   glCheckError();
@@ -207,6 +208,7 @@ void MeshRender::update_object(const std::vector<double> &ivertices, int id) {
 void MeshRender::update_object(const std::vector<double> &ivertices,
                                const std::vector<unsigned int> &ifaces,
                                int id) {
+  /* TODO rename the ubdate_object as ubdate_trimesh */
   /* Update the vertices and faces of an object. */
   Object &obj = objects.at(id);
 
@@ -612,13 +614,11 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
                instances_attr.data(), GL_STATIC_DRAW);
 
-  // glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(3);
-
   glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
                         (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(4);

@@ -53,7 +53,6 @@ class MeshRender {
   int width{0}, height{0};
 
   // contains vertices coordinates , colors, normals... for all meshes
-  // meshes
   std::vector<float> vertices_attr{0};
   // list of vertices for each triangular face for all meshes
   std::vector<unsigned int> faces{0};
@@ -73,7 +72,8 @@ class MeshRender {
   void *userpointer{this}; // for use in glfw callback
   GLFWwindow *window{};
 
-  unsigned int VAO{}, VBO{}, EBO{};
+  // ID of the global mesh storage
+  unsigned int VAO{0}, meshes_VBO{0}, meshes_EBO{0};
 
   // list of object to be rendered
   std::vector<Object> objects;
