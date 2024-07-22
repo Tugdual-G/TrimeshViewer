@@ -10,6 +10,7 @@ demo
 vector_field
 magnetic
 curve
+streamlines
 icosahedron_sphere
 meshviewer
 test

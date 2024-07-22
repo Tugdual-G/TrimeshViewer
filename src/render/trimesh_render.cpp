@@ -573,6 +573,20 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
   return obj_id;
 }
 
+auto MeshRender::add_curves(
+    const std::vector<double> &coords, const std::vector<double> &tangents,
+    const std::vector<unsigned int> &curves_indices) -> int {
+  // Draws a set of vector or a single vectors
+
+  int obj_id =
+      add_object(coords, curves_indices, tangents, ShaderProgramType::CURVE);
+
+  Object &obj = objects.at(obj_id);
+  obj.vertices_per_face = 4;
+
+  return obj_id;
+}
+
 void MeshRender::draw(Object &obj) {
   glUseProgram(obj.shader_program);
   // Mouse rotation
@@ -586,6 +600,8 @@ void MeshRender::draw(Object &obj) {
 
   switch (obj.program_type) {
   case ShaderProgramType::CURVE:
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDrawElementsBaseVertex(
         GL_LINES_ADJACENCY, obj.faces_indices_length, GL_UNSIGNED_INT,
         (void *)(obj.faces_indices_offset * sizeof(unsigned int)),

@@ -1,8 +1,9 @@
 #version 460 core
 
 layout (lines_adjacency) in;
-layout (triangle_strip, max_vertices = 36) out;
+layout (triangle_strip, max_vertices = 4) out;
 out vec3 normal;
+out vec3 position;
 
 uniform vec4 q, q_inv;
 uniform float zoom_level;
@@ -22,7 +23,7 @@ vec4 mul_quatern(vec4 u, vec4 v){
 vec3 normal_vec(vec3 T){
     // Normal vector to the tangent T.
     vec3 normal = vec3(0,0,0);
-    if (abs(T.x) > 0.0001 || abs(T.y) > 0.0001){
+    if (abs(T.x) > 0.0 || abs(T.y) > 0.00){
         normal.x = -T.y;
         normal.y = T.x;
         normal = normalize(normal);
@@ -33,102 +34,65 @@ vec3 normal_vec(vec3 T){
     return normal;
 }
 
-void build_tube(){
+void build_quad_line(vec3 pos1, vec3 pos2){
 
-    float width = 0.005;
 
-    vec3 vertices[16]=vec3[16](vec3(0 , 1 , 0),
-                            vec3(0 , 0.5 , 0.866025),
-                            vec3(0 , -0.5 , 0.866025),
-                            vec3(0 , -1 , 0.0),
-                            vec3(0 , -0.5 , -0.866025),
-                            vec3(0 , 0.5 , -0.866025),
-                            vec3(0 , 1 , 0),
-                            vec3(1 , 1 , 0),
-                            vec3(1 , 0.5 , 0.866025),
-                            vec3(1 , -0.5 , 0.866025),
-                            vec3(1 , -1 , 0.0),
-                            vec3(1 , -0.5 , -0.866025),
-                            vec3(1 , 0.5 , -0.866025),
-                            vec3(1 , 1 , 0),
-                            vec3(0 , 0 , 0),
-                            vec3(1 , 0 , 0));
+    // quaternion mouse rotation
+    vec4 qpos1 = vec4(0, pos1);
+    qpos1 = mul_quatern(qpos1, q_inv);
+    qpos1 = mul_quatern(q, qpos1);
+    pos1 = qpos1.yzw;
 
-    vec3 normals[16];
+    vec4 qpos2 = vec4(0, pos2);
+    qpos2 = mul_quatern(qpos2, q_inv);
+    qpos2 = mul_quatern(q, qpos2);
+    pos2 = qpos2.yzw;
 
     // start and end tangent
-    vec3 T = gl_in[2].gl_Position.xyz - gl_in[1].gl_Position.xyz;
+    vec3 T = pos2 - pos1;
+
+    float width = 0.002;
+    // if (length(T.xy)<width){
+
+    //     pos2.xy += normalize(T.xy)*width;
+
+    // }
     float len = length(T);
     T = T/len;
-    vertices[14].x -= width/len;
-    vertices[15].x += width/len;
 
 
     vec3 N = normal_vec(T);
-    vec3 B = cross(T, N);
-    mat3 transform;
-    transform[0] = len*T;
-    transform[1] = N*width;
-    transform[2] = B*width;
-    for (int i = 0 ; i < 14 ; ++i){
-        normals[i] = transform*vec3(0,vertices[i].yz);
-        normals[i] = normalize(normals[i]);
-        }
-    normals[14] = vec3(-1, 0,0);
-    normals[15] = vec3(1, 0,0);
 
-    for (int i = 0 ; i < 16 ; ++i){
-        vertices[i] = gl_in[1].gl_Position.xyz  + transform*vertices[i];
+    vec3 normals[4];
+    vec3 vertices[4];
 
+    vertices[0] = pos1 - width*N;
+    normals[0] = normalize(-N+vec3(0,0,0.01));
+    vertices[1] = pos1 + width*N;
+    normals[1] = normalize(N+vec3(0,0,0.01));
 
-        vec4 qnormals = vec4(0,normals[i]);
-        qnormals = mul_quatern(qnormals, q_inv);
-        qnormals = mul_quatern(q, qnormals);
-        normals[i] = qnormals.yzw;
+    vertices[2] = pos2 - width*N;
+    normals[2] = normalize(-N+vec3(0,0,0.01));
+    vertices[3] = pos2 + width*N;
+    normals[3] = normalize(N+vec3(0,0,0.01));
 
-        vec4 qpos = vec4(0,vertices[i].xyz);
-        qpos = mul_quatern(qpos, q_inv);
-        qpos = mul_quatern(q, qpos);
+    for (int i = 0 ; i < 4 ; ++i){
+        position = vertices[i];
 
-
+        vec4 qpos = vec4(0,vertices[i]);
         qpos.yz *= -2/(qpos.w - 2); // perspective
         qpos.yz = qpos.yz * zoom_level;
         qpos.y *= viewport_size.y/viewport_size.x; //aspect ratio
-        vertices[i] = qpos.yzw;
-    }
-
-
-    for (int i = 0; i < 6; ++i) {
-        gl_Position = vec4(vertices[14], 1);
+        gl_Position = vec4(qpos.yzw, 1);
         normal = normals[i];
         EmitVertex();
-
-        gl_Position = vec4(vertices[i], 1);
-        normal = normals[i];
-        EmitVertex();
-
-        gl_Position = vec4(vertices[i + 1], 1);
-        normal = normals[i + 1];
-        EmitVertex();
-
-        gl_Position = vec4(vertices[i + 7], 1);
-        normal = normals[i + 7];
-        EmitVertex();
-
-        gl_Position =  vec4(vertices[i + 8], 1);
-        normal =  normals[i + 8];
-        EmitVertex();
-
-        gl_Position = vec4(vertices[15], 1);
-        normal = normals[i + 8];
-        EmitVertex();
-        EndPrimitive();
     }
+    EndPrimitive();
 
 }
 
 void main() {
 
-    build_tube();
+    build_quad_line(gl_in[1].gl_Position.xyz, gl_in[2].gl_Position.xyz);
 
 }

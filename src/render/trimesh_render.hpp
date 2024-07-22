@@ -147,6 +147,10 @@ public:
   auto add_curve(const std::vector<double> &coords,
                  const std::vector<double> &tangents) -> int;
 
+  auto add_curves(const std::vector<double> &coords,
+                  const std::vector<double> &tangents,
+                  const std::vector<unsigned int> &curves_indices) -> int;
+
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
       : width(w_width), height(w_height) {
