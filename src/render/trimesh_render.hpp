@@ -29,6 +29,8 @@ class MeshRender {
 
     long int n_vertices{0};
     long int n_faces{0};
+    // A face can also be a pentagon, a line strip ...
+    long int vertices_per_face{3};
 
     // Offset in the EBO/faces
     long int faces_indices_offset{0}; // elements (not bytes)
@@ -45,8 +47,7 @@ class MeshRender {
 
     void set_shader_program();
 
-    Object(long int total_length_attr)
-        : total_number_attr(total_length_attr) {};
+    Object() = default;
   };
 
   // viewport size

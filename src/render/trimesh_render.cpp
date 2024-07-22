@@ -326,9 +326,9 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces,
                             ShaderProgramType shader_type) -> int {
 
-  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
-                              vert_attr_group_length.end()));
-
+  Object new_mesh;
+  new_mesh.total_number_attr =
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   new_mesh.attr_offset = (long)vertices_attr.size();
   new_mesh.attr_length = (long)ivertices.size() * 2;
   new_mesh.faces_indices_offset = (long)faces.size();
@@ -366,8 +366,9 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<double> &colors,
                             ShaderProgramType shader_type) -> int {
 
-  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
-                              vert_attr_group_length.end()));
+  Object new_mesh;
+  new_mesh.total_number_attr =
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
   new_mesh.attr_offset = (long)vertices_attr.size();
   new_mesh.attr_length = (long)ivertices.size() * 2;
@@ -405,8 +406,9 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces,
                             const std::vector<double> &colors) -> int {
 
-  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
-                              vert_attr_group_length.end()));
+  Object new_mesh;
+  new_mesh.total_number_attr =
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
   new_mesh.attr_offset = (long)vertices_attr.size();
   new_mesh.attr_length = (long)ivertices.size() * 2;
@@ -443,8 +445,9 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
 auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces) -> int {
 
-  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
-                              vert_attr_group_length.end()));
+  Object new_mesh;
+  new_mesh.total_number_attr =
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
   new_mesh.attr_offset = (long)vertices_attr.size();
   new_mesh.attr_length = (long)ivertices.size() * 2;
@@ -482,8 +485,9 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions,
                              const std::vector<double> &colors) -> int {
   // Draws a set of vector or a single vectors
-  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
-                              vert_attr_group_length.end()));
+  Object new_mesh;
+  new_mesh.total_number_attr =
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
   int obj_id = add_object(VectorInstance::vector_instance_vertices,
                           VectorInstance::vector_instance_faces,
@@ -534,8 +538,9 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions) -> int {
   // Draws a set of vector or a single vectors
 
-  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
-                              vert_attr_group_length.end()));
+  Object new_mesh;
+  new_mesh.total_number_attr =
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
   int obj_id = add_object(VectorInstance::vector_instance_vertices,
                           VectorInstance::vector_instance_faces,
@@ -585,8 +590,9 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
                            const std::vector<double> &directions) -> int {
   // Draws a set of vector or a single vectors
 
-  Object new_mesh(std::reduce(vert_attr_group_length.begin(),
-                              vert_attr_group_length.end()));
+  Object new_mesh;
+  new_mesh.total_number_attr =
+      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
   int obj_id = add_object(VectorInstance::vector_instance_vertices,
                           VectorInstance::vector_instance_faces,
