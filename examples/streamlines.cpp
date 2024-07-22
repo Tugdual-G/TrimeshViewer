@@ -42,7 +42,7 @@ auto main() -> int {
   std::vector<double> streamlines_tangents;
   std::vector<unsigned int> streamlines_indices;
   magnetic_streamlines(streamlines_coords, streamlines_tangents,
-                       streamlines_indices, 0.3, 40, 36);
+                       streamlines_indices, 0.3, 2000, 36);
 
   double length{0};
   std::vector<double> vortex_scalval(streamlines_coords.size() / 3, 0);
@@ -117,33 +117,28 @@ void magnetic_streamlines(std::vector<double> &coords,
   constexpr double pi{3.1415926535898};
 
   std::uniform_real_distribution<double> unifx(-1.5, 1.5);
-  std::uniform_real_distribution<double> unify(-0.05, 0.05);
+  std::uniform_real_distribution<double> unify(-0.02, 0.02);
   std::uniform_real_distribution<double> unifz(-1.5, 0.5);
   std::default_random_engine re;
 
   // Great radius vector angle
-  double phi{0};
   double dt = 0.001;
-  double T{0.25};
+  double T{0.1};
 
   int n_it = T / dt;
-  int N_r = 40;
-  int N_phi = N;
-  double R_start_pts = R * 0.02;
 
-  coords.resize(n_it * N_r * N_phi * 3);
+  coords.resize(n_it * N * 3);
   directions.resize(coords.size());
   indices.resize(4 * (coords.size() / 3 - 3));
+
   int idx{0};
-  for (int i = 0; i < N_r; ++i) {
-    for (int j = 0; j < N_phi; ++j) {
-      for (int k = 0; k < n_it - 3; ++k) {
-        idx = (i * (N_phi * n_it) + j * n_it + k);
-        indices.at(idx * 4) = idx;
-        indices.at(idx * 4 + 1) = idx + 1;
-        indices.at(idx * 4 + 2) = idx + 2;
-        indices.at(idx * 4 + 3) = idx + 3;
-      }
+  for (int i = 0; i < N; ++i) {
+    for (int k = 0; k < n_it - 3; ++k) {
+      idx = i * n_it + k;
+      indices.at(idx * 4) = idx;
+      indices.at(idx * 4 + 1) = idx + 1;
+      indices.at(idx * 4 + 2) = idx + 2;
+      indices.at(idx * 4 + 3) = idx + 3;
     }
   }
 
@@ -153,37 +148,36 @@ void magnetic_streamlines(std::vector<double> &coords,
   std::vector<double> vector_tmp(3);
   dt /= 2.0;
 
-  for (int i = 0; i < N_r; ++i) {
-    for (int j = 0; j < N_phi; ++j) {
-      coord[0] = unifx(re);
-      coord[1] = 0.0;
-      coord[2] = unifx(re);
-      for (int it = 0; it < n_it; ++it) {
+  for (int i = 0; i < N; ++i) {
+    coord[0] = unifx(re);
+    coord[1] = unify(re);
+    coord[2] = unifx(re);
+    for (int it = 0; it < n_it; ++it) {
 
-        vector[0] = 0;
-        vector[1] = 0;
-        vector[2] = 0;
+      vector[0] = 0;
+      vector[1] = 0;
+      vector[2] = 0;
+      idx = i * n_it + it;
 
-        coords.at((i * (N_phi * n_it) + j * n_it + it) * 3) = coord[0];
-        coords.at((i * (N_phi * n_it) + j * n_it + it) * 3 + 1) = coord[1];
-        coords.at((i * (N_phi * n_it) + j * n_it + it) * 3 + 2) = coord[2];
+      coords.at(idx * 3) = coord[0];
+      coords.at(idx * 3 + 1) = coord[1];
+      coords.at(idx * 3 + 2) = coord[2];
 
-        magnetic_field(coord, vector, R, n_ring_sections);
-        directions.at((i * (N_phi * n_it) + j * n_it + it) * 3) = vector[0];
-        directions.at((i * (N_phi * n_it) + j * n_it + it) * 3 + 1) = vector[1];
-        directions.at((i * (N_phi * n_it) + j * n_it + it) * 3 + 2) = vector[2];
+      magnetic_field(coord, vector, R, n_ring_sections);
+      directions.at(idx * 3) = vector[0];
+      directions.at(idx * 3 + 1) = vector[1];
+      directions.at(idx * 3 + 2) = vector[2];
 
-        coord_tmp[0] = coord[0] + dt * vector[0];
-        coord_tmp[1] = coord[1] + dt * vector[1];
-        coord_tmp[2] = coord[2] + dt * vector[2];
-        vector_tmp = vector;
-        magnetic_field(coord_tmp, vector, R, n_ring_sections);
-        vector = Linalg::vect_add(vector_tmp, vector);
+      coord_tmp[0] = coord[0] + dt * vector[0];
+      coord_tmp[1] = coord[1] + dt * vector[1];
+      coord_tmp[2] = coord[2] + dt * vector[2];
+      vector_tmp = vector;
+      magnetic_field(coord_tmp, vector, R, n_ring_sections);
+      vector = Linalg::vect_add(vector_tmp, vector);
 
-        coord[0] = coord[0] + dt * vector[0];
-        coord[1] = coord[1] + dt * vector[1];
-        coord[2] = coord[2] + dt * vector[2];
-      }
+      coord[0] = coord[0] + dt * vector[0];
+      coord[1] = coord[1] + dt * vector[1];
+      coord[2] = coord[2] + dt * vector[2];
     }
   }
 }
