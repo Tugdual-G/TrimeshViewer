@@ -25,16 +25,21 @@ class MeshRender {
     // number of elements in the Vertex Buffer Object
     long int attr_length{0};
     // total number of attributes per vertex
-    long int total_number_attr;
+    long int total_number_attr{0};
 
-    long int n_vertices{0};
-    long int n_faces{0};
-    // A face can also be a pentagon, a line strip ...
-    long int vertices_per_face{3};
+    auto n_vertices() const -> long int {
+      return attr_length / total_number_attr;
+    }
 
     // Offset in the EBO/faces
     long int faces_indices_offset{0}; // elements (not bytes)
     long int faces_indices_length{0};
+    // A face can also be a pentagon, a line strip ...
+    long int vertices_per_face{3};
+
+    auto n_faces() const -> long int {
+      return faces_indices_length / vertices_per_face;
+    }
 
     // each object has its own shader program for flexibility
     int shader_program{0};
@@ -59,7 +64,7 @@ class MeshRender {
   std::vector<unsigned int> faces{0};
 
   long int n_total_vertices{0};
-  long int n_total_faces{0};
+  long int n_total_indices{0};
 
   // Number of elements per vertices attrib group (position, normal, color)
   std::vector<long int> vert_attr_group_length;
@@ -93,6 +98,17 @@ class MeshRender {
   friend void keyboard_callback(__attribute__((unused)) GLFWwindow *window,
                                 int key, __attribute__((unused)) int scancode,
                                 int action, __attribute__((unused)) int mods);
+
+  void add_indices(const std::vector<unsigned int> &new_indices);
+  void update_indices(const std::vector<unsigned int> &new_indices,
+                      Object &obj);
+  void add_vertices(const std::vector<double> &new_vertices);
+  void add_vertices(const std::vector<double> &new_vertices,
+                    const std::vector<double> &colors);
+
+  void update_vertices(const std::vector<double> &new_vertices, Object &obj);
+  void update_vertices(const std::vector<double> &new_vertices,
+                       const std::vector<double> &colors, Object &obj);
 
   auto add_object(const std::vector<double> &ivertices,
                   const std::vector<unsigned int> &ifaces,
