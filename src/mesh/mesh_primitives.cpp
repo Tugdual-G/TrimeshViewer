@@ -208,6 +208,39 @@ auto Primitives::torus(double R, double r, int n) -> Mesh {
   return mesh;
 }
 
+auto Primitives::tube(int n) -> Mesh {
+  /* Tube of lenght 1 , direction (1,0,0), radius 1. */
+  Mesh mesh;
+  mesh.vertices.resize(n * 6);
+  mesh.faces.resize(n * 6);
+
+  // Small radius vector angle
+  double theta{0};
+
+  for (int i = 0; i < n; ++i) {
+    theta = i * 2.0 * pi / n;
+    mesh.vertices.at(i * 3 + 1) = cos(theta);
+    mesh.vertices.at(i * 3 + 2) = sin(theta);
+
+    mesh.vertices.at((i + n) * 3) = 1.0;
+    mesh.vertices.at((i + n) * 3 + 1) = cos(theta);
+    mesh.vertices.at((i + n) * 3 + 2) = sin(theta);
+  }
+
+  for (int i = 0; i < n; ++i) {
+    mesh.faces.at(i * 3) = i;
+    mesh.faces.at(i * 3 + 1) = (i + 1) % n;
+    mesh.faces.at(i * 3 + 2) = (i + 1) % n + n;
+    mesh.faces.at((i + n) * 3) = i;
+    mesh.faces.at((i + n) * 3 + 1) = (i + 1) % n + n;
+    mesh.faces.at((i + n) * 3 + 2) = i + n;
+  }
+
+  mesh.n_faces = (int)mesh.faces.size() / 3;
+  mesh.n_vertices = (int)mesh.vertices.size() / 3;
+  return mesh;
+}
+
 auto arrow(double shaft_radius, double cone_radius, double base_length,
            int n_angles) -> Mesh {
   /* Returns a mesh representing an arrow of coordinates direction (1, 0, 0),

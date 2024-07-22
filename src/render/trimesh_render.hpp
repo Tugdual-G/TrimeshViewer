@@ -32,9 +32,9 @@ class MeshRender {
     }
 
     // Offset in the EBO/faces
+    // A face can also be a pentagon, a line strip ...
     long int faces_indices_offset{0}; // elements (not bytes)
     long int faces_indices_length{0};
-    // A face can also be a pentagon, a line strip ...
     long int vertices_per_face{3};
 
     auto n_faces() const -> long int {
@@ -145,7 +145,7 @@ public:
                    const std::vector<double> &colors) -> int;
 
   auto add_curve(const std::vector<double> &coords,
-                 const std::vector<double> &directions) -> int;
+                 const std::vector<double> &tangents) -> int;
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)

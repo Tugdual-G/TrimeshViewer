@@ -85,13 +85,15 @@ void MeshRender::Object::set_shader_program() {
 
   case ShaderProgramType::CURVE:
 
-    shader_id.push_back(compile_shader(SHADER_PATH CURVE_NAME FLAT_SHADE_NAME
-                                       "vertex_shader.glsl",
-                                       GL_VERTEX_SHADER));
+    glLineWidth(2.0);
+    shader_id.push_back(compile_shader(
+        SHADER_PATH CURVE_NAME "vertex_shader.glsl", GL_VERTEX_SHADER));
 
-    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
-                                       "fragment_shader.glsl",
-                                       GL_FRAGMENT_SHADER));
+    shader_id.push_back(compile_shader(
+        SHADER_PATH CURVE_NAME "geometry_shader.glsl", GL_GEOMETRY_SHADER));
+
+    shader_id.push_back(compile_shader(
+        SHADER_PATH CURVE_NAME "fragment_shader.glsl", GL_FRAGMENT_SHADER));
 
     break;
   default:
@@ -552,52 +554,22 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 }
 
 auto MeshRender::add_curve(const std::vector<double> &coords,
-                           const std::vector<double> &directions) -> int {
+                           const std::vector<double> &tangents) -> int {
   // Draws a set of vector or a single vectors
 
   Object new_mesh;
   new_mesh.total_number_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
-
-  int obj_id = add_object(VectorInstance::vector_instance_vertices,
-                          VectorInstance::vector_instance_faces,
-                          ShaderProgramType::CURVE);
+  std::vector<unsigned int> curve_indices(2 * (coords.size() / 3 - 1));
+  for (unsigned int i = 1; i < coords.size() / 3 - 1; ++i) {
+    curve_indices.at(i * 2) = i;
+    curve_indices.at(i * 2 + 1) = i + 1;
+  }
+  int obj_id =
+      add_object(coords, curve_indices, tangents, ShaderProgramType::CURVE);
 
   Object &obj = objects.at(obj_id);
-  obj.n_instances = (int)coords.size() / 3;
-
-  std::vector<float> instances_attr(coords.size() * 3);
-  for (int i = 0; i < (int)coords.size(); i += 3) {
-    instances_attr.at(i * 3) = (float)coords.at(i);
-    instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
-    instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
-    instances_attr.at(i * 3 + 3) = (float)directions.at(i);
-    instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
-    instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
-
-    instances_attr.at(i * 3 + 7) = 0.8;
-    instances_attr.at(i * 3 + 8) = 0.7;
-  }
-
-  unsigned int vector_VBO{0};
-  glGenBuffers(1, &vector_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
-               instances_attr.data(), GL_STATIC_DRAW);
-
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(3);
-  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(4);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glVertexAttribDivisor(2, 1);
-  glVertexAttribDivisor(3, 1);
-  glVertexAttribDivisor(4, 1);
+  obj.vertices_per_face = 2;
 
   return obj_id;
 }
@@ -613,16 +585,28 @@ void MeshRender::draw(Object &obj) {
 
   glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
 
-  if (obj.n_instances == 0) {
+  switch (obj.program_type) {
+  case ShaderProgramType::CURVE:
     glDrawElementsBaseVertex(
-        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        GL_LINES, obj.faces_indices_length, GL_UNSIGNED_INT,
         (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
         obj.attr_offset / obj.total_number_attr);
-  } else {
+    break;
+
+  case ShaderProgramType::VECTOR_INSTANCE:
     glDrawElementsInstancedBaseVertex(
         GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
         (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
         obj.n_instances, obj.attr_offset / obj.total_number_attr);
+
+    break;
+
+  default:
+    glDrawElementsBaseVertex(
+        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+        obj.attr_offset / obj.total_number_attr);
+    break;
   }
 };
 

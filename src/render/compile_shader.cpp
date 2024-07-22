@@ -33,7 +33,7 @@ auto compile_shader(const char *source_fname, GLenum type) -> int {
   std::vector<char> infoLog(1000, '\0');
   if (!success) {
     glGetShaderInfoLog(v_shader, 512, nullptr, infoLog.data());
-    std::cout << "ERROR: SHADER COMPILATION_FAILED\n";
+    std::cout << "ERROR: SHADER COMPILATION_FAILED in" << source_fname << "\n";
     std::cout << infoLog.data() << "\n";
   }
   return v_shader;

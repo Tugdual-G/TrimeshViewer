@@ -68,11 +68,10 @@ auto cube() -> Mesh;
 auto icosahedron() -> Mesh;
 auto tetrahedron() -> Mesh;
 auto torus(double R, double r, int n) -> Mesh;
-// auto arrow(double shaft_radius, double cone_radius, double base_length,
-//            int n_angles) -> Mesh;
 
 auto vector(std::vector<double> &base_coord,
             std::vector<double> &direction) -> Mesh;
+auto tube(int n) -> Mesh;
 
 } // namespace Primitives
 
