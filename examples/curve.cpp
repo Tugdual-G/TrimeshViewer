@@ -23,7 +23,7 @@ void parametric_curve2(double *coord, double *tangent, double t) {
   constexpr double r{0.3};
   t *= Tau;
   coord[0] = r * cos(1.5 * t);
-  coord[1] = r * sin(3.0 * t);
+  coord[1] = r * sin(3.3 * t) + 0.5 * r;
   coord[2] = 1.5 * r * (sin(t) + cos(t));
 
   tangent[0] = -1.5 * r * sin(1.5 * t);
@@ -32,7 +32,7 @@ void parametric_curve2(double *coord, double *tangent, double t) {
 }
 auto main() -> int {
 
-  constexpr int N{200};
+  constexpr int N{300};
 
   std::vector<double> coords(N * 3);
   std::vector<double> tangents(N * 3);

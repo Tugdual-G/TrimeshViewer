@@ -42,7 +42,6 @@ auto main() -> int {
 
   std::vector<double> vortex_coords;
   std::vector<double> vortex_directions;
-  // magnetic_field_square_grid(vortex_coords, vortex_directions, 0.3, 40, 36);
   magnetic_view_square_grid(vortex_coords, vortex_directions, 0.3, 40, 36);
   for (auto &d : vortex_directions) {
     d *= 0.1;

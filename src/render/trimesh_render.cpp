@@ -557,19 +557,18 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
                            const std::vector<double> &tangents) -> int {
   // Draws a set of vector or a single vectors
 
-  Object new_mesh;
-  new_mesh.total_number_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
-  std::vector<unsigned int> curve_indices(2 * (coords.size() / 3 - 1));
-  for (unsigned int i = 1; i < coords.size() / 3 - 1; ++i) {
-    curve_indices.at(i * 2) = i;
-    curve_indices.at(i * 2 + 1) = i + 1;
+  std::vector<unsigned int> curve_indices(4 * (coords.size() / 3 - 3));
+  for (unsigned int i = 1; i < curve_indices.size() / 4; ++i) {
+    curve_indices.at(i * 4) = i;
+    curve_indices.at(i * 4 + 1) = i + 1;
+    curve_indices.at(i * 4 + 2) = i + 2;
+    curve_indices.at(i * 4 + 3) = i + 3;
   }
   int obj_id =
       add_object(coords, curve_indices, tangents, ShaderProgramType::CURVE);
 
   Object &obj = objects.at(obj_id);
-  obj.vertices_per_face = 2;
+  obj.vertices_per_face = 4;
 
   return obj_id;
 }
@@ -588,7 +587,7 @@ void MeshRender::draw(Object &obj) {
   switch (obj.program_type) {
   case ShaderProgramType::CURVE:
     glDrawElementsBaseVertex(
-        GL_LINES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        GL_LINES_ADJACENCY, obj.faces_indices_length, GL_UNSIGNED_INT,
         (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
         obj.attr_offset / obj.total_number_attr);
     break;
