@@ -73,7 +73,7 @@ class MeshRender {
   GLFWwindow *window{};
 
   // ID of the global mesh storage
-  unsigned int VAO{0}, meshes_VBO{0}, meshes_EBO{0};
+  unsigned int VAO{0}, VBO{0}, EBO{0};
 
   // list of object to be rendered
   std::vector<Object> objects;
