@@ -5,7 +5,7 @@ out vec4 FragColor;
 in vec3 position; // flat shading
 in vec3 color;
 float ambient_light = 1.2;
-float specular_light_strength = 0.2;
+float specular_light_strength = 0.4;
 vec3 light_position = vec3(2,2,2);
 void main()
 {
