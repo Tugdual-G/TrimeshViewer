@@ -248,6 +248,5 @@ void MeshRender::set_axis_cross() {
     v *= 0.25;
   }
 
-  add_object(axis_vertices, axis_faces, axis_colors,
-             ShaderProgramType::AXIS_CROSS_FLAT);
+  add_object(axis_vertices, axis_faces, axis_colors, ObjectType::AXIS_CROSS);
 }

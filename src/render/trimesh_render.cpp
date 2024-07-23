@@ -7,17 +7,12 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <map>
 #include <numeric>
+#include <string>
 
 auto glCheckError_(const char *file, int line) -> GLenum;
 #define glCheckError() glCheckError_(__FILE__, __LINE__)
-
-#define SHADER_PATH "shaders/"
-#define SMOOTH_SHADE_NAME "smooth_shading_"
-#define FLAT_SHADE_NAME "flat_shading_"
-#define AXIS_CROSS_NAME "axis_cross_"
-#define VECTOR_INSTANCE_NAME "vector_instance_"
-#define CURVE_NAME "curve_"
 
 constexpr double MOUSE_SENSITIVITY{0.005};
 constexpr double SCROLL_SENSITIVITY{0.05};
@@ -52,55 +47,8 @@ void MeshRender::init_window() {
 }
 
 void MeshRender::Object::set_shader_program() {
-  std::vector<int> shader_id;
-  switch (program_type) {
-  case ShaderProgramType::FLAT_FACES:
-    shader_id.push_back(compile_shader(
-        SHADER_PATH FLAT_SHADE_NAME "vertex_shader.glsl", GL_VERTEX_SHADER));
 
-    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
-                                       "fragment_shader.glsl",
-                                       GL_FRAGMENT_SHADER));
-    break;
-
-  case ShaderProgramType::AXIS_CROSS_FLAT:
-
-    shader_id.push_back(compile_shader(
-        SHADER_PATH AXIS_CROSS_NAME FLAT_SHADE_NAME "vertex_shader.glsl",
-        GL_VERTEX_SHADER));
-
-    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
-                                       "fragment_shader.glsl",
-                                       GL_FRAGMENT_SHADER));
-    break;
-
-  case ShaderProgramType::VECTOR_INSTANCE:
-    shader_id.push_back(compile_shader(
-        SHADER_PATH VECTOR_INSTANCE_NAME FLAT_SHADE_NAME "vertex_shader.glsl",
-        GL_VERTEX_SHADER));
-    shader_id.push_back(compile_shader(SHADER_PATH FLAT_SHADE_NAME
-                                       "fragment_shader.glsl",
-                                       GL_FRAGMENT_SHADER));
-    break;
-
-  case ShaderProgramType::CURVE:
-
-    glLineWidth(2.0);
-    shader_id.push_back(compile_shader(
-        SHADER_PATH CURVE_NAME "vertex_shader.glsl", GL_VERTEX_SHADER));
-
-    shader_id.push_back(compile_shader(
-        SHADER_PATH CURVE_NAME "geometry_shader.glsl", GL_GEOMETRY_SHADER));
-
-    shader_id.push_back(compile_shader(
-        SHADER_PATH CURVE_NAME "fragment_shader.glsl", GL_FRAGMENT_SHADER));
-
-    break;
-  default:
-    break;
-  }
-
-  shader_program = link_shaders(shader_id);
+  shader_program = create_program(OBJECT_SHADER_MAP.at(object_type));
 
   glUseProgram(shader_program);
 
@@ -363,16 +311,15 @@ void MeshRender::update_object(const std::vector<double> &ivertices,
 
 auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces,
-                            ShaderProgramType shader_type) -> int {
+                            ObjectType object_type) -> int {
 
-  Object new_mesh;
+  Object new_mesh(object_type);
   new_mesh.total_number_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   new_mesh.attr_offset = (long)vertices_attr.size();
   new_mesh.attr_length = (long)ivertices.size() * 2;
   new_mesh.faces_indices_offset = (long)faces.size();
   new_mesh.faces_indices_length = (long)ifaces.size();
-  new_mesh.program_type = shader_type;
 
   add_indices(ifaces);
   add_vertices(ivertices);
@@ -385,9 +332,9 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
 auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces,
                             const std::vector<double> &colors,
-                            ShaderProgramType shader_type) -> int {
+                            ObjectType object_type) -> int {
 
-  Object new_mesh;
+  Object new_mesh(object_type);
   new_mesh.total_number_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
@@ -395,7 +342,6 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
   new_mesh.attr_length = (long)ivertices.size() * 2;
   new_mesh.faces_indices_offset = (long)faces.size();
   new_mesh.faces_indices_length = (long)ifaces.size();
-  new_mesh.program_type = shader_type;
 
   add_indices(ifaces);
   add_vertices(ivertices, colors);
@@ -409,7 +355,7 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces,
                             const std::vector<double> &colors) -> int {
 
-  Object new_mesh;
+  Object new_mesh(ObjectType::MESH);
   new_mesh.total_number_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
@@ -417,7 +363,6 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
   new_mesh.attr_length = (long)ivertices.size() * 2;
   new_mesh.faces_indices_offset = (long)faces.size();
   new_mesh.faces_indices_length = (long)ifaces.size();
-  new_mesh.program_type = ShaderProgramType::FLAT_FACES;
 
   add_indices(ifaces);
   add_vertices(ivertices, colors);
@@ -430,7 +375,7 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
 auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces) -> int {
 
-  Object new_mesh;
+  Object new_mesh(ObjectType::MESH);
   new_mesh.total_number_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
 
@@ -438,7 +383,6 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
   new_mesh.attr_length = (long)ivertices.size() * 2;
   new_mesh.faces_indices_offset = (long)faces.size();
   new_mesh.faces_indices_length = (long)ifaces.size();
-  new_mesh.program_type = ShaderProgramType::FLAT_FACES;
 
   add_indices(ifaces);
   add_vertices(ivertices);
@@ -452,13 +396,9 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions,
                              const std::vector<double> &colors) -> int {
   // Draws a set of vector or a single vectors
-  Object new_mesh;
-  new_mesh.total_number_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
-
-  int obj_id = add_object(VectorInstance::vector_instance_vertices,
-                          VectorInstance::vector_instance_faces,
-                          ShaderProgramType::VECTOR_INSTANCE);
+  int obj_id =
+      add_object(VectorInstance::vector_instance_vertices,
+                 VectorInstance::vector_instance_faces, ObjectType::VECTOR);
 
   Object &obj = objects.at(obj_id);
   obj.n_instances = (int)coords.size() / 3;
@@ -505,13 +445,9 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions) -> int {
   // Draws a set of vector or a single vectors
 
-  Object new_mesh;
-  new_mesh.total_number_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
-
-  int obj_id = add_object(VectorInstance::vector_instance_vertices,
-                          VectorInstance::vector_instance_faces,
-                          ShaderProgramType::VECTOR_INSTANCE);
+  int obj_id =
+      add_object(VectorInstance::vector_instance_vertices,
+                 VectorInstance::vector_instance_faces, ObjectType::VECTOR);
 
   Object &obj = objects.at(obj_id);
   obj.n_instances = (int)coords.size() / 3;
@@ -554,7 +490,8 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 }
 
 auto MeshRender::add_curve(const std::vector<double> &coords,
-                           const std::vector<double> &tangents) -> int {
+                           const std::vector<double> &tangents,
+                           ObjectType shader) -> int {
   // Draws a set of vector or a single vectors
 
   std::vector<unsigned int> curve_indices(4 * (coords.size() / 3 - 3));
@@ -564,8 +501,7 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
     curve_indices.at(i * 4 + 2) = i + 2;
     curve_indices.at(i * 4 + 3) = i + 3;
   }
-  int obj_id =
-      add_object(coords, curve_indices, tangents, ShaderProgramType::CURVE);
+  int obj_id = add_object(coords, curve_indices, tangents, shader);
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;
@@ -573,13 +509,13 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
   return obj_id;
 }
 
-auto MeshRender::add_curves(
-    const std::vector<double> &coords, const std::vector<double> &tangents,
-    const std::vector<unsigned int> &curves_indices) -> int {
+auto MeshRender::add_curves(const std::vector<double> &coords,
+                            const std::vector<double> &tangents,
+                            const std::vector<unsigned int> &curves_indices,
+                            ObjectType shader) -> int {
   // Draws a set of vector or a single vectors
 
-  int obj_id =
-      add_object(coords, curves_indices, tangents, ShaderProgramType::CURVE);
+  int obj_id = add_object(coords, curves_indices, tangents, shader);
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;
@@ -598,8 +534,16 @@ void MeshRender::draw(Object &obj) {
 
   glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
 
-  switch (obj.program_type) {
-  case ShaderProgramType::CURVE:
+  switch (obj.object_type) {
+  case ObjectType::MESH:
+    glDrawElementsBaseVertex(
+        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+        obj.attr_offset / obj.total_number_attr);
+    break;
+
+  case ObjectType::QUAD_CURVE:
+  case ObjectType::TUBE_CURVE:
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDrawElementsBaseVertex(
@@ -608,7 +552,7 @@ void MeshRender::draw(Object &obj) {
         obj.attr_offset / obj.total_number_attr);
     break;
 
-  case ShaderProgramType::VECTOR_INSTANCE:
+  case ObjectType::VECTOR:
     glDrawElementsInstancedBaseVertex(
         GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
         (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
@@ -617,10 +561,6 @@ void MeshRender::draw(Object &obj) {
     break;
 
   default:
-    glDrawElementsBaseVertex(
-        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
-        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
-        obj.attr_offset / obj.total_number_attr);
     break;
   }
 };

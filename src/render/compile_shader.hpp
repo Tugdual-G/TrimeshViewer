@@ -2,9 +2,27 @@
 #define COMPILE_SHADER_H_
 #include "glad/include/glad/glad.h"
 #include <GLFW/glfw3.h>
-#include <vector>
+#include <map>
+#include <string>
 
-auto compile_shader(const char *source_fname, GLenum type) -> int;
-auto link_shaders(std::vector<int> &shaders) -> int;
+enum class ShaderProgramType : int {
+  FLAT_FACES,
+  SMOOTH_FACES,
+  VECTOR_INSTANCE,
+  QUAD_CURVE,
+  TUBE_CURVE,
+  AXIS_CROSS,
+};
+
+// Contains the list of sources directory names for each shader type;
+std::map<ShaderProgramType, std::string> const SHADER_DIR_MAP{
+    {ShaderProgramType::AXIS_CROSS, "shaders/axis_cross/"},
+    {ShaderProgramType::FLAT_FACES, "shaders/flat_faces/"},
+    {ShaderProgramType::SMOOTH_FACES, "shaders/smooth_faces/"},
+    {ShaderProgramType::VECTOR_INSTANCE, "shaders/vector_instance/"},
+    {ShaderProgramType::QUAD_CURVE, "shaders/quad_curve/"},
+    {ShaderProgramType::TUBE_CURVE, "shaders/tube_curve/"}};
+
+auto create_program(ShaderProgramType type) -> int;
 
 #endif // COMPILE_SHADER_H_

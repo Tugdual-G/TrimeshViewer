@@ -1,25 +1,97 @@
 #ifndef TRIMESH_RENDER_H_
 #define TRIMESH_RENDER_H_
 
+#include "compile_shader.hpp"
 #include "glad/include/glad/glad.h" // glad should be included before glfw3
 #include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
+#include <map>
+#include <string>
 #include <vector>
 
 class MeshRender {
-
-  enum class ShaderProgramType {
-    FLAT_FACES,
-    SMOOTH_FACES,
-    AXIS_CROSS_FLAT, // Used to render the axis-cross
-    AXIS_CROSS_SMOOTH,
-    VECTOR_INSTANCE,
-    CURVE,
+public:
+  enum class ObjectType : int {
+    NONE,
+    MESH,
+    VECTOR,
+    QUAD_CURVE,
+    TUBE_CURVE,
+    AXIS_CROSS,
   };
 
+  auto add_object(const std::vector<double> &ivertices,
+                  const std::vector<unsigned int> &ifaces) -> int;
+
+  auto add_object(const std::vector<double> &ivertices,
+                  const std::vector<unsigned int> &ifaces,
+                  const std::vector<double> &colors) -> int;
+
+  void update_object(const std::vector<double> &ivertices, int id);
+
+  void update_object(const std::vector<double> &ivertices,
+                     const std::vector<unsigned int> &ifaces, int id);
+
+  void update_object(const std::vector<double> &ivertices,
+                     const std::vector<unsigned int> &ifaces,
+                     const std::vector<double> &icolors, int id);
+
+  // Draws a set of vector or a single vectors
+  auto add_vectors(const std::vector<double> &coords,
+                   const std::vector<double> &directions) -> int;
+
+  auto add_vectors(const std::vector<double> &coords,
+                   const std::vector<double> &directions,
+                   const std::vector<double> &colors) -> int;
+
+  auto add_curve(const std::vector<double> &coords,
+                 const std::vector<double> &tangents, ObjectType type) -> int;
+
+  auto add_curves(const std::vector<double> &coords,
+                  const std::vector<double> &tangents,
+                  const std::vector<unsigned int> &curves_indices,
+                  ObjectType type) -> int;
+
+  MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
+             std::vector<unsigned int> &ifaces)
+      : width(w_width), height(w_height) {
+
+    vert_attr_group_length.resize(2, 3);
+    init_window();
+    init_render();
+    vertices_attr.resize(0);
+    faces.resize(0);
+    set_axis_cross();
+    add_object(ivertices, ifaces);
+  }
+
+  MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
+             std::vector<unsigned int> &ifaces, std::vector<double> &icolors)
+      : width(w_width), height(w_height) {
+
+    vert_attr_group_length.resize(2, 3);
+    init_window();
+    init_render();
+    vertices_attr.resize(0);
+    faces.resize(0);
+    set_axis_cross();
+    add_object(ivertices, ifaces, icolors);
+  }
+
+  auto render_finalize() -> int;
+  auto render_loop(int (*data_update_function)(void *fargs),
+                   void *fargs) -> int;
+  void add_vertex_normals(std::vector<double> &normals);
+  void update_vertex_colors(std::vector<double> &colors,
+                            unsigned int object_idx);
+
+private:
   class Object {
     // Represent a mesh to be rendered and its positions in the openGL buffers.
+
   public:
+    ObjectType object_type;
+
     // first element position in the Vertex Buffer Object/vertices_attr
     long int attr_offset{0}; // in elements, (not in bytes)
     // number of elements in the Vertex Buffer Object
@@ -47,12 +119,11 @@ class MeshRender {
     int q_loc{0}, q_inv_loc{0};
     int zoom_loc{0};          // zoom uniform
     int viewport_size_loc{0}; // uniform to keep the aspect ratio
-    ShaderProgramType program_type{ShaderProgramType::FLAT_FACES};
     int n_instances{0};
 
     void set_shader_program();
 
-    Object() = default;
+    Object(ObjectType type) : object_type(type) {};
   };
 
   // viewport size
@@ -112,78 +183,21 @@ class MeshRender {
 
   auto add_object(const std::vector<double> &ivertices,
                   const std::vector<unsigned int> &ifaces,
-                  ShaderProgramType shader_type) -> int;
+                  ObjectType shader_type) -> int;
 
   auto add_object(const std::vector<double> &ivertices,
                   const std::vector<unsigned int> &ifaces,
                   const std::vector<double> &colors,
-                  ShaderProgramType shader_type) -> int;
-
-public:
-  auto add_object(const std::vector<double> &ivertices,
-                  const std::vector<unsigned int> &ifaces) -> int;
-
-  auto add_object(const std::vector<double> &ivertices,
-                  const std::vector<unsigned int> &ifaces,
-                  const std::vector<double> &colors) -> int;
-
-  void update_object(const std::vector<double> &ivertices, int id);
-
-  void update_object(const std::vector<double> &ivertices,
-                     const std::vector<unsigned int> &ifaces, int id);
-
-  void update_object(const std::vector<double> &ivertices,
-                     const std::vector<unsigned int> &ifaces,
-                     const std::vector<double> &icolors, int id);
-
-  // Draws a set of vector or a single vectors
-  auto add_vectors(const std::vector<double> &coords,
-                   const std::vector<double> &directions) -> int;
-
-  auto add_vectors(const std::vector<double> &coords,
-                   const std::vector<double> &directions,
-                   const std::vector<double> &colors) -> int;
-
-  auto add_curve(const std::vector<double> &coords,
-                 const std::vector<double> &tangents) -> int;
-
-  auto add_curves(const std::vector<double> &coords,
-                  const std::vector<double> &tangents,
-                  const std::vector<unsigned int> &curves_indices) -> int;
-
-  MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
-             std::vector<unsigned int> &ifaces)
-      : width(w_width), height(w_height) {
-
-    vert_attr_group_length.resize(2, 3);
-    init_window();
-    init_render();
-    vertices_attr.resize(0);
-    faces.resize(0);
-    set_axis_cross();
-    add_object(ivertices, ifaces, ShaderProgramType::FLAT_FACES);
-  }
-
-  MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
-             std::vector<unsigned int> &ifaces, std::vector<double> &icolors)
-      : width(w_width), height(w_height) {
-
-    vert_attr_group_length.resize(2, 3);
-    init_window();
-    init_render();
-    vertices_attr.resize(0);
-    faces.resize(0);
-    set_axis_cross();
-    add_object(ivertices, ifaces, icolors, ShaderProgramType::FLAT_FACES);
-  }
-
-  auto render_finalize() -> int;
-  auto render_loop(int (*data_update_function)(void *fargs),
-                   void *fargs) -> int;
-  void add_vertex_normals(std::vector<double> &normals);
-  void update_vertex_colors(std::vector<double> &colors,
-                            unsigned int object_idx);
+                  ObjectType shader_type) -> int;
 };
+
+// convert between different types
+std::map<MeshRender::ObjectType, ShaderProgramType> const OBJECT_SHADER_MAP{
+    {MeshRender::ObjectType::MESH, ShaderProgramType::FLAT_FACES},
+    {MeshRender::ObjectType::VECTOR, ShaderProgramType::VECTOR_INSTANCE},
+    {MeshRender::ObjectType::QUAD_CURVE, ShaderProgramType::QUAD_CURVE},
+    {MeshRender::ObjectType::TUBE_CURVE, ShaderProgramType::TUBE_CURVE},
+    {MeshRender::ObjectType::AXIS_CROSS, ShaderProgramType::AXIS_CROSS}};
 
 void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods);

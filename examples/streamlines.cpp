@@ -59,7 +59,7 @@ auto main() -> int {
   MeshRender render(500, 500, torus.vertices, torus.faces, colors);
 
   render.add_curves(streamlines_coords, streamlines_tangents,
-                    streamlines_indices);
+                    streamlines_indices, MeshRender::ObjectType::QUAD_CURVE);
 
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
@@ -121,7 +121,6 @@ void magnetic_streamlines(std::vector<double> &coords,
   std::uniform_real_distribution<double> unifz(-1.5, 0.5);
   std::default_random_engine re;
 
-  // Great radius vector angle
   double dt = 0.001;
   double T{0.1};
 
