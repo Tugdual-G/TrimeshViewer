@@ -12,5 +12,5 @@ void main()
     float diffusion = dot(light_direction, normal);
 
     float intensity = (ambient_light + diffusion)/(1.0 + ambient_light);
-    FragColor = vec4(vec3(1.0, (1.0 + position.z)/2.0, 1.0 -(1.0 + position.z)/2.0)*intensity,0.3);
+    FragColor = vec4(vec3(1.0, (1.0 + position.z)/2.0, 1.0 -(1.0 + position.z)/2.0)*intensity,0.9);
 }

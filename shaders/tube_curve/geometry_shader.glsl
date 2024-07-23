@@ -1,24 +1,12 @@
 #version 460 core
 
 layout (lines_adjacency) in;
-layout (triangle_strip, max_vertices = 36) out;
+layout (triangle_strip, max_vertices = 24) out;
 out vec3 normal;
 out vec3 position;
 
-uniform vec4 q, q_inv;
 uniform float zoom_level;
 uniform vec2 viewport_size;
-
-vec4 mul_quatern(vec4 u, vec4 v){
-    //u.x, u.y, u.z, u.w = u
-    //v.x, v.y, v.z, v.w = v
-    return vec4(
-            -v.y * u.y - v.z * u.z - v.w * u.w + v.x * u.x,
-            v.y * u.x + v.z * u.w - v.w * u.z + v.x * u.y,
-            -v.y * u.w + v.z * u.x + v.w * u.y + v.x * u.z,
-            v.y * u.z - v.z * u.y + v.w * u.x + v.x * u.w);
-}
-
 
 vec3 normal_vec(vec3 T){
     // Normal vector to the tangent T.
@@ -36,76 +24,61 @@ vec3 normal_vec(vec3 T){
 
 void build_tube(){
 
-    float width = 0.002;
+    float r = 0.01;
 
-    vec3 vertices[16]=vec3[16](vec3(0 , 1 , 0),
+    vec3 circle[7]=vec3[7](vec3(0 , 1 , 0),
                             vec3(0 , 0.5 , 0.866025),
                             vec3(0 , -0.5 , 0.866025),
                             vec3(0 , -1 , 0.0),
                             vec3(0 , -0.5 , -0.866025),
                             vec3(0 , 0.5 , -0.866025),
-                            vec3(0 , 1 , 0),
-                            vec3(1 , 1 , 0),
-                            vec3(1 , 0.5 , 0.866025),
-                            vec3(1 , -0.5 , 0.866025),
-                            vec3(1 , -1 , 0.0),
-                            vec3(1 , -0.5 , -0.866025),
-                            vec3(1 , 0.5 , -0.866025),
-                            vec3(1 , 1 , 0),
-                            vec3(0 , 0 , 0),
-                            vec3(1 , 0 , 0));
+                            vec3(0 , 1 , 0));
 
-    vec3 normals[16];
+    vec3 normals[14];
+    vec3 vertices[14];
 
     // start and end tangent
-    vec3 T = gl_in[2].gl_Position.xyz - gl_in[1].gl_Position.xyz;
-    float len = length(T);
-    T = T/len;
-    vertices[14].x -= width/len;
-    vertices[15].x += width/len;
+    vec3 T0 = normalize(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz);
+    vec3 T1 = normalize(gl_in[2].gl_Position.xyz - gl_in[1].gl_Position.xyz);
+    vec3 T2 = normalize(gl_in[3].gl_Position.xyz - gl_in[2].gl_Position.xyz);
 
-
-    vec3 N = normal_vec(T);
-    vec3 B = cross(T, N);
+    vec3 N = normal_vec(T1);
+    vec3 B = cross(T1, N);
     mat3 transform;
-    transform[0] = len*T;
-    transform[1] = N*width;
-    transform[2] = B*width;
-    for (int i = 0 ; i < 14 ; ++i){
-        normals[i] = transform*vec3(0,vertices[i].yz);
-        normals[i] = normalize(normals[i]);
-        }
-    normals[14] = vec3(-1, 0,0);
-    normals[15] = vec3(1, 0,0);
-
-    for (int i = 0 ; i < 16 ; ++i){
-        vertices[i] = gl_in[1].gl_Position.xyz  + transform*vertices[i];
+    transform[0] = T1;
+    transform[1] = N * r;
+    transform[2] = B * r;
 
 
-        vec4 qnormals = vec4(0,normals[i]);
-        qnormals = mul_quatern(qnormals, q_inv);
-        qnormals = mul_quatern(q, qnormals);
-        normals[i] = qnormals.yzw;
+    float l_T; // length to the meeting point
 
-        vec4 qpos = vec4(0,vertices[i].xyz);
-        qpos = mul_quatern(qpos, q_inv);
-        qpos = mul_quatern(q, qpos);
+    for (int i = 0 ; i < 7 ; ++i){
+        circle[i] = transform*circle[i];
+        normals[i] = normalize(circle[i]);
 
+        l_T = dot(circle[i], T1+T0)/dot(T1, T1+T0);
 
-        qpos.yz *= -2/(qpos.w - 2); // perspective
-        qpos.yz = qpos.yz * zoom_level;
-        qpos.y *= viewport_size.y/viewport_size.x; //aspect ratio
-        vertices[i] = qpos.yzw;
+        vertices[i] = gl_in[1].gl_Position.xyz  + circle[i] - l_T * T1;
+        vertices[i].xy *= -2/(vertices[i].z - 2); // perspective
+        vertices[i].xy = vertices[i].xy * zoom_level;
+        vertices[i].x *= viewport_size.y/viewport_size.x; //aspect ratio
+    }
+
+    for (int i = 7 ; i < 14 ; ++i){
+        normals[i] = normalize(circle[i-7]);
+
+        l_T = dot(circle[i-7], T1+T2)/dot(T1, T1+T2);
+
+        vertices[i] = gl_in[2].gl_Position.xyz  + circle[i-7] - l_T * T1;
+        vertices[i].xy *= -2/(vertices[i].z - 2); // perspective
+        vertices[i].xy = vertices[i].xy * zoom_level;
+        vertices[i].x *= viewport_size.y/viewport_size.x; //aspect ratio
     }
 
 
     for (int i = 0; i < 6; ++i) {
-        gl_Position = vec4(vertices[14], 1);
-        normal = normals[i];
-        position = vertices[14];
-        EmitVertex();
-
         gl_Position = vec4(vertices[i], 1);
+        position = vertices[i];
         normal = normals[i];
         EmitVertex();
 
@@ -119,10 +92,6 @@ void build_tube(){
 
         gl_Position =  vec4(vertices[i + 8], 1);
         normal =  normals[i + 8];
-        EmitVertex();
-
-        gl_Position = vec4(vertices[15], 1);
-        normal = normals[i + 8];
         EmitVertex();
         EndPrimitive();
     }

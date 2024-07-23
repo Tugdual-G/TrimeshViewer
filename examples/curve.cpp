@@ -41,12 +41,12 @@ auto main() -> int {
 
   MeshRender render(500, 500, torus.vertices, torus.faces);
 
-  for (int k = 0; k < 20; ++k) {
+  for (int k = 0; k < 1; ++k) {
     for (int i = 0; i < N; ++i) {
       parametric_curve2(&coords[i * 3], &tangents[i * 3],
                         (double)i * 1.0 / (N - 1), (double)k * 0.05 + 0.5);
     }
-    render.add_curve(coords, tangents, CurveType::QUAD_CURVE);
+    render.add_curve(coords, tangents, CurveType::TUBE_CURVE);
   }
 
   render.render_loop(nullptr, nullptr);
