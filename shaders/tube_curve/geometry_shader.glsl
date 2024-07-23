@@ -3,6 +3,7 @@
 layout (lines_adjacency) in;
 layout (triangle_strip, max_vertices = 36) out;
 out vec3 normal;
+out vec3 position;
 
 uniform vec4 q, q_inv;
 uniform float zoom_level;
@@ -101,6 +102,7 @@ void build_tube(){
     for (int i = 0; i < 6; ++i) {
         gl_Position = vec4(vertices[14], 1);
         normal = normals[i];
+        position = vertices[14];
         EmitVertex();
 
         gl_Position = vec4(vertices[i], 1);

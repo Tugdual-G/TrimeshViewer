@@ -5,21 +5,26 @@
 #include "glad/include/glad/glad.h" // glad should be included before glfw3
 #include "quatern_transform.hpp"
 #include <GLFW/glfw3.h>
+#include <iostream>
 #include <map>
-#include <string>
 #include <vector>
+
+enum class CurveType : int {
+  QUAD_CURVE,
+  TUBE_CURVE,
+};
+
+enum class ObjectType : int {
+  NONE,
+  MESH,
+  VECTOR,
+  QUAD_CURVE,
+  TUBE_CURVE,
+  AXIS_CROSS,
+};
 
 class MeshRender {
 public:
-  enum class ObjectType : int {
-    NONE,
-    MESH,
-    VECTOR,
-    QUAD_CURVE,
-    TUBE_CURVE,
-    AXIS_CROSS,
-  };
-
   auto add_object(const std::vector<double> &ivertices,
                   const std::vector<unsigned int> &ifaces) -> int;
 
@@ -45,12 +50,12 @@ public:
                    const std::vector<double> &colors) -> int;
 
   auto add_curve(const std::vector<double> &coords,
-                 const std::vector<double> &tangents, ObjectType type) -> int;
+                 const std::vector<double> &tangents, CurveType type) -> int;
 
   auto add_curves(const std::vector<double> &coords,
                   const std::vector<double> &tangents,
                   const std::vector<unsigned int> &curves_indices,
-                  ObjectType type) -> int;
+                  CurveType type) -> int;
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
@@ -192,12 +197,12 @@ private:
 };
 
 // convert between different types
-std::map<MeshRender::ObjectType, ShaderProgramType> const OBJECT_SHADER_MAP{
-    {MeshRender::ObjectType::MESH, ShaderProgramType::FLAT_FACES},
-    {MeshRender::ObjectType::VECTOR, ShaderProgramType::VECTOR_INSTANCE},
-    {MeshRender::ObjectType::QUAD_CURVE, ShaderProgramType::QUAD_CURVE},
-    {MeshRender::ObjectType::TUBE_CURVE, ShaderProgramType::TUBE_CURVE},
-    {MeshRender::ObjectType::AXIS_CROSS, ShaderProgramType::AXIS_CROSS}};
+std::map<ObjectType, ShaderProgramType> const OBJECT_SHADER_MAP{
+    {ObjectType::MESH, ShaderProgramType::FLAT_FACES},
+    {ObjectType::VECTOR, ShaderProgramType::VECTOR_INSTANCE},
+    {ObjectType::QUAD_CURVE, ShaderProgramType::QUAD_CURVE},
+    {ObjectType::TUBE_CURVE, ShaderProgramType::TUBE_CURVE},
+    {ObjectType::AXIS_CROSS, ShaderProgramType::AXIS_CROSS}};
 
 void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods);

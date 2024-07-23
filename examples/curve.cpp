@@ -46,7 +46,7 @@ auto main() -> int {
       parametric_curve2(&coords[i * 3], &tangents[i * 3],
                         (double)i * 1.0 / (N - 1), (double)k * 0.05 + 0.5);
     }
-    render.add_curve(coords, tangents, MeshRender::ObjectType::QUAD_CURVE);
+    render.add_curve(coords, tangents, CurveType::QUAD_CURVE);
   }
 
   render.render_loop(nullptr, nullptr);

@@ -395,7 +395,7 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
 auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions,
                              const std::vector<double> &colors) -> int {
-  // Draws a set of vector or a single vectors
+  // Draws a set of colored vectors or a single colored vector
   int obj_id =
       add_object(VectorInstance::vector_instance_vertices,
                  VectorInstance::vector_instance_faces, ObjectType::VECTOR);
@@ -443,7 +443,7 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 
 auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions) -> int {
-  // Draws a set of vector or a single vectors
+  // Draws a set of vectors or a single vector
 
   int obj_id =
       add_object(VectorInstance::vector_instance_vertices,
@@ -491,8 +491,21 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 
 auto MeshRender::add_curve(const std::vector<double> &coords,
                            const std::vector<double> &tangents,
-                           ObjectType shader) -> int {
-  // Draws a set of vector or a single vectors
+                           CurveType type) -> int {
+  // Draws a curve
+
+  ObjectType obtype{0};
+  switch (type) {
+  case CurveType::QUAD_CURVE:
+    obtype = ObjectType::QUAD_CURVE;
+    break;
+  case CurveType::TUBE_CURVE:
+    obtype = ObjectType::TUBE_CURVE;
+    break;
+  default:
+    throw;
+    break;
+  }
 
   std::vector<unsigned int> curve_indices(4 * (coords.size() / 3 - 3));
   for (unsigned int i = 1; i < curve_indices.size() / 4; ++i) {
@@ -501,7 +514,7 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
     curve_indices.at(i * 4 + 2) = i + 2;
     curve_indices.at(i * 4 + 3) = i + 3;
   }
-  int obj_id = add_object(coords, curve_indices, tangents, shader);
+  int obj_id = add_object(coords, curve_indices, tangents, obtype);
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;
@@ -512,10 +525,22 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
 auto MeshRender::add_curves(const std::vector<double> &coords,
                             const std::vector<double> &tangents,
                             const std::vector<unsigned int> &curves_indices,
-                            ObjectType shader) -> int {
-  // Draws a set of vector or a single vectors
+                            CurveType type) -> int {
+  // Draws multiples curves.
+  ObjectType obtype{0};
+  switch (type) {
+  case CurveType::QUAD_CURVE:
+    obtype = ObjectType::QUAD_CURVE;
+    break;
+  case CurveType::TUBE_CURVE:
+    obtype = ObjectType::TUBE_CURVE;
+    break;
+  default:
+    throw;
+    break;
+  }
 
-  int obj_id = add_object(coords, curves_indices, tangents, shader);
+  int obj_id = add_object(coords, curves_indices, tangents, obtype);
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;
@@ -535,6 +560,7 @@ void MeshRender::draw(Object &obj) {
   glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
 
   switch (obj.object_type) {
+  case ObjectType::AXIS_CROSS:
   case ObjectType::MESH:
     glDrawElementsBaseVertex(
         GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,

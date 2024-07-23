@@ -23,5 +23,5 @@ void main()
     specular_ligth *= specular_light_strength;
 
     float intensity =  (specular_ligth + ambient_light + diffusion)/(1.0 + ambient_light);
-    FragColor = vec4(color, 1.0)*intensity;
+    FragColor = vec4(color*intensity, 1.0);
 }
