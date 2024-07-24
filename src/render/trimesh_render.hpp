@@ -50,12 +50,13 @@ public:
                    const std::vector<double> &colors) -> int;
 
   auto add_curve(const std::vector<double> &coords,
-                 const std::vector<double> &tangents, CurveType type) -> int;
+                 const std::vector<double> &tangents, CurveType type,
+                 double width) -> int;
 
   auto add_curves(const std::vector<double> &coords,
                   const std::vector<double> &tangents,
                   const std::vector<unsigned int> &curves_indices,
-                  CurveType type) -> int;
+                  CurveType type, double width) -> int;
 
   void set_axis_cross();
 

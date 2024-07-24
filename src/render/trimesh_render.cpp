@@ -490,8 +490,8 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 }
 
 auto MeshRender::add_curve(const std::vector<double> &coords,
-                           const std::vector<double> &tangents,
-                           CurveType type) -> int {
+                           const std::vector<double> &tangents, CurveType type,
+                           double width) -> int {
   // Draws a curve
 
   ObjectType obtype{0};
@@ -518,6 +518,7 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;
+  glUniform1f(glGetUniformLocation(obj.shader_program, "r"), (float)width);
 
   return obj_id;
 }
@@ -525,7 +526,7 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
 auto MeshRender::add_curves(const std::vector<double> &coords,
                             const std::vector<double> &tangents,
                             const std::vector<unsigned int> &curves_indices,
-                            CurveType type) -> int {
+                            CurveType type, double width) -> int {
   // Draws multiples curves.
   ObjectType obtype{0};
   switch (type) {
@@ -544,6 +545,7 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;
+  glUniform1f(glGetUniformLocation(obj.shader_program, "r"), (float)width);
 
   return obj_id;
 }

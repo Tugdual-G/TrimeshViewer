@@ -39,15 +39,14 @@ auto main() -> int {
   std::vector<double> tangents(N * 3);
   Mesh torus = Primitives::torus(0.2, 0.06, 16);
 
-  MeshRender render(500, 500, torus.vertices, torus.faces);
+  MeshRender render(500, 500);
+  render.add_object(torus.vertices, torus.faces);
 
-  for (int k = 0; k < 1; ++k) {
-    for (int i = 0; i < N; ++i) {
-      parametric_curve2(&coords[i * 3], &tangents[i * 3],
-                        (double)i * 1.0 / (N - 1), (double)k * 0.05 + 0.5);
-    }
-    render.add_curve(coords, tangents, CurveType::TUBE_CURVE);
+  for (int i = 0; i < N; ++i) {
+    parametric_curve2(&coords[i * 3], &tangents[i * 3],
+                      (double)i * 1.0 / (N - 1), 0.0);
   }
+  render.add_curve(coords, tangents, CurveType::TUBE_CURVE, 0.01);
 
   render.render_loop(nullptr, nullptr);
   render.render_finalize();

@@ -5,6 +5,7 @@ layout (triangle_strip, max_vertices = 32) out;
 out vec3 normal;
 out vec3 position;
 
+uniform float r;
 uniform float zoom_level;
 uniform vec2 viewport_size;
 
@@ -24,7 +25,6 @@ vec3 normal_vec(vec3 T){
 
 void build_tube(){
 
-    float r = 0.01;
 
     int n = 9;
     vec3 circle[8]=vec3[8](vec3(0, 1.0, 0.0),
@@ -75,10 +75,14 @@ void build_tube(){
 
         l_T = dot(vertices[i], T1+T0)/dot(T1, T1+T0);
 
-        vertices[i] = gl_in[1].gl_Position.xyz  + r*(vertices[i] - l_T * T1);
+        // to ensure smooth shading bettween sections
+        normals[i] = vertices[i] - l_T * T1;
+
+        vertices[i] = gl_in[1].gl_Position.xyz  + r * normals[i];
         vertices[i].xy *= -2/(vertices[i].z - 2); // perspective
         vertices[i].xy = vertices[i].xy * zoom_level;
         vertices[i].x *= viewport_size.y/viewport_size.x; //aspect ratio
+        normals[i] = normalize(normals[i]);
     }
 
     N = normalize(cross(T1, T2));
@@ -95,10 +99,14 @@ void build_tube(){
 
         l_T = dot(vertices[i], T1+T2)/dot(T1, T1+T2);
 
-        vertices[i] = gl_in[2].gl_Position.xyz  + r*(vertices[i] - l_T * T1);
+        // to ensure smooth shading bettween sections
+        normals[i] = vertices[i] - l_T * T1;
+
+        vertices[i] = gl_in[2].gl_Position.xyz  + r * normals[i];
         vertices[i].xy *= -2/(vertices[i].z - 2); // perspective
         vertices[i].xy = vertices[i].xy * zoom_level;
         vertices[i].x *= viewport_size.y/viewport_size.x; //aspect ratio
+        normals[i] = normalize(normals[i]);
     }
 
 

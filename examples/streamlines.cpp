@@ -59,7 +59,7 @@ auto main() -> int {
   MeshRender render(500, 500, torus.vertices, torus.faces, colors);
 
   render.add_curves(streamlines_coords, streamlines_tangents,
-                    streamlines_indices, CurveType::TUBE_CURVE);
+                    streamlines_indices, CurveType::QUAD_CURVE, 0.003);
 
   render.render_loop(nullptr, nullptr);
   render.render_finalize();

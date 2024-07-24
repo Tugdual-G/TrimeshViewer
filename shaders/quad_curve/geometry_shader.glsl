@@ -5,6 +5,7 @@ layout (triangle_strip, max_vertices = 4) out;
 out vec3 normal;
 out vec3 position;
 
+uniform float r;
 uniform float zoom_level;
 uniform vec2 viewport_size;
 
@@ -38,22 +39,21 @@ void build_quad_line(){
     vec3 A1 = normal_vec(T0+T1);
     vec3 A2 = normal_vec(T1+T2);
 
-    float width = 0.002;
 
     vec3 N = normal_vec(T1);
 
     vec3 normals[4];
     vec3 vertices[4];
 
-    float l = width/dot(A1, N);
-    l = abs(l) > 2 * width ? 0.0 : l;
+    float l = r/dot(A1, N);
+    l = abs(l) > 2 * r ? 0.0 : l;
     vertices[0] = pos1 - l*A1;
     normals[0] = normalize(-N + vec3(0,0,0.1));
     vertices[1] = pos1 + l*A1;
     normals[1] = normalize(N + vec3(0,0,0.1));
 
-    l = width/dot(A2, N);
-    l = abs(l) > 2 * width ? 0.0 : l;
+    l = r/dot(A2, N);
+    l = abs(l) > 2 * r ? 0.0 : l;
     vertices[2] = pos2 - l*A2;
     normals[2] = normalize(-N + vec3(0,0,0.1));
     vertices[3] = pos2 + l*A2;
