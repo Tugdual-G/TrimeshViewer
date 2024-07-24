@@ -18,9 +18,9 @@ __Render:__
 - zoom and rotate with the mouse
 - show the current orientation
 - perspective projection
-- Animation using a callback function
-- Plot 3d vector fields with large amount of vectors
-- Plot 3d curves using extrusion in geometry shader
+- animation using a callback function
+- plot 3d vector fields with large amount of vectors
+- plot 3d curves using extrusion in geometry shader
 
 __Mesh:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
