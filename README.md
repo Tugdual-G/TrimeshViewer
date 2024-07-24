@@ -19,15 +19,23 @@ __Render:__
 - show the current orientation
 - perspective projection
 - Animation using a callback function
-- Plot 3d vector fields
+- Plot 3d vector fields with large amount of vectors
+- Plot 3d curves using extrusion in geometry shader
 
 __Mesh:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
 - fast edge splitting algorithm, preserving data locality
 - Primitives: torus, icosahedron, tetrahedron, cube
+
 <figure>
     <img src="icosahedron.gif" alt="edges plitting" width="400"/>
     <figcaption> Creation of a sphere from an icosahedron. </figcaption>
+</figure>
+
+
+<figure>
+    <img src="curve.gif" alt="3d curve figure" width="30%"/>
+    <figcaption> Tubular curve extruded in geometry shader. </figcaption>
 </figure>
 
 
