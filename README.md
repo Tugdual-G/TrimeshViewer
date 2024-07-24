@@ -2,7 +2,7 @@
 __A small project to learn c++__
 
 <img src="example.png" alt="example" width="30%"/></img>
-<img src="vortex_ring.png" alt="example" width="30%"/></img>
+<img src="vortex_ring.png" alt="example" width="30.3%"/></img>
 
 This repository contains three modules: a .ply file parser,
 a mesh/graph operator toolset, and a simple render library.
@@ -28,13 +28,11 @@ __Mesh:__
 - Primitives: torus, icosahedron, tetrahedron, cube
 
 <figure>
-    <img src="icosahedron.gif" alt="edges plitting" width="400"/>
+    <img src="icosahedron.gif" alt="edges plitting" width="40%"/>
     <figcaption> Creation of a sphere from an icosahedron. </figcaption>
 </figure>
-
-
 <figure>
-    <img src="curve.gif" alt="3d curve figure" width="30%"/>
+    <img src="curve.png" alt="3d curve figure" width="40%"/>
     <figcaption> Tubular curve extruded in geometry shader. </figcaption>
 </figure>
 
