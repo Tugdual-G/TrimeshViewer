@@ -12,15 +12,15 @@ All transformations are matrix-free and rely on quaternions to keep things simpl
 
 ## Features:
 __Render:__
-- display multiples meshes
+- displays multiples meshes
 - flat shading + specular highlight
 - colormaps
-- zoom and rotate with the mouse
-- show the current orientation
+- zoom and rotation with the mouse
+- shows the current orientation
 - perspective projection
 - animation using a callback function
-- plot 3d vector fields with large amount of vectors
-- plot 3d curves using extrusion in geometry shader
+- plots 3d vector fields handling large amounts of vectors
+- plots 3d curves using extrusion in geometry shader
 
 __Mesh:__
 - curvature, normal, ordered one-ring, and ordered-adjacency computation
