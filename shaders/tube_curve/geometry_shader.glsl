@@ -1,7 +1,7 @@
 #version 460 core
 
 layout (lines_adjacency) in;
-layout (triangle_strip, max_vertices = 24) out;
+layout (triangle_strip, max_vertices = 32) out;
 out vec3 normal;
 out vec3 position;
 
@@ -26,57 +26,83 @@ void build_tube(){
 
     float r = 0.01;
 
-    vec3 circle[7]=vec3[7](vec3(0 , 1 , 0),
-                            vec3(0 , 0.5 , 0.866025),
-                            vec3(0 , -0.5 , 0.866025),
-                            vec3(0 , -1 , 0.0),
-                            vec3(0 , -0.5 , -0.866025),
-                            vec3(0 , 0.5 , -0.866025),
-                            vec3(0 , 1 , 0));
+    int n = 9;
+    vec3 circle[8]=vec3[8](vec3(0, 1.0, 0.0),
+                            vec3(0, 0.70711, 0.70711),
+                            vec3(0, 0.0, 1.0),
+                            vec3(0, -0.70711, 0.70711),
+                            vec3(0, -1.0, 0.0),
+                            vec3(0, -0.70711, -0.70711),
+                            vec3(0, 0.0, -1.0),
+                            vec3(0, 0.70711, -0.70711));
 
-    vec3 normals[14];
-    vec3 vertices[14];
+    // vec3 circle[7]=vec3[7](vec3(0 , 1 , 0),
+    //                         vec3(0 , 0.5 , 0.866025),
+    //                         vec3(0 , -0.5 , 0.866025),
+    //                         vec3(0 , -1 , 0.0),
+    //                         vec3(0 , -0.5 , -0.866025),
+    //                         vec3(0 , 0.5 , -0.866025),
+    //                         vec3(0 , 1 , 0));
+
+    vec3 normals[18];
+    vec3 vertices[18];
 
     // start and end tangent
     vec3 T0 = normalize(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz);
     vec3 T1 = normalize(gl_in[2].gl_Position.xyz - gl_in[1].gl_Position.xyz);
     vec3 T2 = normalize(gl_in[3].gl_Position.xyz - gl_in[2].gl_Position.xyz);
 
-    vec3 N = normal_vec(T1);
+    // vec3 N = normal_vec(T1);
+    // vec3 B = cross(T1, N);
+    // mat3 transform;
+    // transform[0] = T1;
+    // transform[1] = N ;
+    // transform[2] = B ;
+
+
+    vec3 N = normalize(cross(T0, T1));
     vec3 B = cross(T1, N);
     mat3 transform;
     transform[0] = T1;
-    transform[1] = N * r;
-    transform[2] = B * r;
-
+    transform[1] = N ;
+    transform[2] = B ;
 
     float l_T; // length to the meeting point
 
-    for (int i = 0 ; i < 7 ; ++i){
-        circle[i] = transform*circle[i];
-        normals[i] = normalize(circle[i]);
+    for (int i = 0 ; i < n ; ++i){
+        vertices[i] = transform*circle[i%(n-1)];
+        normals[i] = normalize(vertices[i]);
 
-        l_T = dot(circle[i], T1+T0)/dot(T1, T1+T0);
+        l_T = dot(vertices[i], T1+T0)/dot(T1, T1+T0);
 
-        vertices[i] = gl_in[1].gl_Position.xyz  + circle[i] - l_T * T1;
+        vertices[i] = gl_in[1].gl_Position.xyz  + r*(vertices[i] - l_T * T1);
         vertices[i].xy *= -2/(vertices[i].z - 2); // perspective
         vertices[i].xy = vertices[i].xy * zoom_level;
         vertices[i].x *= viewport_size.y/viewport_size.x; //aspect ratio
     }
 
-    for (int i = 7 ; i < 14 ; ++i){
-        normals[i] = normalize(circle[i-7]);
+    N = normalize(cross(T1, T2));
+    B = cross(T1, N);
+    transform;
+    transform[0] = T1;
+    transform[1] = N ;
+    transform[2] = B ;
 
-        l_T = dot(circle[i-7], T1+T2)/dot(T1, T1+T2);
 
-        vertices[i] = gl_in[2].gl_Position.xyz  + circle[i-7] - l_T * T1;
+    for (int i = n ; i < 2*n ; ++i){
+        vertices[i] = transform*circle[(i-n)%(n-1)];
+        normals[i] = normalize(vertices[i]);
+
+        l_T = dot(vertices[i], T1+T2)/dot(T1, T1+T2);
+
+        vertices[i] = gl_in[2].gl_Position.xyz  + r*(vertices[i] - l_T * T1);
         vertices[i].xy *= -2/(vertices[i].z - 2); // perspective
         vertices[i].xy = vertices[i].xy * zoom_level;
         vertices[i].x *= viewport_size.y/viewport_size.x; //aspect ratio
     }
 
 
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 0; i < n-1; ++i) {
         gl_Position = vec4(vertices[i], 1);
         position = vertices[i];
         normal = normals[i];
@@ -86,12 +112,12 @@ void build_tube(){
         normal = normals[i + 1];
         EmitVertex();
 
-        gl_Position = vec4(vertices[i + 7], 1);
-        normal = normals[i + 7];
+        gl_Position = vec4(vertices[i + n], 1);
+        normal = normals[i + n];
         EmitVertex();
 
-        gl_Position =  vec4(vertices[i + 8], 1);
-        normal =  normals[i + 8];
+        gl_Position =  vec4(vertices[i + n + 1], 1);
+        normal =  normals[i + n + 1];
         EmitVertex();
         EndPrimitive();
     }
