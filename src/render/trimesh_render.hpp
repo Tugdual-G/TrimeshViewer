@@ -57,6 +57,17 @@ public:
                   const std::vector<unsigned int> &curves_indices,
                   CurveType type) -> int;
 
+  void set_axis_cross();
+
+  MeshRender(int w_width, int w_height) : width(w_width), height(w_height) {
+    vert_attr_group_length.resize(2, 3);
+    init_window();
+    init_render();
+    vertices_attr.resize(0);
+    faces.resize(0);
+    set_axis_cross();
+  }
+
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
       : width(w_width), height(w_height) {
@@ -165,7 +176,6 @@ private:
   void resize_VAO();
   void resize_EBO();
   void draw(Object &obj);
-  void set_axis_cross();
 
   friend void cursor_callback(GLFWwindow *window, double xpos, double ypos);
   friend void scroll_callback(GLFWwindow *window,
