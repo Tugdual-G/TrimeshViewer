@@ -20,7 +20,7 @@ void parametric_curve(double *coord, double *tangent, double t) {
 }
 
 auto norm(const double *v) -> double {
-  return pow(pow(v[0], 2) + pow(v[1], 2) + pow(v[2], 2), 0.5);
+  return pow(v[0] * v[0] + v[1] * v[1] + v[2] * v[2], 0.5);
 }
 
 auto main() -> int {
@@ -49,7 +49,7 @@ auto main() -> int {
       Colormap::get_nearest_colors(velocity_magnitude, Colormap::PLASMA,
                                    *min - range * 0.4, *max + range * 0.2);
 
-  render.add_curve(coords, colors, CurveType::TUBE_CURVE, 0.01);
+  render.add_curve(coords, colors, CurveType::SMOOTH_TUBE_CURVE, 0.01);
 
   render.render_loop(nullptr, nullptr);
   render.render_finalize();

@@ -1,6 +1,7 @@
 #include "trimesh_render.hpp"
 #include "compile_shader.hpp"
 #include "glad/include/glad/glad.h" // glad should be included before glfw3
+#include "linalg.hpp"
 #include "quatern_transform.hpp"
 #include "vector_instance.hpp"
 #include <GLFW/glfw3.h>
@@ -503,6 +504,19 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
   return obj_id;
 }
 
+static auto get_gost_point(const double *point0,
+                           const double *point1) -> std::vector<double> {
+  // Create a point just before point0, almost aligned with point 0 and 1.
+
+  auto tangent = Linalg::vect_sub(point0, point1);
+  tangent = Linalg::normalize(tangent);
+  auto normal = Linalg::normal(tangent.data());
+  normal = Linalg::vect_scal_mult(normal.data(), 0.01);
+  tangent = Linalg::vect_add(tangent.data(), normal.data());
+  tangent = Linalg::vect_scal_mult(tangent.data(), 0.1);
+  return Linalg::vect_add(point0, tangent.data());
+}
+
 auto MeshRender::add_curve(const std::vector<double> &coords,
                            const std::vector<double> &colors, CurveType type,
                            double width) -> int {
@@ -516,12 +530,30 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
   case CurveType::TUBE_CURVE:
     obtype = ObjectType::TUBE_CURVE;
     break;
+
+  case CurveType::SMOOTH_TUBE_CURVE:
+    obtype = ObjectType::SMOOTH_TUBE_CURVE;
+    break;
   default:
     break;
   }
 
-  std::vector<unsigned int> curve_indices(4 * (coords.size() / 3 - 3));
-  for (unsigned int i = 1; i < curve_indices.size() / 4; ++i) {
+  std::vector<double> coords_clean(coords.size() + 6);
+  std::copy(coords.begin(), coords.end(), coords_clean.begin() + 3);
+
+  auto gost_point = get_gost_point(coords.data(), &coords[3]);
+  coords_clean[0] = gost_point[0];
+  coords_clean[1] = gost_point[1];
+  coords_clean[2] = gost_point[2];
+
+  gost_point =
+      get_gost_point(&coords[coords.size() - 3], &coords[coords.size() - 6]);
+  coords_clean[coords_clean.size() - 3] = gost_point[0];
+  coords_clean[coords_clean.size() - 2] = gost_point[1];
+  coords_clean[coords_clean.size() - 1] = gost_point[2];
+
+  std::vector<unsigned int> curve_indices(4 * (coords_clean.size() / 3 - 3));
+  for (unsigned int i = 0; i < curve_indices.size() / 4; ++i) {
     curve_indices.at(i * 4) = i;
     curve_indices.at(i * 4 + 1) = i + 1;
     curve_indices.at(i * 4 + 2) = i + 2;
@@ -529,16 +561,19 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
   }
 
   int obj_id{0};
+  std::vector<double> per_point_color(coords_clean.size());
   if (colors.size() == 3) {
-    std::vector<double> per_point_color(coords.size());
-    for (int i = 0; i < (int)coords.size(); i += 3) {
+    for (int i = 0; i < (int)coords_clean.size(); i += 3) {
       per_point_color.at(i) = colors[0];
       per_point_color.at(i + 1) = colors[1];
-      per_point_color.at(i + 1) = colors[2];
+      per_point_color.at(i + 2) = colors[2];
     }
-    obj_id = add_object(coords, curve_indices, per_point_color, obtype);
+    obj_id = add_object(coords_clean, curve_indices, per_point_color, obtype);
+  } else if (colors.size() == coords.size()) {
+    std::copy(colors.begin(), colors.end(), per_point_color.begin() + 3);
+    obj_id = add_object(coords_clean, curve_indices, per_point_color, obtype);
   } else {
-    obj_id = add_object(coords, curve_indices, colors, obtype);
+    throw std::invalid_argument("Vertices size and colors size don't match.\n");
   }
 
   Object &obj = objects.at(obj_id);
@@ -560,6 +595,9 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
     break;
   case CurveType::TUBE_CURVE:
     obtype = ObjectType::TUBE_CURVE;
+    break;
+  case CurveType::SMOOTH_TUBE_CURVE:
+    obtype = ObjectType::SMOOTH_TUBE_CURVE;
     break;
   default:
     break;
@@ -607,6 +645,7 @@ void MeshRender::draw(Object &obj) {
 
   case ObjectType::QUAD_CURVE:
   case ObjectType::TUBE_CURVE:
+  case ObjectType::SMOOTH_TUBE_CURVE:
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDrawElementsBaseVertex(

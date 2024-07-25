@@ -11,6 +11,7 @@ enum class ShaderProgramType : int {
   VECTOR_INSTANCE,
   QUAD_CURVE,
   TUBE_CURVE,
+  SMOOTH_TUBE_CURVE,
   AXIS_CROSS,
 };
 
@@ -21,6 +22,7 @@ std::map<ShaderProgramType, std::string> const SHADER_DIR_MAP{
     {ShaderProgramType::SMOOTH_FACES, "shaders/smooth_faces/"},
     {ShaderProgramType::VECTOR_INSTANCE, "shaders/vector_instance/"},
     {ShaderProgramType::QUAD_CURVE, "shaders/quad_curve/"},
+    {ShaderProgramType::SMOOTH_TUBE_CURVE, "shaders/smooth_tube_curve/"},
     {ShaderProgramType::TUBE_CURVE, "shaders/tube_curve/"}};
 
 auto create_program(ShaderProgramType type) -> int;

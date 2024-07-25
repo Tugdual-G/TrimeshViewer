@@ -1,7 +1,7 @@
 #version 460 core
 
 layout (lines_adjacency) in;
-layout (triangle_strip, max_vertices = 32) out;
+layout (triangle_strip, max_vertices = 64) out;
 in vec3 v_color[];
 out vec3 normal;
 out vec3 position;
@@ -14,7 +14,7 @@ uniform vec2 viewport_size;
 vec3 normal_vec(vec3 T){
     // Normal vector to the tangent T.
     vec3 normal = vec3(0,0,0);
-    if (abs(T.x) > 0.0001 || abs(T.y) > 0.0001){
+    if (abs(T.x) > 0.00001 || abs(T.y) > 0.00001){
         normal.x = -T.y;
         normal.y = T.x;
         normal = normalize(normal);
@@ -25,12 +25,12 @@ vec3 normal_vec(vec3 T){
     return normal;
 }
 
-int closer_vertex_idx(vec3 v1, vec3 v2[8]){
+int closer_vertex_idx(vec3 v1, vec3 v2[16]){
     // return the index of the vertice in v2 which is closer
     // to v1.
-    int closer_idx = -1000;
+    int closer_idx = - 1000;
     float dist, min_dist = 1000000;
-    for (int i = 0 ; i < 8 ; ++i){
+    for (int i = 0 ; i < 16 ; ++i){
         dist = distance(v1, v2[i]);
         if (dist < min_dist){
             min_dist = dist;
@@ -43,27 +43,27 @@ int closer_vertex_idx(vec3 v1, vec3 v2[8]){
 void build_tube(){
 
 
-    int n = 9;
-    vec3 circle[8]=vec3[8](vec3(0, 1.0, 0.0),
-                            vec3(0, 0.70711, 0.70711),
+    int n = 17;
+    vec3 circle[16]=vec3[16](vec3(0, 1.0, 0.0),
+                            vec3(0, 0.9239, 0.3827),
+                            vec3(0, 0.7071, 0.7071),
+                            vec3(0, 0.3827, 0.9239),
                             vec3(0, 0.0, 1.0),
-                            vec3(0, -0.70711, 0.70711),
-                            vec3(0, -1.0, 0.0),
-                            vec3(0, -0.70711, -0.70711),
-                            vec3(0, 0.0, -1.0),
-                            vec3(0, 0.70711, -0.70711));
+                            vec3(0, -0.3827, 0.9239),
+                            vec3(0, -0.7071, 0.7071),
+                            vec3(0, -0.9239, 0.3827),
+                            vec3(0, -1.0, 0),
+                            vec3(0, -0.9239, -0.3827),
+                            vec3(0, -0.7071, -0.7071),
+                            vec3(0, -0.3827, -0.9239),
+                            vec3(0, 0, -1.0),
+                            vec3(0, 0.3827, -0.9239),
+                            vec3(0, 0.7071, -0.7071),
+                            vec3(0, 0.9239, -0.3827));
 
-    // vec3 circle[7]=vec3[7](vec3(0 , 1 , 0),
-    //                         vec3(0 , 0.5 , 0.866025),
-    //                         vec3(0 , -0.5 , 0.866025),
-    //                         vec3(0 , -1 , 0.0),
-    //                         vec3(0 , -0.5 , -0.866025),
-    //                         vec3(0 , 0.5 , -0.866025),
-    //                         vec3(0 , 1 , 0));
-
-    vec3 normals[18];
-    vec3 vertices[18];
-    vec3 world_position[18];
+    vec3 normals[34];
+    vec3 vertices[34];
+    vec3 world_position[34];
 
     // start and end tangent
     vec3 T0 = normalize(gl_in[1].gl_Position.xyz - gl_in[0].gl_Position.xyz);

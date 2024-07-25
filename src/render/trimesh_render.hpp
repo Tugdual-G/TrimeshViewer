@@ -12,6 +12,7 @@
 enum class CurveType : int {
   QUAD_CURVE,
   TUBE_CURVE,
+  SMOOTH_TUBE_CURVE,
 };
 
 enum class ObjectType : int {
@@ -20,6 +21,7 @@ enum class ObjectType : int {
   VECTOR,
   QUAD_CURVE,
   TUBE_CURVE,
+  SMOOTH_TUBE_CURVE,
   AXIS_CROSS,
 };
 
@@ -213,6 +215,7 @@ std::map<ObjectType, ShaderProgramType> const OBJECT_SHADER_MAP{
     {ObjectType::VECTOR, ShaderProgramType::VECTOR_INSTANCE},
     {ObjectType::QUAD_CURVE, ShaderProgramType::QUAD_CURVE},
     {ObjectType::TUBE_CURVE, ShaderProgramType::TUBE_CURVE},
+    {ObjectType::SMOOTH_TUBE_CURVE, ShaderProgramType::SMOOTH_TUBE_CURVE},
     {ObjectType::AXIS_CROSS, ShaderProgramType::AXIS_CROSS}};
 
 void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,

@@ -87,6 +87,7 @@ auto create_program(ShaderProgramType type) -> int {
   switch (type) {
   case ShaderProgramType::TUBE_CURVE:
   case ShaderProgramType::QUAD_CURVE:
+  case ShaderProgramType::SMOOTH_TUBE_CURVE:
     shader_id.push_back(compile_shader(
         SHADER_DIR_MAP.at(type) + "geometry_shader.glsl", GL_GEOMETRY_SHADER));
     break;
