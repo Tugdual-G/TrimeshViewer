@@ -186,6 +186,10 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices) {
 
 void MeshRender::add_vertices(const std::vector<double> &new_vertices,
                               const std::vector<double> &colors) {
+  if (new_vertices.size() != colors.size()) {
+    throw std::invalid_argument(
+        "New vertices size and colors size don't match.");
+  }
 
   vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
 
@@ -234,6 +238,11 @@ void MeshRender::update_vertices(const std::vector<double> &new_vertices,
 void MeshRender::update_vertices(const std::vector<double> &new_vertices,
                                  const std::vector<double> &colors,
                                  Object &obj) {
+
+  if (new_vertices.size() != colors.size()) {
+    throw std::invalid_argument(
+        "New vertices size and colors size don't match.");
+  }
   // update vertices, can change the number of vertices.
   std::vector<float> attr_tmp(vertices_attr);
   long int new_attr_length =
@@ -298,6 +307,11 @@ void MeshRender::update_object(const std::vector<double> &ivertices,
 void MeshRender::update_object(const std::vector<double> &ivertices,
                                const std::vector<unsigned int> &ifaces,
                                const std::vector<double> &icolors, int id) {
+
+  if (ivertices.size() != icolors.size()) {
+    throw std::invalid_argument(
+        "New vertices size and colors size don't match.");
+  }
   /* Update the vertices and faces of an object. */
   Object &obj = objects.at(id);
 
@@ -490,7 +504,7 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 }
 
 auto MeshRender::add_curve(const std::vector<double> &coords,
-                           const std::vector<double> &tangents, CurveType type,
+                           const std::vector<double> &colors, CurveType type,
                            double width) -> int {
   // Draws a curve
 
@@ -513,7 +527,19 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
     curve_indices.at(i * 4 + 2) = i + 2;
     curve_indices.at(i * 4 + 3) = i + 3;
   }
-  int obj_id = add_object(coords, curve_indices, tangents, obtype);
+
+  int obj_id{0};
+  if (colors.size() == 3) {
+    std::vector<double> per_point_color(coords.size());
+    for (int i = 0; i < (int)coords.size(); i += 3) {
+      per_point_color.at(i) = colors[0];
+      per_point_color.at(i + 1) = colors[1];
+      per_point_color.at(i + 1) = colors[2];
+    }
+    obj_id = add_object(coords, curve_indices, per_point_color, obtype);
+  } else {
+    obj_id = add_object(coords, curve_indices, colors, obtype);
+  }
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;
@@ -523,7 +549,7 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
 }
 
 auto MeshRender::add_curves(const std::vector<double> &coords,
-                            const std::vector<double> &tangents,
+                            const std::vector<double> &colors,
                             const std::vector<unsigned int> &curves_indices,
                             CurveType type, double width) -> int {
   // Draws multiples curves.
@@ -539,7 +565,18 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
     break;
   }
 
-  int obj_id = add_object(coords, curves_indices, tangents, obtype);
+  int obj_id{0};
+  if (colors.size() == 3) {
+    std::vector<double> per_point_color(coords.size());
+    for (int i = 0; i < (int)coords.size(); i += 3) {
+      per_point_color.at(i) = colors[0];
+      per_point_color.at(i + 1) = colors[1];
+      per_point_color.at(i + 1) = colors[2];
+    }
+    obj_id = add_object(coords, curves_indices, per_point_color, obtype);
+  } else {
+    obj_id = add_object(coords, curves_indices, colors, obtype);
+  }
 
   Object &obj = objects.at(obj_id);
   obj.vertices_per_face = 4;

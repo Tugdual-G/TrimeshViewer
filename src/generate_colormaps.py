@@ -4,10 +4,11 @@ import numpy as np
 
 n_colors = 100
 cmaps = {}
-cmaps["PLASMA"] = plt.cm.plasma(np.linspace(0,1,100))[:,0:3]
-cmaps["MAGMA"] = plt.cm.magma(np.linspace(0,1,100))[:,0:3]
-cmaps["INFERNO"] = plt.cm.inferno(np.linspace(0,1,100))[:,0:3]
-cmaps["VIRIDIS"] = plt.cm.viridis(np.linspace(0,1,100))[:,0:3]
+cmaps["PLASMA"] = plt.cm.plasma(np.linspace(0, 1, 100))[:, 0:3]
+cmaps["MAGMA"] = plt.cm.magma(np.linspace(0, 1, 100))[:, 0:3]
+cmaps["INFERNO"] = plt.cm.inferno(np.linspace(0, 1, 100))[:, 0:3]
+cmaps["VIRIDIS"] = plt.cm.viridis(np.linspace(0, 1, 100))[:, 0:3]
+cmaps["HOT"] = plt.cm.viridis(np.linspace(0, 1, 100))[:, 0:3]
 
 head = """
 #ifndef CMAP_H_
@@ -82,16 +83,16 @@ void get_nearest_colors(std::vector<double> &values,
 #endif // CMAP_H_
 """
 
-with open('colormap.h', mode="w") as f:
+with open("colormap.h", mode="w") as f:
     f.write(head)
     f.write(f"#define NCOLORS {n_colors}\n")
     for key, value in cmaps.items():
-        f.write(f"\ndouble {key}[] = ""{")
-        for i in range(value.shape[0]-1):
+        f.write(f"\ndouble {key}[] = " "{")
+        for i in range(value.shape[0] - 1):
             for j in range(value.shape[1]):
                 f.write(f"{value[i,j]}, ")
             f.write("  //\n                   ")
 
-        f.write(f"{value[-1,0]}, {value[-1,1]}, {value[-1,2]}""};")
+        f.write(f"{value[-1,0]}, {value[-1,1]}, {value[-1,2]}" "};")
         f.write("  //\n\n")
     f.write(func)

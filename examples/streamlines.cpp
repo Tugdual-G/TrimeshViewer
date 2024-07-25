@@ -44,22 +44,19 @@ auto main() -> int {
   magnetic_streamlines(streamlines_coords, streamlines_tangents,
                        streamlines_indices, 0.3, 2000, 36);
 
-  double length{0};
-  std::vector<double> vortex_scalval(streamlines_coords.size() / 3, 0);
+  std::vector<double> velocity_magnitude(streamlines_coords.size() / 3, 0);
   // gives color to the vectors and changes their length
-  for (int i = 0; i < (int)vortex_scalval.size(); ++i) {
-    length = Linalg::norm(&streamlines_tangents[i * 3]);
-    Linalg::normalize(&streamlines_tangents[i * 3]);
-    length = pow(length / 290.0, 0.6);
-    vortex_scalval.at(i) = length;
+  for (int i = 0; i < (int)velocity_magnitude.size(); ++i) {
+    velocity_magnitude.at(i) =
+        pow(Linalg::norm(&streamlines_tangents[i * 3]), 0.5);
   }
-  std::vector<double> vect_colors =
-      Colormap::get_nearest_colors(vortex_scalval, Colormap::MAGMA);
+  std::vector<double> streamlines_colors =
+      Colormap::get_nearest_colors(velocity_magnitude, Colormap::PLASMA);
 
   MeshRender render(500, 500, torus.vertices, torus.faces, colors);
 
-  render.add_curves(streamlines_coords, streamlines_tangents,
-                    streamlines_indices, CurveType::QUAD_CURVE, 0.003);
+  render.add_curves(streamlines_coords, streamlines_colors, streamlines_indices,
+                    CurveType::QUAD_CURVE, 0.003);
 
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
@@ -113,8 +110,6 @@ void magnetic_streamlines(std::vector<double> &coords,
                           std::vector<double> &directions,
                           std::vector<unsigned int> &indices, double R, int N,
                           int n_ring_sections) {
-
-  constexpr double pi{3.1415926535898};
 
   std::uniform_real_distribution<double> unifx(-1.5, 1.5);
   std::uniform_real_distribution<double> unify(-0.02, 0.02);

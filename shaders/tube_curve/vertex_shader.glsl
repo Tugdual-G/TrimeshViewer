@@ -2,7 +2,9 @@
 
 uniform vec4 q, q_inv;
 layout(location = 0) in vec3 in_pos;        // Vertex position
-layout(location = 1) in vec3 in_tangent;        // Vertex colors
+layout(location = 1) in vec3 in_color;        // Vertex colors
+
+out vec3 v_color;
 
 vec4 mul_quatern(vec4 u, vec4 v){
     //u.x, u.y, u.z, u.w = u
@@ -23,4 +25,5 @@ vec3 rotation(vec3 vector){
 void main()
 {
     gl_Position = vec4(rotation(in_pos), 1.0);
+    v_color = in_color;
 }

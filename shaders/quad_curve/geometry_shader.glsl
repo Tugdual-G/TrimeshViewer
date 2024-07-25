@@ -2,8 +2,10 @@
 
 layout (lines_adjacency) in;
 layout (triangle_strip, max_vertices = 4) out;
+in vec3 v_color[];
 out vec3 normal;
 out vec3 position;
+out vec3 color;
 
 uniform float r;
 uniform float zoom_level;
@@ -66,6 +68,7 @@ void build_quad_line(){
         vertices[i].x *= viewport_size.y/viewport_size.x; //aspect ratio
         gl_Position = vec4(vertices[i], 1);
         normal = normals[i];
+        color = v_color[1+i/3];
         EmitVertex();
     }
     EndPrimitive();
