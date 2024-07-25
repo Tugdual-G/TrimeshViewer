@@ -503,7 +503,6 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
     obtype = ObjectType::TUBE_CURVE;
     break;
   default:
-    throw;
     break;
   }
 
@@ -537,7 +536,6 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
     obtype = ObjectType::TUBE_CURVE;
     break;
   default:
-    throw;
     break;
   }
 
