@@ -25,6 +25,21 @@ vec3 normal_vec(vec3 T){
     return normal;
 }
 
+int closer_vertex_idx(vec3 v1, vec3 v2[8]){
+    // return the index of the vertice in v2 which is closer
+    // to v1.
+    int closer_idx = -1000;
+    float dist, min_dist = 1000000;
+    for (int i = 0 ; i < 8 ; ++i){
+        dist = distance(v1, v2[i]);
+        if (dist < min_dist){
+            min_dist = dist;
+            closer_idx = i;
+        }
+    }
+    return closer_idx;
+}
+
 void build_tube(){
 
 
@@ -67,7 +82,7 @@ void build_tube(){
     float l_T; // length to the meeting point
 
     for (int i = 0 ; i < n ; ++i){
-        vertices[i] = transform*circle[i%(n-1)];
+        vertices[i] = transform * circle[i%(n-1)];
         normals[i] = normalize(vertices[i]);
 
         l_T = dot(vertices[i], T1+T0)/dot(T1, T1+T0);
@@ -83,16 +98,23 @@ void build_tube(){
         normals[i] = normalize(normals[i]);
     }
 
+    vec3 v0 = transform * circle[0];
     N = normalize(cross(T1, T2));
     B = cross(T1, N);
-    transform;
     transform[0] = T1;
     transform[1] = N ;
     transform[2] = B ;
 
+    for (int i = 0 ; i < n-1 ; ++i){
+        circle[i] = transform * circle[i];
+    }
+
+    // To reduce twisting when the curve is straight.
+    int closer_v_idx = closer_vertex_idx(v0, circle);
+
 
     for (int i = n ; i < 2*n ; ++i){
-        vertices[i] = transform*circle[(i-n)%(n-1)];
+        vertices[i] = circle[(closer_v_idx + i-n)%(n-1)];
         normals[i] = normalize(vertices[i]);
 
         l_T = dot(vertices[i], T1+T2)/dot(T1, T1+T2);
