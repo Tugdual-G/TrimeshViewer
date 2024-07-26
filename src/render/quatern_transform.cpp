@@ -13,7 +13,7 @@ auto Quaternion::c() -> Quaternion {
 
 auto Quaternion::norm2() -> double {
   /* Square norm */
-  return pow(q[0], 2) + pow(q[1], 2) + pow(q[2], 2) + pow(q[3], 2);
+  return q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
 }
 
 auto Quaternion::norm() -> double { return pow(norm2(), 0.5); };
