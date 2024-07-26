@@ -92,10 +92,13 @@ auto main() -> int {
   std::vector<double> ico_colors = Colormap::get_interpolated_colors(
       ico_scalar_vertex_value, Colormap::MAGMA, 0, 20);
 
-  MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
-  render.add_object(ico.vertices, ico.faces, ico_colors);
-  render.add_object(sphere.vertices, sphere.faces, sphere_colors);
-  render.add_object(torus.vertices, torus.faces);
+  MeshRender render(500, 500);
+  render.set_axis_cross();
+
+  render.add_mesh(mesh.vertices, mesh.faces, colors);
+  render.add_mesh(ico.vertices, ico.faces, ico_colors);
+  render.add_mesh(sphere.vertices, sphere.faces, sphere_colors);
+  render.add_mesh(torus.vertices, torus.faces);
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
   return 0;

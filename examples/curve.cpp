@@ -32,7 +32,7 @@ auto main() -> int {
   Mesh torus = Primitives::torus(0.2, 0.06, 16);
 
   MeshRender render(500, 500);
-  render.add_object(torus.vertices, torus.faces);
+  render.add_mesh(torus.vertices, torus.faces);
 
   std::vector<double> velocity_magnitude(coords.size() / 3);
   for (int i = 0; i < N; ++i) {

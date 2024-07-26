@@ -71,7 +71,9 @@ auto main() -> int {
       ico_scalar_vertex_value, Colormap::INFERNO, -0.5, 0.5);
   // Generates colors
 
-  MeshRender render(500, 500, ico.vertices, ico.faces, ico_colors);
+  MeshRender render(500, 500);
+  render.set_axis_cross();
+  render.add_mesh(ico.vertices, ico.faces, ico_colors);
   Fargs fargs{&ico, &render, radius};
   callback(&fargs);
   render.render_loop(callback, &fargs);

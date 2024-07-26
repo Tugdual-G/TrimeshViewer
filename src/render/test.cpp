@@ -189,9 +189,7 @@ auto main() -> int {
 
   std::vector<double> tube_colors{0.7, 0.4, 0.9};
 
-  MeshRender render(500, 500, cube_vertices, cube_faces, cube_colors);
-
-  render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
+  MeshRender render(500, 500);
 
   int curve_idx = render.add_curve(tube_coords, tube_colors,
                                    CurveType::SMOOTH_TUBE_CURVE, 0.01);
@@ -201,11 +199,16 @@ auto main() -> int {
   tube_colors.resize(tube_colors.size() + 6);
   render.update_vertex_colors(tube_colors, curve_idx);
 
+  render.add_mesh(icosahedron_vertices, icosahedron_faces, ico_colors);
+
+  render.set_axis_cross();
+
+  render.add_mesh(cube_vertices, cube_faces, cube_colors);
   ///////////////////////////////////////////////////
   // Replace an object by another
   /////////////////////////////////////////////////
   int ico_id =
-      render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
+      render.add_mesh(icosahedron_vertices, icosahedron_faces, ico_colors);
   icosahedron_faces = cube_faces;
   icosahedron_vertices = cube_vertices;
   cube_colors =
@@ -219,7 +222,8 @@ auto main() -> int {
                     .render = &render,
                     .obj_id = ico_id};
 
-  render.add_object(tet_vertices, tet_faces);
+  render.add_mesh(tet_vertices, tet_faces);
+
   render.render_loop(callback, &ico_args);
   render.render_finalize();
 

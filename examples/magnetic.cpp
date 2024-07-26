@@ -64,7 +64,9 @@ auto main() -> int {
   std::vector<double> vect_colors =
       Colormap::get_nearest_colors(vortex_scalval, Colormap::MAGMA);
 
-  MeshRender render(500, 500, torus.vertices, torus.faces, colors);
+  MeshRender render(500, 500);
+  render.set_axis_cross();
+  render.add_mesh(torus.vertices, torus.faces, colors);
 
   render.add_vectors(vortex_coords, vortex_directions, vect_colors);
 
