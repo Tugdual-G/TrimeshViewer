@@ -1,6 +1,7 @@
 /* Basic script to debug and test implementation */
 #include "colormap.hpp"
 #include "trimesh_render.hpp"
+#include <cmath>
 #include <vector>
 
 constexpr double phi{1.6180339887498};
@@ -8,18 +9,51 @@ constexpr double phi{1.6180339887498};
 struct Fargs {
   /* For the animaion callback. */
   std::vector<double> *vertices{nullptr};
+  std::vector<double> *colors{nullptr};
   MeshRender *render{nullptr};
   int obj_id{0};
 };
 
 auto callback(void *fargs) -> int {
+  static double t{0};
   /* Animation callback. */
   auto *args = (Fargs *)fargs;
+
+  static std::vector<double> init_colors = *args->colors;
+
   for (auto &v : *args->vertices) {
     v -= 0.001;
   }
+
   args->render->update_object(*args->vertices, args->obj_id);
+  double r = (1.0 + std::sin(t)) / 2.0;
+  double g = (1.0 + std::cos(1.12 * t)) / 2.0;
+  double b = (1.0 + std::cos(1.51 * t)) / 2.0;
+  for (int i = 0; i < (int)(*args->vertices).size() / 3; ++i) {
+    (*args->colors).at(i * 3) = init_colors.at(i * 3) * r;
+    (*args->colors).at(i * 3 + 1) = init_colors.at(i * 3 + 1) * g;
+    (*args->colors).at(i * 3 + 2) = init_colors.at(i * 3 + 2) * b;
+  }
+  args->render->update_vertex_colors(*args->colors, args->obj_id);
+  t += 0.03;
   return 1;
+}
+
+auto norm(const double *v) -> double {
+  return pow(v[0] * v[0] + v[1] * v[1] + v[2] * v[2], 0.5);
+}
+void parametric_curve(double *coord, double *tangent, double t) {
+  // parametric curve designed for t in [0.0, 1.0].
+  constexpr double Tau{2.0 * 3.1415926535898};
+  constexpr double r{0.3};
+  t *= Tau;
+  coord[0] = r * cos(1.5 * t);
+  coord[1] = r * sin(3.3 * t) + 0.5 * r;
+  coord[2] = 1.5 * r * (sin(t) + cos(t));
+
+  tangent[0] = -1.5 * r * sin(1.5 * t);
+  tangent[1] = 3.3 * r * cos(3.3 * t);
+  tangent[2] = 1.5 * r * (cos(t) - sin(t));
 }
 
 auto main() -> int {
@@ -141,9 +175,31 @@ auto main() -> int {
   std::vector<double> cube_colors =
       Colormap::get_nearest_colors(cube_scalar_vertex_value, Colormap::VIRIDIS);
 
+  constexpr int N{200};
+  std::vector<double> tube_coords(N * 3);
+  std::vector<double> tube_tangents(N * 3);
+
+  std::vector<double> velocity_magnitude(tube_coords.size() / 3);
+  for (int i = 0; i < N; ++i) {
+    parametric_curve(&tube_coords[i * 3], &tube_tangents[i * 3],
+                     (double)i * 1.5 / (N - 1));
+
+    velocity_magnitude.at(i) = norm(&tube_tangents[i * 3]);
+  }
+
+  std::vector<double> tube_colors{0.7, 0.4, 0.9};
+
   MeshRender render(500, 500, cube_vertices, cube_faces, cube_colors);
 
   render.add_object(icosahedron_vertices, icosahedron_faces, ico_colors);
+
+  int curve_idx = render.add_curve(tube_coords, tube_colors,
+                                   CurveType::SMOOTH_TUBE_CURVE, 0.01);
+
+  tube_colors =
+      Colormap::get_nearest_colors(velocity_magnitude, Colormap::PLASMA);
+  tube_colors.resize(tube_colors.size() + 6);
+  render.update_vertex_colors(tube_colors, curve_idx);
 
   ///////////////////////////////////////////////////
   // Replace an object by another
@@ -158,8 +214,10 @@ auto main() -> int {
                        ico_id);
 
   // Arguments for the animation callback
-  Fargs ico_args = {
-      .vertices = &icosahedron_vertices, .render = &render, .obj_id = ico_id};
+  Fargs ico_args = {.vertices = &icosahedron_vertices,
+                    .colors = &cube_colors,
+                    .render = &render,
+                    .obj_id = ico_id};
 
   render.add_object(tet_vertices, tet_faces);
   render.render_loop(callback, &ico_args);
