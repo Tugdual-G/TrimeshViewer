@@ -178,7 +178,7 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices) {
     vertices_attr.at((n_total_vertices + i) * 6 + 5) = 0.8;
   }
   n_total_vertices += (long)new_vertices.size() / 3;
-  resize_VAO();
+  resize_VBO();
 }
 
 void MeshRender::add_vertices(const std::vector<double> &new_vertices,
@@ -200,7 +200,7 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices,
     }
   }
   n_total_vertices += (long)new_vertices.size() / 3;
-  resize_VAO();
+  resize_VBO();
 }
 
 void MeshRender::update_vertices(const std::vector<double> &new_vertices,
@@ -271,6 +271,18 @@ void MeshRender::update_vertices(const std::vector<double> &new_vertices,
                vertices_attr.data(), GL_STATIC_DRAW);
 }
 
+MeshRender::Object::Object(ObjectType type, long int attr_offset,
+                           long int attr_length, long int total_number_attr,
+                           long int indices_offset, long int indices_length,
+                           long int vertices_per_primitive)
+    : object_type(type), attr_offset(attr_offset), attr_length(attr_length),
+      total_number_attr(total_number_attr),
+      faces_indices_offset(indices_offset),
+      faces_indices_length(indices_length),
+      vertices_per_primitive(vertices_per_primitive) {
+  set_shader_program();
+}
+
 void MeshRender::update_object(const std::vector<double> &ivertices, int id) {
   /* Update the vertices positions of an object. */
   Object &obj = objects.at(id);
@@ -327,19 +339,21 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces,
                             ObjectType object_type) -> int {
 
-  Object new_mesh(object_type);
-  new_mesh.total_number_attr =
+  long int total_number_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
-  new_mesh.attr_offset = (long)vertices_attr.size();
-  new_mesh.attr_length = (long)ivertices.size() * 2;
-  new_mesh.faces_indices_offset = (long)faces.size();
-  new_mesh.faces_indices_length = (long)ifaces.size();
+  auto attr_offset = (long int)vertices_attr.size();
+  auto attr_length = (long int)ivertices.size() * 2;
+  auto faces_indices_offset = (long int)faces.size();
+  auto faces_indices_length = (long int)ifaces.size();
+
+  Object new_obj(object_type, attr_offset, attr_length, total_number_attr,
+                 faces_indices_offset, faces_indices_length,
+                 OBJECT_VERTICES_PER_PRIMITIVE_MAP.at(object_type));
 
   add_indices(ifaces);
   add_vertices(ivertices);
 
-  new_mesh.set_shader_program();
-  objects.push_back(new_mesh);
+  objects.push_back(new_obj);
   return (int)objects.size() - 1;
 }
 
@@ -348,62 +362,34 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<double> &colors,
                             ObjectType object_type) -> int {
 
-  Object new_mesh(object_type);
-  new_mesh.total_number_attr =
+  long int total_number_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
+  auto attr_offset = (long int)vertices_attr.size();
+  auto attr_length = (long int)ivertices.size() * 2;
+  auto faces_indices_offset = (long int)faces.size();
+  auto faces_indices_length = (long int)ifaces.size();
 
-  new_mesh.attr_offset = (long)vertices_attr.size();
-  new_mesh.attr_length = (long)ivertices.size() * 2;
-  new_mesh.faces_indices_offset = (long)faces.size();
-  new_mesh.faces_indices_length = (long)ifaces.size();
+  Object new_obj(object_type, attr_offset, attr_length, total_number_attr,
+                 faces_indices_offset, faces_indices_length,
+                 OBJECT_VERTICES_PER_PRIMITIVE_MAP.at(object_type));
 
   add_indices(ifaces);
   add_vertices(ivertices, colors);
 
-  new_mesh.set_shader_program();
-  objects.push_back(new_mesh);
+  objects.push_back(new_obj);
   return (int)objects.size() - 1;
 }
 
-auto MeshRender::add_object(const std::vector<double> &ivertices,
-                            const std::vector<unsigned int> &ifaces,
-                            const std::vector<double> &colors) -> int {
+auto MeshRender::add_mesh(const std::vector<double> &ivertices,
+                          const std::vector<unsigned int> &ifaces,
+                          const std::vector<double> &colors) -> int {
 
-  Object new_mesh(ObjectType::MESH);
-  new_mesh.total_number_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
-
-  new_mesh.attr_offset = (long)vertices_attr.size();
-  new_mesh.attr_length = (long)ivertices.size() * 2;
-  new_mesh.faces_indices_offset = (long)faces.size();
-  new_mesh.faces_indices_length = (long)ifaces.size();
-
-  add_indices(ifaces);
-  add_vertices(ivertices, colors);
-
-  new_mesh.set_shader_program();
-  objects.push_back(new_mesh);
-  return (int)objects.size() - 1;
+  return add_object(ivertices, ifaces, colors, ObjectType::MESH);
 }
 
-auto MeshRender::add_object(const std::vector<double> &ivertices,
-                            const std::vector<unsigned int> &ifaces) -> int {
-
-  Object new_mesh(ObjectType::MESH);
-  new_mesh.total_number_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
-
-  new_mesh.attr_offset = (long)vertices_attr.size();
-  new_mesh.attr_length = (long)ivertices.size() * 2;
-  new_mesh.faces_indices_offset = (long)faces.size();
-  new_mesh.faces_indices_length = (long)ifaces.size();
-
-  add_indices(ifaces);
-  add_vertices(ivertices);
-
-  new_mesh.set_shader_program();
-  objects.push_back(new_mesh);
-  return (int)objects.size() - 1;
+auto MeshRender::add_mesh(const std::vector<double> &ivertices,
+                          const std::vector<unsigned int> &ifaces) -> int {
+  return add_object(ivertices, ifaces, ObjectType::MESH);
 }
 
 auto MeshRender::add_vectors(const std::vector<double> &coords,
@@ -506,6 +492,7 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 static auto get_gost_point(const double *point0,
                            const double *point1) -> std::vector<double> {
   // Create a point just before point0, almost aligned with point 0 and 1.
+  // this function exist for open curves since we need adjacency.
 
   auto tangent = Linalg::vect_sub(point0, point1);
   tangent = Linalg::normalize(tangent);
@@ -519,7 +506,7 @@ static auto get_gost_point(const double *point0,
 auto MeshRender::add_curve(const std::vector<double> &coords,
                            const std::vector<double> &colors, CurveType type,
                            double width) -> int {
-  // Draws a curve
+  // Adds a curve object, generate gost points at the extremities.
 
   ObjectType obtype{0};
   switch (type) {
@@ -541,15 +528,11 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
   std::copy(coords.begin(), coords.end(), coords_clean.begin() + 3);
 
   auto gost_point = get_gost_point(coords.data(), &coords[3]);
-  coords_clean[0] = gost_point[0];
-  coords_clean[1] = gost_point[1];
-  coords_clean[2] = gost_point[2];
+  std::copy(gost_point.begin(), gost_point.end(), coords_clean.begin());
 
   gost_point =
       get_gost_point(&coords[coords.size() - 3], &coords[coords.size() - 6]);
-  coords_clean[coords_clean.size() - 3] = gost_point[0];
-  coords_clean[coords_clean.size() - 2] = gost_point[1];
-  coords_clean[coords_clean.size() - 1] = gost_point[2];
+  std::copy(gost_point.begin(), gost_point.end(), coords_clean.end() - 3);
 
   std::vector<unsigned int> curve_indices(4 * (coords_clean.size() / 3 - 3));
   for (unsigned int i = 0; i < curve_indices.size() / 4; ++i) {
@@ -577,7 +560,7 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
   }
 
   Object &obj = objects.at(obj_id);
-  obj.vertices_per_face = 4;
+  obj.vertices_per_primitive = 4; // for line adjacency
   glUniform1f(glGetUniformLocation(obj.shader_program, "r"), (float)width);
 
   return obj_id;
@@ -588,7 +571,7 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
                             const std::vector<unsigned int> &curves_indices,
                             CurveType type, double width) -> int {
   // Draws multiples curves.
-  ObjectType obtype{0};
+  ObjectType obtype{ObjectType::NONE};
   switch (type) {
   case CurveType::QUAD_CURVE:
     obtype = ObjectType::QUAD_CURVE;
@@ -612,12 +595,14 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
       per_point_color.at(i + 1) = colors[2];
     }
     obj_id = add_object(coords, curves_indices, per_point_color, obtype);
-  } else {
+  } else if (colors.size() == coords.size()) {
     obj_id = add_object(coords, curves_indices, colors, obtype);
+  } else {
+    throw std::invalid_argument("Coords size and colors size don't match in " +
+                                std::string(__func__) + "\n");
   }
 
   Object &obj = objects.at(obj_id);
-  obj.vertices_per_face = 4;
   glUniform1f(glGetUniformLocation(obj.shader_program, "r"), (float)width);
 
   return obj_id;
@@ -665,7 +650,7 @@ void MeshRender::draw(Object &obj) {
   }
 };
 
-void MeshRender::resize_VAO() {
+void MeshRender::resize_VBO() {
   // Resize the VAO and update vertex attributes data
   size_t total_size_vertice_attr =
       sizeof(float) *

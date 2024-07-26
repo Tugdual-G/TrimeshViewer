@@ -27,12 +27,15 @@ enum class ObjectType : int {
 
 class MeshRender {
 public:
-  auto add_object(const std::vector<double> &ivertices,
-                  const std::vector<unsigned int> &ifaces) -> int;
+  auto add_mesh(const std::vector<double> &ivertices,
+                const std::vector<unsigned int> &ifaces) -> int;
 
-  auto add_object(const std::vector<double> &ivertices,
-                  const std::vector<unsigned int> &ifaces,
-                  const std::vector<double> &colors) -> int;
+  auto add_mesh(const std::vector<double> &ivertices,
+                const std::vector<unsigned int> &ifaces,
+                const std::vector<double> &colors) -> int;
+
+  void update_vertex_colors(std::vector<double> &colors,
+                            unsigned int object_idx);
 
   void update_object(const std::vector<double> &ivertices, int id);
 
@@ -69,36 +72,16 @@ public:
     faces.resize(0);
   }
 
-  MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
-             std::vector<unsigned int> &ifaces)
-      : width(w_width), height(w_height) {
-
-    init_window();
-    init_render();
-    set_axis_cross();
-    add_object(ivertices, ifaces);
-  }
-
-  MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
-             std::vector<unsigned int> &ifaces, std::vector<double> &icolors)
-      : width(w_width), height(w_height) {
-
-    init_window();
-    init_render();
-    set_axis_cross();
-    add_object(ivertices, ifaces, icolors);
-  }
-
   auto render_finalize() -> int;
   auto render_loop(int (*data_update_function)(void *fargs),
                    void *fargs) -> int;
-  void add_vertex_normals(std::vector<double> &normals);
-  void update_vertex_colors(std::vector<double> &colors,
-                            unsigned int object_idx);
+
+  // void add_vertex_normals(std::vector<double> &normals);
 
 private:
   class Object {
     // Represent a mesh to be rendered and its positions in the openGL buffers.
+    void set_shader_program();
 
   public:
     ObjectType object_type;
@@ -119,10 +102,10 @@ private:
     // A face can also be a pentagon, a line strip ...
     long int faces_indices_offset{-1}; // elements (not bytes)
     long int faces_indices_length{-1};
-    long int vertices_per_face{-1};
+    long int vertices_per_primitive{-1};
 
     auto n_faces() const -> long int {
-      return faces_indices_length / vertices_per_face;
+      return faces_indices_length / vertices_per_primitive;
     }
 
     // each object has its own shader program for flexibility
@@ -133,9 +116,9 @@ private:
     int viewport_size_loc{0}; // uniform to keep the aspect ratio
     int n_instances{0};
 
-    void set_shader_program();
-
-    Object(ObjectType type) : object_type(type) {};
+    Object(ObjectType type, long int attr_offset, long int attr_length,
+           long int total_number_attr, long int indices_offset,
+           long int indices_length, long int vertices_per_primitive);
   };
 
   // viewport size
@@ -168,7 +151,7 @@ private:
 
   void init_window();
   void init_render();
-  void resize_VAO();
+  void resize_VBO();
   void resize_EBO();
   void draw(Object &obj);
 
@@ -193,22 +176,28 @@ private:
 
   auto add_object(const std::vector<double> &ivertices,
                   const std::vector<unsigned int> &ifaces,
-                  ObjectType shader_type) -> int;
+                  ObjectType object_type) -> int;
 
   auto add_object(const std::vector<double> &ivertices,
                   const std::vector<unsigned int> &ifaces,
                   const std::vector<double> &colors,
-                  ObjectType shader_type) -> int;
+                  ObjectType object_type) -> int;
 };
 
 // convert between different types
-std::map<ObjectType, ShaderProgramType> const OBJECT_SHADER_MAP{
+const std::map<ObjectType, ShaderProgramType> OBJECT_SHADER_MAP{
     {ObjectType::MESH, ShaderProgramType::FLAT_FACES},
     {ObjectType::VECTOR, ShaderProgramType::VECTOR_INSTANCE},
     {ObjectType::QUAD_CURVE, ShaderProgramType::QUAD_CURVE},
     {ObjectType::TUBE_CURVE, ShaderProgramType::TUBE_CURVE},
     {ObjectType::SMOOTH_TUBE_CURVE, ShaderProgramType::SMOOTH_TUBE_CURVE},
     {ObjectType::AXIS_CROSS, ShaderProgramType::AXIS_CROSS}};
+
+const std::map<ObjectType, int> OBJECT_VERTICES_PER_PRIMITIVE_MAP{
+    {ObjectType::NONE, -1},      {ObjectType::MESH, 3},
+    {ObjectType::VECTOR, 3},     {ObjectType::QUAD_CURVE, 4},
+    {ObjectType::TUBE_CURVE, 4}, {ObjectType::SMOOTH_TUBE_CURVE, 4},
+    {ObjectType::AXIS_CROSS, 3}};
 
 void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods);
