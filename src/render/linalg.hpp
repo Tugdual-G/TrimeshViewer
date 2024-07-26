@@ -41,11 +41,29 @@ auto normalize(const double *u) -> std::vector<double> {
   return v;
 }
 
+auto vect_scal_mult(std::vector<double> u,
+                    double alpha) -> std::vector<double> {
+  std::vector<double> w(3);
+  w[0] = u[0] * alpha;
+  w[1] = u[1] * alpha;
+  w[2] = u[2] * alpha;
+  return w;
+}
+
 auto vect_scal_mult(const double *u, double alpha) -> std::vector<double> {
   std::vector<double> w(3);
   w[0] = u[0] * alpha;
   w[1] = u[1] * alpha;
   w[2] = u[2] * alpha;
+  return w;
+}
+
+auto vect_add(std::vector<double> u,
+              std::vector<double> v) -> std::vector<double> {
+  std::vector<double> w(3);
+  w[0] = u[0] + v[0];
+  w[1] = u[1] + v[1];
+  w[2] = u[2] + v[2];
   return w;
 }
 
@@ -57,6 +75,14 @@ auto vect_add(const double *u, const double *v) -> std::vector<double> {
   return w;
 }
 
+auto vect_sub(std::vector<double> u,
+              std::vector<double> v) -> std::vector<double> {
+  std::vector<double> w(3);
+  w[0] = u[0] - v[0];
+  w[1] = u[1] - v[1];
+  w[2] = u[2] - v[2];
+  return w;
+}
 auto vect_sub(const double *u, const double *v) -> std::vector<double> {
   std::vector<double> w(3);
   w[0] = u[0] - v[0];
