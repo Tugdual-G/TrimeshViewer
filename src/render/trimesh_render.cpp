@@ -79,7 +79,7 @@ void MeshRender::resize_EBO() {
   // Square EBO
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               (long)sizeof(unsigned int) * n_total_indices, faces.data(),
+               (long)sizeof(unsigned int) * faces.size(), faces.data(),
                GL_STATIC_DRAW);
 
   glCheckError();
@@ -141,9 +141,7 @@ auto MeshRender::render_finalize() -> int {
 void MeshRender::add_indices(const std::vector<unsigned int> &new_indices) {
   faces.resize(faces.size() + new_indices.size());
   std::copy(new_indices.begin(), new_indices.end(),
-            faces.begin() + (long)n_total_indices);
-  n_total_indices +=
-      (long)new_indices.size(); // sturdier if different number of attr
+            faces.end() - (long int)new_indices.size());
   resize_EBO();
 }
 
@@ -164,7 +162,6 @@ void MeshRender::update_indices(const std::vector<unsigned int> &new_indices,
             faces.begin() +
                 (long)(obj.faces_indices_offset + new_indices.size()));
 
-  n_total_indices += (long)new_indices.size() - obj.faces_indices_length;
   obj.faces_indices_length = (long)new_indices.size();
   resize_EBO();
 }

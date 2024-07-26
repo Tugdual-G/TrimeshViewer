@@ -63,23 +63,18 @@ public:
   void set_axis_cross();
 
   MeshRender(int w_width, int w_height) : width(w_width), height(w_height) {
-    vert_attr_group_length.resize(2, 3);
     init_window();
     init_render();
     vertices_attr.resize(0);
     faces.resize(0);
-    set_axis_cross();
   }
 
   MeshRender(int w_width, int w_height, std::vector<double> &ivertices,
              std::vector<unsigned int> &ifaces)
       : width(w_width), height(w_height) {
 
-    vert_attr_group_length.resize(2, 3);
     init_window();
     init_render();
-    vertices_attr.resize(0);
-    faces.resize(0);
     set_axis_cross();
     add_object(ivertices, ifaces);
   }
@@ -88,11 +83,8 @@ public:
              std::vector<unsigned int> &ifaces, std::vector<double> &icolors)
       : width(w_width), height(w_height) {
 
-    vert_attr_group_length.resize(2, 3);
     init_window();
     init_render();
-    vertices_attr.resize(0);
-    faces.resize(0);
     set_axis_cross();
     add_object(ivertices, ifaces, icolors);
   }
@@ -112,11 +104,12 @@ private:
     ObjectType object_type;
 
     // first element position in the Vertex Buffer Object/vertices_attr
-    long int attr_offset{0}; // in elements, (not in bytes)
+    long int attr_offset{-1}; // in elements, (not in bytes)
     // number of elements in the Vertex Buffer Object
-    long int attr_length{0};
+    long int attr_length{-1};
+
     // total number of attributes per vertex
-    long int total_number_attr{0};
+    long int total_number_attr{-1};
 
     auto n_vertices() const -> long int {
       return attr_length / total_number_attr;
@@ -124,9 +117,9 @@ private:
 
     // Offset in the EBO/faces
     // A face can also be a pentagon, a line strip ...
-    long int faces_indices_offset{0}; // elements (not bytes)
-    long int faces_indices_length{0};
-    long int vertices_per_face{3};
+    long int faces_indices_offset{-1}; // elements (not bytes)
+    long int faces_indices_length{-1};
+    long int vertices_per_face{-1};
 
     auto n_faces() const -> long int {
       return faces_indices_length / vertices_per_face;
@@ -149,15 +142,14 @@ private:
   int width{0}, height{0};
 
   // contains vertices coordinates , colors, normals... for all meshes
-  std::vector<float> vertices_attr{0};
+  std::vector<float> vertices_attr;
   // list of vertices for each triangular face for all meshes
-  std::vector<unsigned int> faces{0};
+  std::vector<unsigned int> faces;
 
   long int n_total_vertices{0};
-  long int n_total_indices{0};
 
   // Number of elements per vertices attrib group (position, normal, color)
-  std::vector<long int> vert_attr_group_length;
+  const std::vector<long int> vert_attr_group_length{3, 3};
 
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
