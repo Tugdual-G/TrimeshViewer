@@ -87,7 +87,10 @@ void MeshRender::resize_EBO() {
 
 auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
                              void *fargs) -> int {
-  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   int flag = 1;
   glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -101,8 +104,6 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
       glBindVertexArray(VAO);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       for (auto &obj : objects) {
         draw(obj);
       }
@@ -115,8 +116,6 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
       glBindVertexArray(VAO);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-      // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       for (auto &obj : objects) {
         draw(obj);
       }
@@ -189,7 +188,8 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices,
                               const std::vector<double> &colors) {
   if (new_vertices.size() != colors.size()) {
     throw std::invalid_argument(
-        "New vertices size and colors size don't match.");
+        "New vertices size and colors size don't match in " +
+        std::string(__func__) + "\n");
   }
 
   vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
@@ -242,7 +242,8 @@ void MeshRender::update_vertices(const std::vector<double> &new_vertices,
 
   if (new_vertices.size() != colors.size()) {
     throw std::invalid_argument(
-        "New vertices size and colors size don't match.");
+        "Vertices size and colors size don't match in " +
+        std::string(__func__) + "\n");
   }
   // update vertices, can change the number of vertices.
   std::vector<float> attr_tmp(vertices_attr);
@@ -311,7 +312,8 @@ void MeshRender::update_object(const std::vector<double> &ivertices,
 
   if (ivertices.size() != icolors.size()) {
     throw std::invalid_argument(
-        "New vertices size and colors size don't match.");
+        "Vertices size and colors size don't match in " +
+        std::string(__func__) + "\n");
   }
   /* Update the vertices and faces of an object. */
   Object &obj = objects.at(id);
@@ -573,7 +575,8 @@ auto MeshRender::add_curve(const std::vector<double> &coords,
     std::copy(colors.begin(), colors.end(), per_point_color.begin() + 3);
     obj_id = add_object(coords_clean, curve_indices, per_point_color, obtype);
   } else {
-    throw std::invalid_argument("Vertices size and colors size don't match.\n");
+    throw std::invalid_argument("Coords size and colors size don't match in " +
+                                std::string(__func__) + "\n");
   }
 
   Object &obj = objects.at(obj_id);
@@ -646,8 +649,6 @@ void MeshRender::draw(Object &obj) {
   case ObjectType::QUAD_CURVE:
   case ObjectType::TUBE_CURVE:
   case ObjectType::SMOOTH_TUBE_CURVE:
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDrawElementsBaseVertex(
         GL_LINES_ADJACENCY, obj.faces_indices_length, GL_UNSIGNED_INT,
         (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
@@ -695,6 +696,13 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors,
   size_t n_vertice_attr =
       std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   Object &obj = objects.at(object_idx);
+
+  if ((int)colors.size() / 3 != obj.n_vertices()) {
+    throw std::invalid_argument(
+        "Vertices size and colors size don't match in " +
+        std::string(__func__) + "\n");
+  }
+
   for (long int i = 0; i < obj.n_vertices(); ++i) {
     for (long int j = 0; j < 3; ++j) {
       // copies the precedent attributes
@@ -732,10 +740,8 @@ void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
     auto *render = (MeshRender *)glfwGetWindowUserPointer(window);
     double dx = xpos - x_old;
     double dy = ypos - y_old;
-    dx = dx > 15 ? 0.1 : dx;
-    dy = dy > 15 ? 0.1 : dy;
-    // std::cout << dx << " , " << dy << std::endl;
-    double norm_dm = pow(pow(dy, 2) + pow(dx, 2), 0.5);
+
+    double norm_dm = pow(dy * dy + dx * dx, 0.5);
 
     // quaternionic transform
     double sin_dm = sin(norm_dm * MOUSE_SENSITIVITY) / norm_dm;
