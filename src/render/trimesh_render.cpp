@@ -80,7 +80,7 @@ void MeshRender::resize_VBO() {
   // Resize the VAO and update vertex attributes data
   long int stride = (long int)sizeof(float) * vertices_stride();
 
-  int n_vertice_attr = (int)vert_attr_group_length.size();
+  int n_vertice_attr = (int)VERT_ATTR_LENGTHS.size();
   long int offset{0 * sizeof(float)};
 
   glBindVertexArray(VAO);
@@ -93,7 +93,7 @@ void MeshRender::resize_VBO() {
     // TODO do not hardcode 3 !
     glVertexAttribPointer(i, 3, GL_FLOAT, GL_FALSE, stride, (void *)(offset));
     glEnableVertexAttribArray(i);
-    offset += vert_attr_group_length[i] * (long int)sizeof(float);
+    offset += VERT_ATTR_LENGTHS[i] * (long int)sizeof(float);
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -675,9 +675,9 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
 
 void MeshRender::update_vertex_colors(std::vector<double> &colors,
                                       unsigned int object_idx) {
-  // TODO vertices attr numbers might vary
-  size_t n_vertice_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
+
+  size_t n_vertice_attr = vertices_stride();
+
   Object &obj = objects.at(object_idx);
 
   if ((int)colors.size() / 3 != obj.n_vertices()) {
@@ -714,9 +714,24 @@ void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,
 }
 
 auto MeshRender::vertices_stride() -> long int {
-  return std::reduce(vert_attr_group_length.begin(),
-                     vert_attr_group_length.end());
+  return std::reduce(VERT_ATTR_LENGTHS.begin(), VERT_ATTR_LENGTHS.end());
 }
+
+auto MeshRender::vertices_attr_offset(VertexAttr attr) -> long int {
+  switch (attr) {
+  case VertexAttr::VERTEX:
+    return 0;
+    break;
+  case VertexAttr::NORMAL:
+    return VERT_ATTR_LENGTHS.at(0);
+    break;
+  case VertexAttr::COLOR:
+    return VERT_ATTR_LENGTHS.at(0) + VERT_ATTR_LENGTHS.at(1);
+    break;
+  default:
+    return -1;
+  }
+};
 
 void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
   static double x_old{0};

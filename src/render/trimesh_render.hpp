@@ -92,7 +92,7 @@ private:
     // number of elements in the Vertex Buffer Object
     long int attr_length{-1};
 
-    // total number of attributes per vertex
+    // total number of attributes per vertex (vvvnnnccc) -> 9
     long int total_number_attr{-1};
 
     auto n_vertices() const -> long int {
@@ -124,6 +124,12 @@ private:
            long int indices_length, long int vertices_per_primitive);
   };
 
+  enum class VertexAttr : int {
+    VERTEX,
+    NORMAL,
+    COLOR,
+  };
+
   // viewport size
   int width{0}, height{0};
 
@@ -132,9 +138,8 @@ private:
   // list of vertices for each triangular face for all meshes
   std::vector<unsigned int> faces;
 
-  // Number of elements per vertices attrib group (position, normal, color)
-  const std::vector<long int> vert_attr_group_length{3, 3};
-  auto vertices_stride() -> long int;
+  static auto vertices_stride() -> long int;
+  static auto vertices_attr_offset(VertexAttr attr) -> long int;
 
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
@@ -200,6 +205,9 @@ const std::map<ObjectType, int> OBJECT_VERTICES_PER_PRIMITIVE_MAP{
     {ObjectType::VECTOR, 3},     {ObjectType::QUAD_CURVE, 4},
     {ObjectType::TUBE_CURVE, 4}, {ObjectType::SMOOTH_TUBE_CURVE, 4},
     {ObjectType::AXIS_CROSS, 3}};
+
+// Number of elements per vertices attrib group (position, normal, color)
+const std::vector<long int> VERT_ATTR_LENGTHS{3, 3};
 
 void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods);
