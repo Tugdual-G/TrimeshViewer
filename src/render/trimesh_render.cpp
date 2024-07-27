@@ -91,12 +91,11 @@ void MeshRender::resize_VBO() {
 
   for (int i = 0; i < n_vertice_attr; ++i) {
     // TODO do not hardcode 3 !
-    glVertexAttribPointer(i, 3, GL_FLOAT, GL_FALSE, stride, (void *)(offset));
+    glVertexAttribPointer(i, (int)VERT_ATTR_LENGTHS[i], GL_FLOAT, GL_FALSE,
+                          (int)stride, (void *)(offset));
     glEnableVertexAttribArray(i);
     offset += VERT_ATTR_LENGTHS[i] * (long int)sizeof(float);
   }
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void MeshRender::resize_EBO() {
@@ -105,19 +104,18 @@ void MeshRender::resize_EBO() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                (long)sizeof(unsigned int) * faces.size(), faces.data(),
                GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glCheckError();
 }
 
 auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
                              void *fargs) -> int {
 
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
   int flag = 1;
   glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -139,6 +137,7 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
     }
   } else {
     while ((glfwWindowShouldClose(window) == 0) && (flag != 0)) {
+
       glfwGetWindowSize(window, &width, &height);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -160,6 +159,7 @@ auto MeshRender::render_finalize() -> int {
   // Cleanup
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
+  glDeleteBuffers(1, &EBO);
   glfwTerminate();
   return 0;
 }
@@ -234,99 +234,66 @@ void MeshRender::update_indices(const std::vector<unsigned int> &new_indices,
   resize_EBO();
 }
 
-void MeshRender::add_vertices(const std::vector<double> &new_vertices) {
-  long int n_total_vertices = (long)vertices_attr.size() / vertices_stride();
+void MeshRender::fill_vertice_attr(const std::vector<double> &new_vertices,
+                                   const std::vector<double> &new_colors,
+                                   long int vertices_offset) {
+  // vertices_offset is the global offset in the vector
 
-  vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
+  long int stride = vertices_stride();
+  long int color_offset = vertices_attr_offset(VertexAttr::COLOR);
 
-  for (unsigned int i = 0; i < new_vertices.size() / 3; ++i) {
-    for (unsigned int j = 0; j < 3; ++j) {
-      vertices_attr.at((n_total_vertices + i) * 6 + j) =
-          (float)new_vertices.at(i * 3 + j);
+  if (new_colors.size() == new_vertices.size()) {
+    for (long int i = 0; i < (long)new_vertices.size() / 3; ++i) {
+      for (long int j = 0; j < 3; ++j) {
+        vertices_attr.at(vertices_offset + i * stride + j) =
+            (float)new_vertices.at(i * 3 + j);
+        vertices_attr.at(vertices_offset + i * stride + color_offset + j) =
+            (float)new_colors.at(i * 3 + j);
+      }
     }
-    vertices_attr.at((n_total_vertices + i) * 6 + 4) = 0.7; // default colors
-    vertices_attr.at((n_total_vertices + i) * 6 + 5) = 0.8;
-  }
-  resize_VBO();
-}
-
-void MeshRender::add_vertices(const std::vector<double> &new_vertices,
-                              const std::vector<double> &colors) {
-  if (new_vertices.size() != colors.size()) {
+  } else if (new_colors.size() == 3) {
+    for (long int i = 0; i < (long)new_vertices.size() / 3; ++i) {
+      for (long int j = 0; j < 3; ++j) {
+        vertices_attr.at(vertices_offset + i * stride + j) =
+            (float)new_vertices.at(i * 3 + j);
+        vertices_attr.at(vertices_offset + i * stride + color_offset + j) =
+            (float)new_colors.at(j);
+      }
+    }
+  } else {
     throw std::invalid_argument(
         "New vertices size and colors size don't match in " +
         std::string(__func__) + "\n");
   }
-
-  long int n_total_vertices = (long)vertices_attr.size() / vertices_stride();
-  vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
-
-  for (unsigned int i = 0; i < new_vertices.size() / 3; ++i) {
-    for (unsigned int j = 0; j < 3; ++j) {
-      vertices_attr.at((n_total_vertices + i) * 6 + j) =
-          (float)new_vertices.at(i * 3 + j);
-      vertices_attr.at((n_total_vertices + i) * 6 + 3 + j) =
-          (float)colors.at(i * 3 + j);
-    }
-  }
-  resize_VBO();
 }
 
-void MeshRender::update_vertices(const std::vector<double> &new_vertices,
-                                 Object &obj) {
-  // update vertices, can change the number of vertices.
-  std::vector<float> attr_tmp(vertices_attr);
-  long int new_attr_length =
-      obj.total_number_attr * (long)new_vertices.size() / 3;
+void MeshRender::add_vertices(const std::vector<double> &new_vertices,
+                              const std::vector<double> &colors) {
+
+  long int stride = vertices_stride();
+  long int n_curent_vertices = n_vertices();
+
   vertices_attr.resize(vertices_attr.size() +
-                       (new_attr_length - obj.attr_length));
+                       (new_vertices.size() / 3) * stride);
 
-  for (unsigned int i = 0; i < new_vertices.size() / 3; ++i) {
-    for (unsigned int j = 0; j < 3; ++j) {
-      vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
-          (float)new_vertices.at(i * 3 + j);
-    }
-    // default color
-    vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + 4) = 0.7;
-    vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + 5) = 0.8;
-  }
-  std::copy(attr_tmp.begin() + (long)(obj.attr_offset + obj.attr_length),
-            attr_tmp.end(),
-            vertices_attr.begin() + (long)(obj.attr_offset + new_attr_length));
+  fill_vertice_attr(new_vertices, colors, n_curent_vertices * stride);
 
-  obj.attr_length = new_attr_length;
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, (long)(vertices_attr.size() * sizeof(float)),
-               vertices_attr.data(), GL_STATIC_DRAW);
+  resize_VBO();
 }
 
 void MeshRender::update_vertices(const std::vector<double> &new_vertices,
                                  const std::vector<double> &colors,
                                  Object &obj) {
 
-  if (new_vertices.size() != colors.size()) {
-    throw std::invalid_argument(
-        "Vertices size and colors size don't match in " +
-        std::string(__func__) + "\n");
-  }
   // update vertices, can change the number of vertices.
   std::vector<float> attr_tmp(vertices_attr);
-  long int new_attr_length =
-      obj.total_number_attr * (long)new_vertices.size() / 3;
+  long int new_attr_length = vertices_stride() * (long)new_vertices.size() / 3;
+
   vertices_attr.resize(vertices_attr.size() +
                        (new_attr_length - obj.attr_length));
 
-  for (unsigned int i = 0; i < new_vertices.size() / 3; ++i) {
-    for (unsigned int j = 0; j < 3; ++j) {
-      vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j) =
-          (float)new_vertices.at(i * 3 + j);
-    }
-    for (unsigned int j = 0; j < 3; ++j) {
-      vertices_attr.at(obj.attr_offset + i * obj.total_number_attr + j + 3) =
-          (float)colors.at(i * 3 + j);
-    }
-  }
+  fill_vertice_attr(new_vertices, colors, obj.attr_offset);
+
   std::copy(attr_tmp.begin() + (long)(obj.attr_offset + obj.attr_length),
             attr_tmp.end(),
             vertices_attr.begin() + (long)(obj.attr_offset + new_attr_length));
@@ -377,7 +344,7 @@ void MeshRender::update_object(const std::vector<double> &ivertices,
   // updates faces
   update_indices(ifaces, obj);
 
-  update_vertices(ivertices, obj);
+  update_vertices(ivertices, DEFAULT_COLOR, obj);
 
   glCheckError();
 }
@@ -400,26 +367,6 @@ void MeshRender::update_object(const std::vector<double> &ivertices,
   update_vertices(ivertices, icolors, obj);
 
   glCheckError();
-}
-
-auto MeshRender::add_object(const std::vector<double> &ivertices,
-                            const std::vector<unsigned int> &ifaces,
-                            ObjectType object_type) -> int {
-
-  auto attr_offset = (long int)vertices_attr.size();
-  auto attr_length = (long int)ivertices.size() * 2;
-  auto faces_indices_offset = (long int)faces.size();
-  auto faces_indices_length = (long int)ifaces.size();
-
-  Object new_obj(object_type, attr_offset, attr_length, vertices_stride(),
-                 faces_indices_offset, faces_indices_length,
-                 OBJECT_VERTICES_PER_PRIMITIVE_MAP.at(object_type));
-
-  add_indices(ifaces);
-  add_vertices(ivertices);
-
-  objects.push_back(new_obj);
-  return (int)objects.size() - 1;
 }
 
 auto MeshRender::add_object(const std::vector<double> &ivertices,
@@ -452,33 +399,61 @@ auto MeshRender::add_mesh(const std::vector<double> &ivertices,
 
 auto MeshRender::add_mesh(const std::vector<double> &ivertices,
                           const std::vector<unsigned int> &ifaces) -> int {
-  return add_object(ivertices, ifaces, ObjectType::MESH);
+  return add_object(ivertices, ifaces, DEFAULT_COLOR, ObjectType::MESH);
+}
+
+void MeshRender::fill_vectors_instance_attr(
+    const std::vector<double> &coords, const std::vector<double> &directions,
+    const std::vector<double> &colors, std::vector<float> &instances_attr) {
+
+  instances_attr.resize(coords.size() * 3);
+  if (colors.size() == coords.size()) {
+    for (int i = 0; i < (int)coords.size(); i += 3) {
+      instances_attr.at(i * 3) = (float)coords.at(i);
+      instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
+      instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
+
+      instances_attr.at(i * 3 + 3) = (float)directions.at(i);
+      instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
+      instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
+
+      instances_attr.at(i * 3 + 6) = (float)colors.at(i);
+      instances_attr.at(i * 3 + 7) = (float)colors.at(i + 1);
+      instances_attr.at(i * 3 + 8) = (float)colors.at(i + 2);
+    }
+  } else if (colors.size() == 3) {
+
+    for (int i = 0; i < (int)coords.size(); i += 3) {
+      instances_attr.at(i * 3) = (float)coords.at(i);
+      instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
+      instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
+
+      instances_attr.at(i * 3 + 3) = (float)directions.at(i);
+      instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
+      instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
+
+      instances_attr.at(i * 3 + 6) = (float)colors.at(0);
+      instances_attr.at(i * 3 + 7) = (float)colors.at(1);
+      instances_attr.at(i * 3 + 8) = (float)colors.at(2);
+    }
+  }
 }
 
 auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions,
                              const std::vector<double> &colors) -> int {
+
   // Draws a set of colored vectors or a single colored vector
-  int obj_id =
-      add_object(VectorInstance::vector_instance_vertices,
-                 VectorInstance::vector_instance_faces, ObjectType::VECTOR);
+  int obj_id = add_object(VectorInstance::vector_instance_vertices,
+                          VectorInstance::vector_instance_faces, DEFAULT_COLOR,
+                          ObjectType::VECTOR);
 
   Object &obj = objects.at(obj_id);
   obj.n_instances = (int)coords.size() / 3;
 
-  std::vector<float> instances_attr(coords.size() * 3);
-  for (int i = 0; i < (int)coords.size(); i += 3) {
-    instances_attr.at(i * 3) = (float)coords.at(i);
-    instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
-    instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
-    instances_attr.at(i * 3 + 3) = (float)directions.at(i);
-    instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
-    instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
+  std::vector<float> instances_attr;
 
-    instances_attr.at(i * 3 + 6) = (float)colors.at(i);
-    instances_attr.at(i * 3 + 7) = (float)colors.at(i + 1);
-    instances_attr.at(i * 3 + 8) = (float)colors.at(i + 2);
-  }
+  fill_vectors_instance_attr(coords, directions, colors, instances_attr);
 
   unsigned int vector_VBO{0};
   glGenBuffers(1, &vector_VBO);
@@ -508,50 +483,7 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
 auto MeshRender::add_vectors(const std::vector<double> &coords,
                              const std::vector<double> &directions) -> int {
   // Draws a set of vectors or a single vector
-
-  int obj_id =
-      add_object(VectorInstance::vector_instance_vertices,
-                 VectorInstance::vector_instance_faces, ObjectType::VECTOR);
-
-  Object &obj = objects.at(obj_id);
-  obj.n_instances = (int)coords.size() / 3;
-
-  std::vector<float> instances_attr(coords.size() * 3);
-  for (int i = 0; i < (int)coords.size(); i += 3) {
-    instances_attr.at(i * 3) = (float)coords.at(i);
-    instances_attr.at(i * 3 + 1) = (float)coords.at(i + 1);
-    instances_attr.at(i * 3 + 2) = (float)coords.at(i + 2);
-    instances_attr.at(i * 3 + 3) = (float)directions.at(i);
-    instances_attr.at(i * 3 + 4) = (float)directions.at(i + 1);
-    instances_attr.at(i * 3 + 5) = (float)directions.at(i + 2);
-
-    instances_attr.at(i * 3 + 7) = 0.8;
-    instances_attr.at(i * 3 + 8) = 0.7;
-  }
-
-  unsigned int vector_VBO{0};
-  glGenBuffers(1, &vector_VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
-  glBufferData(GL_ARRAY_BUFFER,
-               (long)sizeof(float) * (long)instances_attr.size(),
-               instances_attr.data(), GL_STATIC_DRAW);
-
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(3);
-
-  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(4);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glVertexAttribDivisor(2, 1);
-  glVertexAttribDivisor(3, 1);
-  glVertexAttribDivisor(4, 1);
-
-  return obj_id;
+  return add_vectors(coords, directions, DEFAULT_COLOR);
 }
 
 static auto get_gost_point(const double *point0,
@@ -568,26 +500,29 @@ static auto get_gost_point(const double *point0,
   return Linalg::vect_add(point0, tangent.data());
 }
 
+auto curvetype_to_objecttype(CurveType type) {
+  switch (type) {
+  case CurveType::QUAD_CURVE:
+    return ObjectType::QUAD_CURVE;
+    break;
+  case CurveType::TUBE_CURVE:
+    return ObjectType::TUBE_CURVE;
+    break;
+
+  case CurveType::SMOOTH_TUBE_CURVE:
+    return ObjectType::SMOOTH_TUBE_CURVE;
+    break;
+  default:
+    return ObjectType::NONE;
+  }
+}
+
 auto MeshRender::add_curve(const std::vector<double> &coords,
                            const std::vector<double> &colors, CurveType type,
                            double width) -> int {
   // Adds a curve object, generate gost points at the extremities.
 
-  ObjectType obtype{0};
-  switch (type) {
-  case CurveType::QUAD_CURVE:
-    obtype = ObjectType::QUAD_CURVE;
-    break;
-  case CurveType::TUBE_CURVE:
-    obtype = ObjectType::TUBE_CURVE;
-    break;
-
-  case CurveType::SMOOTH_TUBE_CURVE:
-    obtype = ObjectType::SMOOTH_TUBE_CURVE;
-    break;
-  default:
-    break;
-  }
+  ObjectType obtype = curvetype_to_objecttype(type);
 
   std::vector<double> coords_clean(coords.size() + 6);
   std::copy(coords.begin(), coords.end(), coords_clean.begin() + 3);
@@ -636,20 +571,8 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
                             const std::vector<unsigned int> &curves_indices,
                             CurveType type, double width) -> int {
   // Draws multiples curves.
-  ObjectType obtype{ObjectType::NONE};
-  switch (type) {
-  case CurveType::QUAD_CURVE:
-    obtype = ObjectType::QUAD_CURVE;
-    break;
-  case CurveType::TUBE_CURVE:
-    obtype = ObjectType::TUBE_CURVE;
-    break;
-  case CurveType::SMOOTH_TUBE_CURVE:
-    obtype = ObjectType::SMOOTH_TUBE_CURVE;
-    break;
-  default:
-    break;
-  }
+
+  ObjectType obtype = curvetype_to_objecttype(type);
 
   int obj_id{0};
   if (colors.size() == 3) {
@@ -726,12 +649,32 @@ auto MeshRender::vertices_attr_offset(VertexAttr attr) -> long int {
     return VERT_ATTR_LENGTHS.at(0);
     break;
   case VertexAttr::COLOR:
-    return VERT_ATTR_LENGTHS.at(0) + VERT_ATTR_LENGTHS.at(1);
+    return VERT_ATTR_LENGTHS.at(0); // + VERT_ATTR_LENGTHS.at(1);
     break;
   default:
     return -1;
   }
 };
+
+auto MeshRender::vertices_attr_size(VertexAttr attr) -> long int {
+  switch (attr) {
+  case VertexAttr::VERTEX:
+    return VERT_ATTR_LENGTHS.at(0);
+    break;
+  case VertexAttr::NORMAL:
+    return VERT_ATTR_LENGTHS.at(1);
+    break;
+  case VertexAttr::COLOR:
+    return VERT_ATTR_LENGTHS.at(1); // + VERT_ATTR_LENGTHS.at(1);
+    break;
+  default:
+    return -1;
+  }
+};
+
+auto MeshRender::n_vertices() -> long int {
+  return (long)vertices_attr.size() / vertices_stride();
+}
 
 void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
   static double x_old{0};

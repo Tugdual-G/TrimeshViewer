@@ -18,6 +18,7 @@ struct Fargs {
   Mesh *mesh{nullptr};
   MeshRender *render{nullptr};
   double radius{0};
+  int obj_id{0};
 };
 
 auto callback(void *fargs) -> int {
@@ -45,7 +46,8 @@ auto callback(void *fargs) -> int {
     std::vector<double> ico_colors = Colormap::get_interpolated_colors(
         ico_scalar_vertex_value, Colormap::INFERNO, -0.5, 0.5);
 
-    args->render->update_object(mesh->vertices, mesh->faces, ico_colors, 1);
+    args->render->update_object(mesh->vertices, mesh->faces, ico_colors,
+                                args->obj_id);
   }
 
   ++i;
@@ -73,8 +75,8 @@ auto main() -> int {
 
   MeshRender render(500, 500);
   render.set_axis_cross();
-  render.add_mesh(ico.vertices, ico.faces, ico_colors);
-  Fargs fargs{&ico, &render, radius};
+  int obj_id = render.add_mesh(ico.vertices, ico.faces, ico_colors);
+  Fargs fargs{&ico, &render, radius, obj_id};
   callback(&fargs);
   render.render_loop(callback, &fargs);
   render.render_finalize();

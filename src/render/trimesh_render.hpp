@@ -140,6 +140,8 @@ private:
 
   static auto vertices_stride() -> long int;
   static auto vertices_attr_offset(VertexAttr attr) -> long int;
+  auto vertices_attr_size(VertexAttr attr) -> long int;
+  auto n_vertices() -> long int;
 
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};
@@ -173,22 +175,30 @@ private:
   void add_indices(const std::vector<unsigned int> &new_indices);
   void update_indices(const std::vector<unsigned int> &new_indices,
                       Object &obj);
-  void add_vertices(const std::vector<double> &new_vertices);
+
+  void fill_vertice_attr(const std::vector<double> &new_vertices,
+                         const std::vector<double> &new_colors,
+                         long int vertices_offset);
+
   void add_vertices(const std::vector<double> &new_vertices,
                     const std::vector<double> &colors);
 
-  void update_vertices(const std::vector<double> &new_vertices, Object &obj);
   void update_vertices(const std::vector<double> &new_vertices,
                        const std::vector<double> &colors, Object &obj);
 
-  auto add_object(const std::vector<double> &ivertices,
-                  const std::vector<unsigned int> &ifaces,
-                  ObjectType object_type) -> int;
+  // auto add_object(const std::vector<double> &ivertices,
+  //                 const std::vector<unsigned int> &ifaces,
+  //                 ObjectType object_type) -> int;
 
   auto add_object(const std::vector<double> &ivertices,
                   const std::vector<unsigned int> &ifaces,
                   const std::vector<double> &colors,
                   ObjectType object_type) -> int;
+
+  void fill_vectors_instance_attr(const std::vector<double> &coords,
+                                  const std::vector<double> &directions,
+                                  const std::vector<double> &colors,
+                                  std::vector<float> &instances_attr);
 };
 
 // convert between different types
@@ -207,7 +217,10 @@ const std::map<ObjectType, int> OBJECT_VERTICES_PER_PRIMITIVE_MAP{
     {ObjectType::AXIS_CROSS, 3}};
 
 // Number of elements per vertices attrib group (position, normal, color)
+// if modifying, change vertices_attr_offset() and vertices_attr_size();
 const std::vector<long int> VERT_ATTR_LENGTHS{3, 3};
+
+const std::vector<double> DEFAULT_COLOR{0.0, 0.7, 0.8};
 
 void keyboard_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods);
