@@ -76,6 +76,27 @@ void MeshRender::init_storage() {
   glCheckError();
 }
 
+void MeshRender::resize_VBO() {
+  // Resize the VAO and update vertex attributes data
+  long int stride = (long int)sizeof(float) * vertices_stride();
+
+  int n_vertice_attr = (int)vert_attr_group_length.size();
+  long int offset{0 * sizeof(float)};
+
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER,
+               (long)vertices_attr.size() * (long)sizeof(float),
+               vertices_attr.data(), GL_STATIC_DRAW);
+
+  for (int i = 0; i < n_vertice_attr; ++i) {
+    // TODO do not hardcode 3 !
+    glVertexAttribPointer(i, 3, GL_FLOAT, GL_FALSE, stride, (void *)(offset));
+    glEnableVertexAttribArray(i);
+    offset += vert_attr_group_length[i] * (long int)sizeof(float);
+  }
+}
+
 void MeshRender::resize_EBO() {
   // Square EBO
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -168,7 +189,7 @@ void MeshRender::update_indices(const std::vector<unsigned int> &new_indices,
 }
 
 void MeshRender::add_vertices(const std::vector<double> &new_vertices) {
-  long int n_total_vertices = vertices_attr.size() / vertices_stride();
+  long int n_total_vertices = (long)vertices_attr.size() / vertices_stride();
 
   vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
 
@@ -191,7 +212,7 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices,
         std::string(__func__) + "\n");
   }
 
-  long int n_total_vertices = vertices_attr.size() / vertices_stride();
+  long int n_total_vertices = (long)vertices_attr.size() / vertices_stride();
   vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
 
   for (unsigned int i = 0; i < new_vertices.size() / 3; ++i) {
@@ -295,8 +316,8 @@ void MeshRender::update_object(const std::vector<double> &ivertices, int id) {
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * obj.attr_offset,
-                  sizeof(float) * obj.attr_length,
+  glBufferSubData(GL_ARRAY_BUFFER, (long)sizeof(float) * obj.attr_offset,
+                  (long)sizeof(float) * obj.attr_length,
                   vertices_attr.data() + obj.attr_offset);
 }
 
@@ -339,14 +360,12 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<unsigned int> &ifaces,
                             ObjectType object_type) -> int {
 
-  long int total_number_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   auto attr_offset = (long int)vertices_attr.size();
   auto attr_length = (long int)ivertices.size() * 2;
   auto faces_indices_offset = (long int)faces.size();
   auto faces_indices_length = (long int)ifaces.size();
 
-  Object new_obj(object_type, attr_offset, attr_length, total_number_attr,
+  Object new_obj(object_type, attr_offset, attr_length, vertices_stride(),
                  faces_indices_offset, faces_indices_length,
                  OBJECT_VERTICES_PER_PRIMITIVE_MAP.at(object_type));
 
@@ -362,14 +381,12 @@ auto MeshRender::add_object(const std::vector<double> &ivertices,
                             const std::vector<double> &colors,
                             ObjectType object_type) -> int {
 
-  long int total_number_attr =
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
   auto attr_offset = (long int)vertices_attr.size();
   auto attr_length = (long int)ivertices.size() * 2;
   auto faces_indices_offset = (long int)faces.size();
   auto faces_indices_length = (long int)ifaces.size();
 
-  Object new_obj(object_type, attr_offset, attr_length, total_number_attr,
+  Object new_obj(object_type, attr_offset, attr_length, vertices_stride(),
                  faces_indices_offset, faces_indices_length,
                  OBJECT_VERTICES_PER_PRIMITIVE_MAP.at(object_type));
 
@@ -420,7 +437,8 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
   unsigned int vector_VBO{0};
   glGenBuffers(1, &vector_VBO);
   glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
+  glBufferData(GL_ARRAY_BUFFER,
+               (long)sizeof(float) * (long)instances_attr.size(),
                instances_attr.data(), GL_STATIC_DRAW);
 
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
@@ -468,7 +486,8 @@ auto MeshRender::add_vectors(const std::vector<double> &coords,
   unsigned int vector_VBO{0};
   glGenBuffers(1, &vector_VBO);
   glBindBuffer(GL_ARRAY_BUFFER, vector_VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float) * instances_attr.size(),
+  glBufferData(GL_ARRAY_BUFFER,
+               (long)sizeof(float) * (long)instances_attr.size(),
                instances_attr.data(), GL_STATIC_DRAW);
 
   glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void *)0);
@@ -649,27 +668,6 @@ void MeshRender::draw(Object &obj) {
     break;
   }
 };
-
-void MeshRender::resize_VBO() {
-  // Resize the VAO and update vertex attributes data
-  size_t stride = sizeof(float) * vertices_stride();
-
-  size_t n_vertice_attr = vert_attr_group_length.size();
-  size_t offset{0 * sizeof(float)};
-
-  glBindVertexArray(VAO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER,
-               (long)vertices_attr.size() * (long)sizeof(float),
-               vertices_attr.data(), GL_STATIC_DRAW);
-
-  for (size_t i = 0; i < n_vertice_attr; ++i) {
-    // TODO do not hardcode 3 !
-    glVertexAttribPointer(i, 3, GL_FLOAT, GL_FALSE, stride, (void *)(offset));
-    glEnableVertexAttribArray(i);
-    offset += vert_attr_group_length[i] * sizeof(float);
-  }
-}
 
 void MeshRender::update_vertex_colors(std::vector<double> &colors,
                                       unsigned int object_idx) {
