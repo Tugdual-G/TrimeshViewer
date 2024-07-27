@@ -70,6 +70,7 @@ public:
     init_storage();
     vertices_attr.resize(0);
     faces.resize(0);
+    objects.resize(0);
   }
 
   auto render_finalize() -> int;
@@ -84,7 +85,7 @@ private:
     void set_shader_program();
 
   public:
-    ObjectType object_type;
+    ObjectType object_type{ObjectType::NONE};
 
     // first element position in the Vertex Buffer Object/vertices_attr
     long int attr_offset{-1}; // in elements, (not in bytes)
@@ -115,6 +116,8 @@ private:
     int zoom_loc{0};          // zoom uniform
     int viewport_size_loc{0}; // uniform to keep the aspect ratio
     int n_instances{0};
+
+    Object() = default;
 
     Object(ObjectType type, long int attr_offset, long int attr_length,
            long int total_number_attr, long int indices_offset,

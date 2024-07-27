@@ -95,6 +95,8 @@ void MeshRender::resize_VBO() {
     glEnableVertexAttribArray(i);
     offset += vert_attr_group_length[i] * (long int)sizeof(float);
   }
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void MeshRender::resize_EBO() {
@@ -103,7 +105,7 @@ void MeshRender::resize_EBO() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                (long)sizeof(unsigned int) * faces.size(), faces.data(),
                GL_STATIC_DRAW);
-
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   glCheckError();
 }
 
@@ -112,6 +114,10 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
   int flag = 1;
   glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -123,7 +129,6 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
   if (data_update_function == nullptr) {
     while ((glfwWindowShouldClose(window) == 0)) {
       glfwGetWindowSize(window, &width, &height);
-      glBindVertexArray(VAO);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       for (auto &obj : objects) {
@@ -135,7 +140,6 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
   } else {
     while ((glfwWindowShouldClose(window) == 0) && (flag != 0)) {
       glfwGetWindowSize(window, &width, &height);
-      glBindVertexArray(VAO);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       for (auto &obj : objects) {
@@ -159,6 +163,48 @@ auto MeshRender::render_finalize() -> int {
   glfwTerminate();
   return 0;
 }
+
+void MeshRender::draw(Object &obj) {
+  glUseProgram(obj.shader_program);
+  // Mouse rotation
+  glUniform4f(obj.q_loc, (float)q[0], (float)q[1], (float)q[2], (float)q[3]);
+  glUniform4f(obj.q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
+              (float)q_inv[3]);
+  // Zoom
+  glUniform1f(obj.zoom_loc, (float)zoom_level);
+
+  glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
+
+  switch (obj.object_type) {
+  case ObjectType::AXIS_CROSS:
+  case ObjectType::MESH:
+    glDrawElementsBaseVertex(
+        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+        obj.attr_offset / obj.total_number_attr);
+    break;
+
+  case ObjectType::QUAD_CURVE:
+  case ObjectType::TUBE_CURVE:
+  case ObjectType::SMOOTH_TUBE_CURVE:
+    glDrawElementsBaseVertex(
+        GL_LINES_ADJACENCY, obj.faces_indices_length, GL_UNSIGNED_INT,
+        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+        obj.attr_offset / obj.total_number_attr);
+    break;
+
+  case ObjectType::VECTOR:
+    glDrawElementsInstancedBaseVertex(
+        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
+        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
+        obj.n_instances, obj.attr_offset / obj.total_number_attr);
+
+    break;
+
+  default:
+    break;
+  }
+};
 
 void MeshRender::add_indices(const std::vector<unsigned int> &new_indices) {
   faces.resize(faces.size() + new_indices.size());
@@ -626,48 +672,6 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
 
   return obj_id;
 }
-
-void MeshRender::draw(Object &obj) {
-  glUseProgram(obj.shader_program);
-  // Mouse rotation
-  glUniform4f(obj.q_loc, (float)q[0], (float)q[1], (float)q[2], (float)q[3]);
-  glUniform4f(obj.q_inv_loc, (float)q_inv[0], (float)q_inv[1], (float)q_inv[2],
-              (float)q_inv[3]);
-  // Zoom
-  glUniform1f(obj.zoom_loc, (float)zoom_level);
-
-  glUniform2f(obj.viewport_size_loc, (float)width, (float)height);
-
-  switch (obj.object_type) {
-  case ObjectType::AXIS_CROSS:
-  case ObjectType::MESH:
-    glDrawElementsBaseVertex(
-        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
-        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
-        obj.attr_offset / obj.total_number_attr);
-    break;
-
-  case ObjectType::QUAD_CURVE:
-  case ObjectType::TUBE_CURVE:
-  case ObjectType::SMOOTH_TUBE_CURVE:
-    glDrawElementsBaseVertex(
-        GL_LINES_ADJACENCY, obj.faces_indices_length, GL_UNSIGNED_INT,
-        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
-        obj.attr_offset / obj.total_number_attr);
-    break;
-
-  case ObjectType::VECTOR:
-    glDrawElementsInstancedBaseVertex(
-        GL_TRIANGLES, obj.faces_indices_length, GL_UNSIGNED_INT,
-        (void *)(obj.faces_indices_offset * sizeof(unsigned int)),
-        obj.n_instances, obj.attr_offset / obj.total_number_attr);
-
-    break;
-
-  default:
-    break;
-  }
-};
 
 void MeshRender::update_vertex_colors(std::vector<double> &colors,
                                       unsigned int object_idx) {
