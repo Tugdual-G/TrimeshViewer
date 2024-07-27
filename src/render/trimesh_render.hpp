@@ -67,7 +67,7 @@ public:
 
   MeshRender(int w_width, int w_height) : width(w_width), height(w_height) {
     init_window();
-    init_render();
+    init_storage();
     vertices_attr.resize(0);
     faces.resize(0);
   }
@@ -149,7 +149,7 @@ private:
   std::vector<Object> objects;
 
   void init_window();
-  void init_render();
+  void init_storage();
   void resize_VBO();
   void resize_EBO();
   void draw(Object &obj);

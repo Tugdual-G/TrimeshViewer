@@ -18,6 +18,11 @@ auto glCheckError_(const char *file, int line) -> GLenum;
 constexpr double MOUSE_SENSITIVITY{0.005};
 constexpr double SCROLL_SENSITIVITY{0.05};
 
+void framebuffer_size_callback(__attribute__((unused)) GLFWwindow *window,
+                               int width, int height) {
+  glViewport(0, 0, width, height);
+}
+
 void MeshRender::init_window() {
 
   glfwInit();
@@ -39,10 +44,13 @@ void MeshRender::init_window() {
   glfwSetCursorPosCallback(window, cursor_callback);
   glfwSetScrollCallback(window, scroll_callback);
 
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
   if (gladLoadGLLoader((GLADloadproc)glfwGetProcAddress) == 0) {
     std::cout << "Failed to initialize GLAD\n";
     exit(1);
   }
+
   glEnable(GL_MULTISAMPLE); // anti-aliasing
   glDepthRange(1, 0);       // Makes opengl right-handed
 }
@@ -60,19 +68,7 @@ void MeshRender::Object::set_shader_program() {
       shader_program, "viewport_size"); // for the aspect ratio
 }
 
-void framebuffer_size_callback(__attribute__((unused)) GLFWwindow *window,
-                               int width, int height) {
-  glViewport(0, 0, width, height);
-}
-
-auto MeshRender::vertices_stride() -> long int {
-  return std::reduce(vert_attr_group_length.begin(),
-                     vert_attr_group_length.end());
-}
-
-void MeshRender::init_render() {
-
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+void MeshRender::init_storage() {
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
@@ -696,8 +692,6 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors,
     }
   }
 
-  size_t total_size_vertice_attr = sizeof(float) * vertices_stride();
-
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // TODO do not reload all data
@@ -715,6 +709,11 @@ void set_image2D(unsigned int unit, unsigned int *imageID, unsigned int width,
                GL_UNSIGNED_SHORT, img_data);
   glBindImageTexture(unit, *imageID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16UI);
   glCheckError();
+}
+
+auto MeshRender::vertices_stride() -> long int {
+  return std::reduce(vert_attr_group_length.begin(),
+                     vert_attr_group_length.end());
 }
 
 void cursor_callback(GLFWwindow *window, double xpos, double ypos) {
