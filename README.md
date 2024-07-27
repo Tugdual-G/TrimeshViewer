@@ -79,27 +79,25 @@ auto main() -> int {
   std::vector<double> normals;
   file.get_subelement_data<double>("vertices", normal_property_names, normals);
 
-
-
   Mesh mesh(file.vertices, file.faces);
 
 
-  // Computing the curvature to define the colors of the rendered object.
-
-  // get_mean_curvature takes one_ring as argument to make explicit that the
-  // method depends on the one-ring.
+  // Computes the curvature to define the colors of the rendered object.
   mesh.set_one_ring();
+  // get_mean_curvature takes one_ring as argument to make explicit that the
+  // method depends on the one-ring and leave the choice to the user to update explicitly.
   std::vector<double> kn = mesh.get_mean_curvature(mesh.one_ring);
   std::vector<double> k = mesh.get_scalar_mean_curvature(kn);
 
 
   std::vector<double> colors = Colormap::get_interpolated_colors(k, Colormap::INFERNO);
 
-  MeshRender render(500, 500, mesh.vertices, mesh.faces, colors);
+  MeshRender render(500, 500);
+  render.add_mesh(mesh.vertices, mesh.faces, colors);
 
   // adding another mesh to the display
   Mesh icosahedron = Primitives::icosahedron();
-  render.add_object(icosahedron.vertices, icosahedron.faces);
+  render.add_mesh(icosahedron.vertices, icosahedron.faces);
 
   render.render_loop(nullptr, nullptr);
   render.render_finalize();
