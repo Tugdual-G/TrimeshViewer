@@ -129,10 +129,9 @@ private:
   // list of vertices for each triangular face for all meshes
   std::vector<unsigned int> faces;
 
-  long int n_total_vertices{0};
-
   // Number of elements per vertices attrib group (position, normal, color)
   const std::vector<long int> vert_attr_group_length{3, 3};
+  auto vertices_stride() -> long int;
 
   // defining the rotation transformation of the current view.
   Quaternion q{1, 0, 0, 0}, q_inv{1, 0, 0, 0};

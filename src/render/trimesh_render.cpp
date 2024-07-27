@@ -65,6 +65,11 @@ void framebuffer_size_callback(__attribute__((unused)) GLFWwindow *window,
   glViewport(0, 0, width, height);
 }
 
+auto MeshRender::vertices_stride() -> long int {
+  return std::reduce(vert_attr_group_length.begin(),
+                     vert_attr_group_length.end());
+}
+
 void MeshRender::init_render() {
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -167,6 +172,8 @@ void MeshRender::update_indices(const std::vector<unsigned int> &new_indices,
 }
 
 void MeshRender::add_vertices(const std::vector<double> &new_vertices) {
+  long int n_total_vertices = vertices_attr.size() / vertices_stride();
+
   vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
 
   for (unsigned int i = 0; i < new_vertices.size() / 3; ++i) {
@@ -177,7 +184,6 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices) {
     vertices_attr.at((n_total_vertices + i) * 6 + 4) = 0.7; // default colors
     vertices_attr.at((n_total_vertices + i) * 6 + 5) = 0.8;
   }
-  n_total_vertices += (long)new_vertices.size() / 3;
   resize_VBO();
 }
 
@@ -189,6 +195,7 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices,
         std::string(__func__) + "\n");
   }
 
+  long int n_total_vertices = vertices_attr.size() / vertices_stride();
   vertices_attr.resize(vertices_attr.size() + new_vertices.size() * 2);
 
   for (unsigned int i = 0; i < new_vertices.size() / 3; ++i) {
@@ -199,7 +206,6 @@ void MeshRender::add_vertices(const std::vector<double> &new_vertices,
           (float)colors.at(i * 3 + j);
     }
   }
-  n_total_vertices += (long)new_vertices.size() / 3;
   resize_VBO();
 }
 
@@ -225,7 +231,6 @@ void MeshRender::update_vertices(const std::vector<double> &new_vertices,
             attr_tmp.end(),
             vertices_attr.begin() + (long)(obj.attr_offset + new_attr_length));
 
-  n_total_vertices += (long)new_vertices.size() / 3 - obj.n_vertices();
   obj.attr_length = new_attr_length;
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -263,7 +268,6 @@ void MeshRender::update_vertices(const std::vector<double> &new_vertices,
             attr_tmp.end(),
             vertices_attr.begin() + (long)(obj.attr_offset + new_attr_length));
 
-  n_total_vertices += (long)new_vertices.size() / 3 - obj.n_vertices();
   obj.attr_length = new_attr_length;
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -652,21 +656,20 @@ void MeshRender::draw(Object &obj) {
 
 void MeshRender::resize_VBO() {
   // Resize the VAO and update vertex attributes data
-  size_t total_size_vertice_attr =
-      sizeof(float) *
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
+  size_t stride = sizeof(float) * vertices_stride();
+
   size_t n_vertice_attr = vert_attr_group_length.size();
   size_t offset{0 * sizeof(float)};
 
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, n_total_vertices * total_size_vertice_attr,
+  glBufferData(GL_ARRAY_BUFFER,
+               (long)vertices_attr.size() * (long)sizeof(float),
                vertices_attr.data(), GL_STATIC_DRAW);
 
   for (size_t i = 0; i < n_vertice_attr; ++i) {
     // TODO do not hardcode 3 !
-    glVertexAttribPointer(i, 3, GL_FLOAT, GL_FALSE, total_size_vertice_attr,
-                          (void *)(offset));
+    glVertexAttribPointer(i, 3, GL_FLOAT, GL_FALSE, stride, (void *)(offset));
     glEnableVertexAttribArray(i);
     offset += vert_attr_group_length[i] * sizeof(float);
   }
@@ -693,14 +696,13 @@ void MeshRender::update_vertex_colors(std::vector<double> &colors,
     }
   }
 
-  size_t total_size_vertice_attr =
-      sizeof(float) *
-      std::reduce(vert_attr_group_length.begin(), vert_attr_group_length.end());
+  size_t total_size_vertice_attr = sizeof(float) * vertices_stride();
+
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // TODO do not reload all data
   glBufferData(GL_ARRAY_BUFFER,
-               (long)total_size_vertice_attr * n_total_vertices,
+               (long)vertices_attr.size() * (long)sizeof(float),
                vertices_attr.data(), GL_STATIC_DRAW);
 }
 
