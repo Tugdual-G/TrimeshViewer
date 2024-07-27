@@ -72,15 +72,15 @@ auto main() -> int {
 
   PlyFile file("meshes/deformHQ.ply");
 
-  // Retrieving the vertice normals from the file.
+  // Retrieves the vertice normals from the file.
   std::vector<PropertyName> normal_property_names = {
       PropertyName::nx, PropertyName::ny, PropertyName::nz};
 
   std::vector<double> normals;
   file.get_subelement_data<double>("vertices", normal_property_names, normals);
 
+  // Creates a mesh object from file data
   Mesh mesh(file.vertices, file.faces);
-
 
   // Computes the curvature to define the colors of the rendered object.
   mesh.set_one_ring();
