@@ -5,8 +5,8 @@
 #include <span>
 #include <vector>
 
-static auto norm(double *w) -> double {
-  return pow(pow(w[0], 2.0) + pow(w[1], 2.0) + pow(w[2], 2.0), 0.5);
+static auto norm(const double *w) -> double {
+  return pow(w[0] * w[0] + w[1] * w[1] + w[2] * w[2], 0.5);
 }
 
 static void cross(const double *u, const double *v, double *w) {

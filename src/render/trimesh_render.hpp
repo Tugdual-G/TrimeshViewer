@@ -77,6 +77,8 @@ public:
   auto render_loop(int (*data_update_function)(void *fargs),
                    void *fargs) -> int;
 
+  void init_frame() const;
+  void draw_frame();
   // void add_vertex_normals(std::vector<double> &normals);
 
 private:

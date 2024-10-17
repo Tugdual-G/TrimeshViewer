@@ -155,6 +155,33 @@ auto MeshRender::render_loop(int (*data_update_function)(void *fargs),
   return 0;
 }
 
+void MeshRender::init_frame() const {
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  glClearColor(0.0, 0.0, 0.0, 0.0);
+
+  glEnable(GL_DEPTH_TEST);
+  // Accept fragment if closer to the camera
+  glDepthFunc(GL_LESS);
+}
+
+void MeshRender::draw_frame() {
+
+  glfwGetWindowSize(window, &width, &height);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  for (auto &obj : objects) {
+    draw(obj);
+  }
+  glfwSwapBuffers(window);
+  glfwPollEvents();
+}
+
 auto MeshRender::render_finalize() -> int {
   // Cleanup
   glDeleteVertexArrays(1, &VAO);
@@ -570,7 +597,9 @@ auto MeshRender::add_curves(const std::vector<double> &coords,
                             const std::vector<double> &colors,
                             const std::vector<unsigned int> &curves_indices,
                             CurveType type, double width) -> int {
-  // Draws multiples curves.
+  // Draws multiples curves. Indices are for example:
+  // [0, 1, 2, 3, |  1, 2, 3, 4, | 2, 3, 4, 5] In the order they are feeded to
+  // the GPU
 
   ObjectType obtype = curvetype_to_objecttype(type);
 
